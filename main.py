@@ -38,7 +38,7 @@ def get_headers(token: str):
     }
 
     super_properties_b64 = base64.b64encode(
-        json.dumps(super_properties, separators=(',', ':')).encode()
+        json.dumps(super_properties, separators = (',', ':')).encode()
     ).decode()
 
     headers = {
@@ -63,7 +63,7 @@ async def send_message(token: str, content: str):
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payload) as resp:
+        async with session.post(url, headers = headers, json = payload) as resp:
             status = resp.status
             body = await resp.text()
             print(f"[{token[:5]}...] Status: {status} | Response: {body[:100]}")
@@ -79,7 +79,7 @@ async def main():
 if __name__ == "__main__":
     if RELAUNCH_FLAG not in sys.argv:
         ctypes.windll.shell32.ShellExecuteW(
-            None, None, sys.executable, " ".join(sys.argv + ["--no-relaunch"]), None, 1
+            None, None, sys.executable, " ".join(sys.argv + ["--no-relaunch"]), None, 1  # Set to 0 to hide terminal
         )
         sys.exit()
     asyncio.run(main())
