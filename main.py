@@ -3,6 +3,11 @@ import asyncio
 import base64
 import json
 import random
+import sys
+import ctypes
+
+# Flag to check if script relaunched
+RELAUNCH_FLAG = "--no-relaunch"
 
 # Replace with your real user tokens
 tokens = [
@@ -72,4 +77,9 @@ async def main():
         await asyncio.sleep(delay + rand_delay)
 
 if __name__ == "__main__":
+    if RELAUNCH_FLAG not in sys.argv:
+        ctypes.windll.shell32.ShellExecuteW(
+            None, None, sys.executable, " ".join(sys.argv + ["--no-relaunch"]), None, 1
+        )
+        sys.exit()
     asyncio.run(main())
