@@ -9,12 +9,12 @@ import ctypes
 # Flag to check if script relaunched
 RELAUNCH_FLAG = "--no-relaunch"
 
-# Replace with your real user tokens
+# Enter your user tokens
 tokens = [
     "",
 ]
 
-channel_id = ""  # Replace with your actual target channel
+channel_id = ""  # Enter your target channel
 
 # Construct realistic Discord browser headers
 def get_headers(token: str):
@@ -69,11 +69,11 @@ async def send_message(token: str, content: str):
             print(f"[{token[:5]}...] Status: {status} | Response: {body[:100]}")
 
 async def main():
-    delay = 30 / len(tokens)
+    delay = 30 / len(tokens)  # Karuta drop cooldown is 30 mins- set delay to spread out drops
     for i, token in enumerate(tokens):
         message = f"Automated message from account #{i+1}"
         await send_message(token, message)
-        rand_delay = random.randint(3, 45)
+        rand_delay = random.randint(3, 45)  # Random additional delay of 3 - 45 seconds to avoid detection
         await asyncio.sleep(delay + rand_delay)
 
 if __name__ == "__main__":
