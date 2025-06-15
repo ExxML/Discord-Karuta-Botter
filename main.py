@@ -14,42 +14,54 @@ tokens = [
     "",
 ]
 
+server_id = ""  # Enter your target server
 channel_id = ""  # Enter your target channel
 
 # Construct realistic Discord browser headers
 def get_headers(token: str):
+    # Base super properties copied from real Discord browser traffic
     super_properties = {
         "os": "Windows",
         "browser": "Chrome",
         "device": "",
         "system_locale": "en-US",
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                              "AppleWebKit/537.36 (KHTML, like Gecko) "
-                              "Chrome/114.0.0.0 Safari/537.36",
-        "browser_version": "114.0.0.0",
+        "browser_user_agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/114.0.5735.134 Safari/537.36"
+        ),
+        "browser_version": "114.0.5735.134",
         "os_version": "10",
-        "referrer": "",
-        "referring_domain": "",
-        "referrer_current": "",
-        "referring_domain_current": "",
+        "referrer": "https://discord.com/channels/@me",
+        "referring_domain": "discord.com",
+        "referrer_current": "https://discord.com/channels/@me",
+        "referring_domain_current": "discord.com",
         "release_channel": "stable",
         "client_build_number": 272593,
-        "client_event_source": None,
+        "client_event_source": None
     }
 
-    super_properties_b64 = base64.b64encode(
-        json.dumps(super_properties, separators = (',', ':')).encode()
+    x_super_props = base64.b64encode(
+        json.dumps(super_properties, separators=(',', ':')).encode()
     ).decode()
 
     headers = {
         "Authorization": token,
         "Content-Type": "application/json",
         "User-Agent": super_properties["browser_user_agent"],
-        "X-Super-Properties": super_properties_b64,
+        "X-Super-Properties": x_super_props,
+        "X-Discord-Locale": "en-US",
+        "X-Debug-Options": "bugReporterEnabled",
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Origin": "https://discord.com",
-        "Referer": f"https://discord.com/channels/@me",
+        "Referer": "https://discord.com/channels/@me",
+        "X-Context-Properties": base64.b64encode(json.dumps({
+            "location": "Channel",
+            "location_guild_id": server_id,
+            "location_channel_id": channel_id,
+            "location_channel_type": 1,
+        }).encode()).decode()
     }
 
     return headers
