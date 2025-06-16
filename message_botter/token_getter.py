@@ -47,13 +47,13 @@ class TokenGetter():
             # Execute JS to grab token from local storage
             token = self.driver.execute_script("return window.localStorage.getItem('token');")
             if token:
-                print("Token extracted\n")
+                print("Token extracted")
                 return token[1:-1]  # Trim quotes
             else:
-                print(f"No token found for {email}\n")
+                print(f"No token found for {email}")
                 return None
         except Exception as e:
-            print(f"Error with {email}: {str(e)}\n")
+            print(f"Error with {email}: {str(e)}")
             return None
 
     def main(self):
@@ -63,7 +63,7 @@ class TokenGetter():
             self.setup()
             print(f"Processing {account['email']}...")
             token = self.get_discord_token(account["email"], account["password"])
-            print("Closing undetected Chrome...")
+            print("Closing undetected Chrome...\n")
             self.driver.quit()
             if token:
                 tokens.append(token)
