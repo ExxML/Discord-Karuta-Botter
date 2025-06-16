@@ -1,3 +1,4 @@
+from token_getter import TokenGetter
 import aiohttp
 import asyncio
 import base64
@@ -8,11 +9,6 @@ import ctypes
 
 # Flag to check if script relaunched
 RELAUNCH_FLAG = "--no-relaunch"
-
-# Enter your user tokens
-tokens = [
-    "",
-]
 
 server_id = ""  # Enter your target server
 channel_id = ""  # Enter your target channel
@@ -81,12 +77,16 @@ async def send_message(token: str, content: str):
             print(f"[{token[:5]}...] Status: {status} | Response: {body[:100]}")
 
 async def main():
-    delay = 30 / len(tokens)  # Karuta drop cooldown is 30 mins- set delay to spread out drops
-    for i, token in enumerate(tokens):
-        message = f"Automated message from account #{i+1}"
-        await send_message(token, message)
-        rand_delay = random.randint(3, 45)  # Random additional delay of 3 - 45 seconds to avoid detection
-        await asyncio.sleep(delay + rand_delay)
+    if len(tokens) == 0:
+        print("No tokens found. Please check your accounts.")
+        return
+    delay = 30*60 / len(tokens)  # Karuta drop cooldown is 30 mins- set delay to spread out drops
+    while True:
+        for i, token in enumerate(tokens):
+            message = f"Automated message from account #{i+1}"
+            await send_message(token, message)
+            rand_delay = random.randint(3, 45)  # Random additional delay of 3 - 45 seconds to avoid detection
+            await asyncio.sleep(delay + rand_delay)
 
 if __name__ == "__main__":
     if RELAUNCH_FLAG not in sys.argv:
@@ -94,4 +94,5 @@ if __name__ == "__main__":
             None, None, sys.executable, " ".join(sys.argv + ["--no-relaunch"]), None, 1  # Set to 0 to hide terminal
         )
         sys.exit()
+    tokens = TokenGetter().main()
     asyncio.run(main())
