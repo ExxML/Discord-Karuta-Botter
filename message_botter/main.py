@@ -74,7 +74,7 @@ async def send_message(token: str, content: str):
         async with session.post(url, headers = headers, json = payload) as resp:
             status = resp.status
             body = await resp.text()
-            print(f"[{token[:5]}...] Status: {status} | Response: {body[:100]}")
+            print(f"[Account #{tokens.index(token) + 1}] Status: {status} | Response: {body}")
 
 async def main():
     if len(tokens) == 0:
