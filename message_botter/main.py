@@ -7,11 +7,8 @@ import random
 import sys
 import ctypes
 
-# Flag to check if script relaunched
-RELAUNCH_FLAG = "--no-relaunch"
-
-server_id = ""  # Enter your target server
-channel_id = ""  # Enter your target channel
+SERVER_ID = ""  # Enter your target server
+CHANNEL_ID = ""  # Enter your target channel
 
 # Construct realistic Discord browser headers
 def get_headers(token: str):
@@ -54,8 +51,8 @@ def get_headers(token: str):
         "Referer": "https://discord.com/channels/@me",
         "X-Context-Properties": base64.b64encode(json.dumps({
             "location": "Channel",
-            "location_guild_id": server_id,
-            "location_channel_id": channel_id,
+            "location_guild_id": SERVER_ID,
+            "location_channel_id": CHANNEL_ID,
             "location_channel_type": 1,
         }).encode()).decode()
     }
@@ -63,7 +60,7 @@ def get_headers(token: str):
     return headers
 
 async def send_message(token: str, content: str):
-    url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
     headers = get_headers(token)
     payload = {
         "content": content,
@@ -89,9 +86,11 @@ async def main():
             await asyncio.sleep(delay + rand_delay)
 
 if __name__ == "__main__":
+    # Flag to check if script relaunched
+    RELAUNCH_FLAG = "--no-relaunch"
     if RELAUNCH_FLAG not in sys.argv:
         ctypes.windll.shell32.ShellExecuteW(
-            None, None, sys.executable, " ".join(sys.argv + ["--no-relaunch"]), None, 1  # Set to 0 to hide terminal
+            None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, 1  # Set to 0 to hide terminal
         )
         sys.exit()
     tokens = TokenGetter().main()
