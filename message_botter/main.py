@@ -82,7 +82,7 @@ async def main():
         for i, token in enumerate(tokens):
             message = f"Automated message from account #{i+1}"
             await send_message(token, message)
-            rand_delay = random.randint(3, 45)  # Random additional delay of 3 - 45 seconds to avoid detection
+            rand_delay = random.randint(0, 90)  # Random additional delay to avoid detection
             await asyncio.sleep(delay + rand_delay)
 
 if __name__ == "__main__":
