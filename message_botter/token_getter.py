@@ -63,7 +63,7 @@ class TokenGetter():
             self.setup()
             print(f"Processing {account['email']}...")
             token = self.get_discord_token(account["email"], account["password"])
-            print("Closing undetected Chrome...\n")
+            print("Closing Chrome...\n")
             self.driver.quit()
             if token:
                 tokens.append(token)
