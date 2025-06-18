@@ -1,4 +1,7 @@
 from token_getter import TokenGetter
+import win32gui
+import win32con
+import win32console
 import aiohttp
 import asyncio
 import base64
@@ -7,6 +10,7 @@ import random
 import sys
 import ctypes
 
+TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible
 SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
@@ -147,13 +151,9 @@ async def main():
     random_addon = random.choice(['', ' ', ' !', ' :D', ' drop'])
     drop_messages = [f"kdrop{random_addon}", f"kd{random_addon}"]  # Vary to avoid detection
     emojis = ['1️⃣', '2️⃣', '3️⃣']
-    valid_tokens = tokens.copy()
     
     while True:
         for i, token in enumerate(tokens):
-            if token not in valid_tokens:  # Skip removed tokens
-                print(f"[Account #{i + 1}] Failed: Invalid token.")
-                continue
             message = random.choice(drop_messages)  # Randomize message
             message_id = await send_message(token, message)
             if message_id:
@@ -168,7 +168,16 @@ async def main():
                 else:
                     print(f"[Account #{i + 1}] Grab failed: No drop message found.")
             else:
-                valid_tokens.remove(token)  # Remove bad token
+                # Set terminal window on top to notify user of invalid token
+                if TERMINAL_VISIBILITY:
+                    hwnd = win32console.GetConsoleWindow()
+                    win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+                    win32gui.SetForegroundWindow(hwnd)
+                    input("At least one token is invalid. Press `Enter` to restart the script.")
+                    ctypes.windll.shell32.ShellExecuteW(
+                        None, None, sys.executable, " ".join(sys.argv), None, TERMINAL_VISIBILITY
+                    )
+                sys.exit()
             await asyncio.sleep(delay + random.uniform(0, 60))  # Random delay between accounts
 
 if __name__ == "__main__":
@@ -176,7 +185,7 @@ if __name__ == "__main__":
     RELAUNCH_FLAG = "--no-relaunch"
     if RELAUNCH_FLAG not in sys.argv:
         ctypes.windll.shell32.ShellExecuteW(
-            None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, 1  # Set to 0 to hide terminal
+            None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, TERMINAL_VISIBILITY
         )
         sys.exit()
     tokens = TokenGetter().main()
