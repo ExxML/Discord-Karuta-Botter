@@ -1,4 +1,5 @@
 from token_getter import TokenGetter
+from datetime import datetime
 import win32gui
 import win32con
 import win32console
@@ -10,10 +11,11 @@ import random
 import sys
 import ctypes
 
-TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible
+TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
 SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
+RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 
 # Construct realistic Discord browser headers
 token_headers = {}
@@ -65,120 +67,147 @@ def get_headers(token: str):
         }
     return token_headers[token]
 
-async def send_message(token: str, content: str):
+async def send_message(token: str, account: int, content: str, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
     headers = get_headers(token)
     payload = {
         "content": content,
         "tts": False,
     }
-
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers = headers, json = payload) as resp:
             status = resp.status
-            account = tokens.index(token) + 1
             if status == 200:
-                print(f"[Account #{account}] Dropped cards successfully.")
+                print(f"✅ [Account #{account}] Dropped cards successfully.")
             elif status == 401:
-                print(f"[Account #{account}] Drop failed: Invalid token.")
+                print(f"❌ [Account #{account}] Drop failed: Invalid token.")
             elif status == 403:
-                print(f"[Account #{account}] Drop failed: Token banned or no permission.")
-            elif status == 429:
-                print(f"[Account #{account}] Drop failed: Rate limited.")
+                print(f"❌ [Account #{account}] Drop failed: Token banned or no permission.")
+            elif status == 429 and rate_limited < RATE_LIMIT:
+                rate_limited += 1
+                retry_after = (await resp.json()).get('retry_after', 5)
+                print(f"⚠️ [Account #{account}] Drop failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                await asyncio.sleep(retry_after)
+                await send_message(token, account, content, rate_limited)  # Retry drop
             else:
-                print(f"[Account #{account}] Drop failed: Error code {status}.")
+                print(f"❌ [Account #{account}] Drop failed: Error code {status}.")
             return (await resp.json()).get('id') if status == 200 else None
 
-async def add_reaction(token: str, message_id: str, emoji: str):
+async def add_reaction(token: str, account: int, message_id: str, emoji: str, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages/{message_id}/reactions/{emoji}/@me"
     headers = get_headers(token)
-    
     async with aiohttp.ClientSession() as session:
         async with session.put(url, headers = headers) as resp:
             status = resp.status
-            account = tokens.index(token) + 1
             if status == 204:
-                print(f"[Account #{account}] Grabbed card {emoji} successfully.")
+                print(f"✅ [Account #{account}] Grabbed card {emoji} successfully.")
             elif status == 401:
-                print(f"[Account #{account}] Grab card {emoji} failed: Invalid token.")
+                print(f"❌ [Account #{account}] Grab card {emoji} failed: Invalid token.")
             elif status == 403:
-                print(f"[Account #{account}] Grab card {emoji} failed: Token banned or no permission.")
-            elif status == 429:
-                retry_after = (await resp.json()).get('retry_after', 1)
-                print(f"[Account #{account}] Grab card {emoji} failed: Rate limited, retrying after {retry_after}s.")
+                print(f"❌ [Account #{account}] Grab card {emoji} failed: Token banned or no permission.")
+            elif status == 429 and rate_limited < RATE_LIMIT:
+                rate_limited += 1
+                retry_after = (await resp.json()).get('retry_after', 3)
+                print(f"⚠️ [Account #{account}] Grab card {emoji} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
-                await add_reaction(token, message_id, emoji)  # Retry reaction
+                await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
             else:
-                print(f"[Account #{account}] Grab card {emoji} failed: Error code {status}.")
+                print(f"❌ [Account #{account}] Grab card {emoji} failed: Error code {status}.")
 
-async def get_user_id(token: str):
+async def get_user_id(token: str, account: int, rate_limited: int):
     url = "https://discord.com/api/v10/users/@me"
     headers = get_headers(token)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
-            if resp.status == 200:
+            status = resp.status
+            if status == 200:
+                print(f"✅ [Account #{account}] Retrieved user ID successfully.")
                 return (await resp.json()).get('id')
-            return None
+            elif status == 429 and rate_limited < RATE_LIMIT:
+                rate_limited += 1
+                retry_after = (await resp.json()).get('retry_after', 3)
+                print(f"⚠️ [Account #{account}] Retrieve user ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                await asyncio.sleep(retry_after)
+                return await get_user_id(token, account, rate_limited)  # Retry getting user ID
+            else:
+                print(f"❌ [Account #{account}] Retrieve user ID failed: Error code {status}.")
+                return None
 
-async def get_karuta_drop_message(token: str):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=2"
+async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=5"
     headers = get_headers(token)
     
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
-            if resp.status == 200:
-                user_id = await get_user_id(token)
+            status = resp.status
+            if status == 200:
+                user_id = await get_user_id(token, account, 0)
+                if user_id is None:
+                    print(f"❌ [Account #{account}] Retrieve drop ID failed: Failed to retrieve user ID.")
+                    return None
                 messages = await resp.json()
                 for msg in messages:
                     if msg.get('author', {}).get('id') == KARUTA_BOT_ID and f"<@{user_id}> is dropping 3 cards!" == msg.get('content', ''): # Return ID only if Karuta mentions user
-                        return msg.get('id')
-            elif resp.status == 429:
-                retry_after = (await resp.json()).get('retry_after', 5)
-                print(f"[Account #{tokens.index(token) + 1}] Retrieve drop ID failed: Rate limited on message fetch, retrying after {retry_after}s.")
+                        print(f"✅ [Account #{account}] Retrieved drop ID successfully.")
+                        return msg.get('id') 
+            elif status == 429 and rate_limited < RATE_LIMIT:
+                rate_limited += 1
+                retry_after = (await resp.json()).get('retry_after', 3)
+                print(f"⚠️ [Account #{account}] Retrieve drop ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
-                return await get_karuta_drop_message(token)  # Retry
+                return await get_karuta_drop_message(token, account, rate_limited)  # Retry getting message ID
             else:
-                print(f"[Account #{tokens.index(token) + 1}] Retrieve drop ID failed: Error code {resp.status} on message fetch.")
+                print(f"❌ [Account #{account}] Retrieve drop ID failed: Error code {status}.")
                 return None
-            print(f"[Account #{tokens.index(token) + 1}] Retrieve drop ID failed: No drop found in the last 5 messages.")
+            # If status = 200 but no drop found
+            print(f"❌ [Account #{account}] Retrieve drop ID failed: No drop found in recent messages.")
             return None
 
 async def main():
-    if len(tokens) == 0:
-        print("No tokens found. Please check your accounts.")
-        return
-    delay = 30 * 60 / len(tokens)  # Karuta drop cooldown is 30 mins- set delay to spread out drops
+    account_num = len(tokens)
+    if account_num == 0:
+        input("⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
+        sys.exit()
+    delay = 30 * 60 / account_num  # Karuta drop cooldown is 30 mins- set delay to spread out drops
+    if account_num < 3:
+        grab_pointer = 0  # Token pointer for auto-grab
+    else:
+        grab_pointer = account_num - 3
     random_addon = random.choice(['', ' ', ' !', ' :D', ' drop'])
     drop_messages = [f"kdrop{random_addon}", f"kd{random_addon}"]  # Vary to avoid detection
     emojis = ['1️⃣', '2️⃣', '3️⃣']
     
     while True:
-        for i, token in enumerate(tokens):
+        for index, token in enumerate(tokens):
+            print(datetime.now().strftime("%I:%M:%S %p").lstrip("0").lower())  # Timestamp
+            account = index + 1
             message = random.choice(drop_messages)  # Randomize message
-            message_id = await send_message(token, message)
+            message_id = await send_message(token, account, message, 0)
             if message_id:
                 # Wait for Karuta's response
                 await asyncio.sleep(random.uniform(5, 7))
-                karuta_message_id = await get_karuta_drop_message(token)
+                karuta_message_id = await get_karuta_drop_message(token, account, 0)
                 if karuta_message_id:
                     random.shuffle(emojis)
-                    for emoji in emojis:
+                    for i in range(0, 3):
+                        emoji = emojis[i]
+                        token = tokens[(grab_pointer + i) % account_num]
                         await asyncio.sleep(random.uniform(0.5, 3))  # Random delay between reactions
-                        await add_reaction(token, karuta_message_id, emoji)
-                else:
-                    print(f"[Account #{i + 1}] Grab failed: No drop message found.")
+                        await add_reaction(token, account, karuta_message_id, emoji, 0)
             else:
                 # Set terminal window on top to notify user of invalid token
                 if TERMINAL_VISIBILITY:
                     hwnd = win32console.GetConsoleWindow()
                     win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
                     win32gui.SetForegroundWindow(hwnd)
-                    input("At least one token is invalid. Press `Enter` to restart the script.")
+                    input("⛔ Request Error ⛔\nMalformed request. Possible causes include:\n 1. Invalid/expired token\n 2. Incorrectly inputted server/channel/bot ID\nPress `Enter` to restart the script.")
                     ctypes.windll.shell32.ShellExecuteW(
                         None, None, sys.executable, " ".join(sys.argv), None, TERMINAL_VISIBILITY
                     )
                 sys.exit()
-            await asyncio.sleep(delay + random.uniform(0, 60))  # Random delay between accounts
+            grab_pointer = (grab_pointer + 3) % account_num  # Move pointer to next account (3 accounts per drop)
+            print("\n")
+            await asyncio.sleep(delay + random.uniform(0, 60))  # Additional random delay between drops
 
 if __name__ == "__main__":
     # Flag to check if script relaunched
@@ -187,6 +216,9 @@ if __name__ == "__main__":
         ctypes.windll.shell32.ShellExecuteW(
             None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, TERMINAL_VISIBILITY
         )
+        sys.exit()
+    if len(SERVER_ID) == 0 or len(CHANNEL_ID) == 0 or len(KARUTA_BOT_ID) == 0:
+        input("⛔ Configuration Error ⛔\nPlease use a valid server ID, channel ID, and Karuta bot ID in `main.py`.")
         sys.exit()
     tokens = TokenGetter().main()
     asyncio.run(main())
