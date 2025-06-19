@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 # List all accounts in the format: {"email": "example_email@gmail.com", "password": "example_password"}
-# Must use AT LEAST 3 accounts for auto-grab to work properly
+# Must enter AT LEAST 3 accounts for auto-grab to work properly
 ACCOUNTS = [
 ]
 
