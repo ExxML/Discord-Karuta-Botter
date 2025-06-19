@@ -18,7 +18,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-1. Edit `SERVER_ID` and `CHANNEL_ID` in `main.py` to match your target server and channel.
+1. Edit `SERVER_ID`, `CHANNEL_ID`, and `KARUTA_PREFIX` in `main.py` to match your target server/channel and Karuta bot prefix.
 2. Edit `ACCOUNTS` in `token_getter.py` to match your account emails and passwords. To successfully grab all cards dropped, you must enter at least 3 accounts. Make sure all accounts have message access to the target server and channel. 
 3. Run `main.py`.
 - ⚠️ Note: **DO NOT** run this script too many times in a row because you will get rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
