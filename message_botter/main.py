@@ -84,7 +84,7 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
         async with session.post(url, headers = headers, json = payload) as resp:
             status = resp.status
             if status == 200:
-                print(f"✅ [Account #{account}] Dropped cards successfully.")
+                print(f"✅ [Account #{account}] Dropped cards.")
             elif status == 401:
                 print(f"❌ [Account #{account}] Drop failed: Invalid token.")
             elif status == 403:
@@ -99,28 +99,6 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
                 print(f"❌ [Account #{account}] Drop failed: Error code {status}.")
             return (await resp.json()).get('id') if status == 200 else None
 
-async def add_reaction(token: str, account: int, message_id: str, emoji: str, rate_limited: int):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages/{message_id}/reactions/{emoji}/@me"
-    headers = get_headers(token)
-    async with aiohttp.ClientSession() as session:
-        async with session.put(url, headers = headers) as resp:
-            status = resp.status
-            card_number = EMOJI_MAP.get(emoji)
-            if status == 204:
-                print(f"✅ [Account #{account}] Grabbed card {card_number} successfully.")
-            elif status == 401:
-                print(f"❌ [Account #{account}] Grab card {card_number} failed: Invalid token.")
-            elif status == 403:
-                print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
-            elif status == 429 and rate_limited < RATE_LIMIT:
-                rate_limited += 1
-                retry_after = (await resp.json()).get('retry_after', 3)
-                print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
-                await asyncio.sleep(retry_after)
-                await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
-            else:
-                print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
-
 async def get_user_id(token: str, account: int, rate_limited: int):
     url = "https://discord.com/api/v10/users/@me"
     headers = get_headers(token)
@@ -128,7 +106,7 @@ async def get_user_id(token: str, account: int, rate_limited: int):
         async with session.get(url, headers = headers) as resp:
             status = resp.status
             if status == 200:
-                print(f"✅ [Account #{account}] Retrieved user ID successfully.")
+                print(f"✅ [Account #{account}] Retrieved user ID.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
                 retry_after = (await resp.json()).get('retry_after', 3)
@@ -142,7 +120,6 @@ async def get_user_id(token: str, account: int, rate_limited: int):
 async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=5"
     headers = get_headers(token)
-    
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
             status = resp.status
@@ -154,7 +131,7 @@ async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
                 messages = await resp.json()
                 for msg in messages:
                     if msg.get('author', {}).get('id') == KARUTA_BOT_ID and f"<@{user_id}> is dropping 3 cards!" == msg.get('content', ''): # Return ID only if Karuta mentions user
-                        print(f"✅ [Account #{account}] Retrieved drop ID successfully.")
+                        print(f"✅ [Account #{account}] Retrieved drop ID.")
                         return msg.get('id') 
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
@@ -168,6 +145,28 @@ async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
             # If status = 200 but no drop found
             print(f"❌ [Account #{account}] Retrieve drop ID failed: No drop found in recent messages.")
             return None
+
+async def add_reaction(token: str, account: int, message_id: str, emoji: str, rate_limited: int):
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages/{message_id}/reactions/{emoji}/@me"
+    headers = get_headers(token)
+    async with aiohttp.ClientSession() as session:
+        async with session.put(url, headers = headers) as resp:
+            status = resp.status
+            card_number = EMOJI_MAP.get(emoji)
+            if status == 204:
+                print(f"✅ [Account #{account}] Grabbed card {card_number}.")
+            elif status == 401:
+                print(f"❌ [Account #{account}] Grab card {card_number} failed: Invalid token.")
+            elif status == 403:
+                print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
+            elif status == 429 and rate_limited < RATE_LIMIT:
+                rate_limited += 1
+                retry_after = (await resp.json()).get('retry_after', 3)
+                print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                await asyncio.sleep(retry_after)
+                await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
+            else:
+                print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
 async def main():
     account_num = len(tokens)
@@ -185,7 +184,7 @@ async def main():
     
     while True:
         for index, token in enumerate(tokens):
-            print(datetime.now().strftime("%I:%M:%S %p").lstrip("0").lower())  # Timestamp
+            print(f"\n{datetime.now().strftime("%I:%M:%S %p").lstrip("0").lower()}")  # Timestamp
             account = index + 1
             message = random.choice(drop_messages)  # Randomize message
             message_id = await send_message(token, account, message, 0)
@@ -214,7 +213,6 @@ async def main():
                     )
                 sys.exit()
             grab_pointer = (grab_pointer + 3) % account_num  # Move pointer to next account (3 accounts per drop)
-            print("\n")
             await asyncio.sleep(delay + random.uniform(0, 60))  # Additional random delay between drops
 
 if __name__ == "__main__":
