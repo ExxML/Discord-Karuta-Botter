@@ -16,6 +16,7 @@ SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
 
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
+KARUTA_PREFIX = "k"  # Karuta's bot prefix
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 EMOJI_MAP = {
     '1️⃣': '[1]',
@@ -84,20 +85,20 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
         async with session.post(url, headers = headers, json = payload) as resp:
             status = resp.status
             if status == 200:
-                print(f"✅ [Account #{account}] Dropped cards.")
+                print(f"✅ [Account #{account}] Sent message '{content}'.")
             elif status == 401:
-                print(f"❌ [Account #{account}] Drop failed: Invalid token.")
+                print(f"❌ [Account #{account}] Message '{content}' failed: Invalid token.")
             elif status == 403:
-                print(f"❌ [Account #{account}] Drop failed: Token banned or no permission.")
+                print(f"❌ [Account #{account}] Message '{content}' failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
                 retry_after = (await resp.json()).get('retry_after', 5)
-                print(f"⚠️ [Account #{account}] Drop failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                print(f"⚠️ [Account #{account}] Message '{content}' failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await send_message(token, account, content, rate_limited)  # Retry drop
             else:
-                print(f"❌ [Account #{account}] Drop failed: Error code {status}.")
-            return (await resp.json()).get('id') if status == 200 else None
+                print(f"❌ [Account #{account}] Message '{content}' failed: Error code {status}.")
+            return status == 200
 
 async def get_user_id(token: str, account: int, rate_limited: int):
     url = "https://discord.com/api/v10/users/@me"
@@ -178,19 +179,29 @@ async def main():
         grab_pointer = 0  # Token pointer for auto-grab
     else:
         grab_pointer = account_num - 3
-    random_addon = random.choice(['', ' ', ' !', ' :D', ' drop'])
-    drop_messages = [f"kdrop{random_addon}", f"kd{random_addon}"]  # Vary to avoid detection
+    random_addon = random.choice(['', ' ', ' !', ' :D', ' w'])  # Variance to avoid detection
+    drop_messages = [f"{KARUTA_PREFIX}drop{random_addon}", f"{KARUTA_PREFIX}d{random_addon}"]
+    random_messages = [
+        f"{KARUTA_PREFIX}reminders", 
+        f"{KARUTA_PREFIX}rm",
+        f"{KARUTA_PREFIX}lookup",
+        f"{KARUTA_PREFIX}lu",
+        f"{KARUTA_PREFIX}vote",
+        f"{KARUTA_PREFIX}view",
+        f"{KARUTA_PREFIX}v",
+        f"{KARUTA_PREFIX}collection",
+        f"{KARUTA_PREFIX}c"
+    ]
     emojis = ['1️⃣', '2️⃣', '3️⃣']
     
     while True:
         for index, token in enumerate(tokens):
-            print(f"\n{datetime.now().strftime("%I:%M:%S %p").lstrip("0").lower()}")  # Timestamp
+            print(f"\n{datetime.now().strftime("%I:%M:%S %p").lstrip("0")}")  # Timestamp
             account = index + 1
-            message = random.choice(drop_messages)  # Randomize message
-            message_id = await send_message(token, account, message, 0)
-            if message_id:
-                # Wait for Karuta's response
-                await asyncio.sleep(random.uniform(5, 7))
+            drop_message = random.choice(drop_messages)  # Randomize message
+            sent = await send_message(token, account, drop_message, 0)
+            if sent:
+                await asyncio.sleep(random.uniform(5, 8))  # Wait for drop message to fully load
                 karuta_message_id = await get_karuta_drop_message(token, account, 0)
                 if karuta_message_id:
                     random.shuffle(emojis)
@@ -199,8 +210,10 @@ async def main():
                         grab_index = (grab_pointer + i) % account_num
                         grab_token = tokens[grab_index]
                         grab_account = grab_index + 1
-                        await asyncio.sleep(random.uniform(0.5, 3))  # Random delay between reactions
                         await add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
+                        await asyncio.sleep(random.uniform(0.5, 5))
+                        random_message = random.choice(random_messages)
+                        await send_message(grab_token, grab_account, random_message, RATE_LIMIT)  # Won't retry even if rate-limited
             else:
                 # Set terminal window on top to notify user of invalid token
                 if TERMINAL_VISIBILITY:
@@ -213,7 +226,7 @@ async def main():
                     )
                 sys.exit()
             grab_pointer = (grab_pointer + 3) % account_num  # Move pointer to next account (3 accounts per drop)
-            await asyncio.sleep(delay + random.uniform(0, 60))  # Additional random delay between drops
+            await asyncio.sleep(delay + random.uniform(0, 40))  # Additional random delay between drops
 
 if __name__ == "__main__":
     # Flag to check if script relaunched
