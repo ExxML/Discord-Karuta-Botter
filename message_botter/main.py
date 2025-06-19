@@ -14,8 +14,14 @@ import ctypes
 TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
 SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
+
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
+EMOJI_MAP = {
+    '1️⃣': '[1]',
+    '2️⃣': '[2]',
+    '3️⃣': '[3]'
+}
 
 # Construct realistic Discord browser headers
 token_headers = {}
@@ -99,20 +105,21 @@ async def add_reaction(token: str, account: int, message_id: str, emoji: str, ra
     async with aiohttp.ClientSession() as session:
         async with session.put(url, headers = headers) as resp:
             status = resp.status
+            card_number = EMOJI_MAP.get(emoji)
             if status == 204:
-                print(f"✅ [Account #{account}] Grabbed card {emoji} successfully.")
+                print(f"✅ [Account #{account}] Grabbed card {card_number} successfully.")
             elif status == 401:
-                print(f"❌ [Account #{account}] Grab card {emoji} failed: Invalid token.")
+                print(f"❌ [Account #{account}] Grab card {card_number} failed: Invalid token.")
             elif status == 403:
-                print(f"❌ [Account #{account}] Grab card {emoji} failed: Token banned or no permission.")
+                print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
                 retry_after = (await resp.json()).get('retry_after', 3)
-                print(f"⚠️ [Account #{account}] Grab card {emoji} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
             else:
-                print(f"❌ [Account #{account}] Grab card {emoji} failed: Error code {status}.")
+                print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
 async def get_user_id(token: str, account: int, rate_limited: int):
     url = "https://discord.com/api/v10/users/@me"
@@ -122,16 +129,15 @@ async def get_user_id(token: str, account: int, rate_limited: int):
             status = resp.status
             if status == 200:
                 print(f"✅ [Account #{account}] Retrieved user ID successfully.")
-                return (await resp.json()).get('id')
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
                 retry_after = (await resp.json()).get('retry_after', 3)
                 print(f"⚠️ [Account #{account}] Retrieve user ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
-                return await get_user_id(token, account, rate_limited)  # Retry getting user ID
+                await get_user_id(token, account, rate_limited)  # Retry getting user ID
             else:
                 print(f"❌ [Account #{account}] Retrieve user ID failed: Error code {status}.")
-                return None
+            return (await resp.json()).get('id') if status == 200 else None
 
 async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=5"
@@ -191,9 +197,11 @@ async def main():
                     random.shuffle(emojis)
                     for i in range(0, 3):
                         emoji = emojis[i]
-                        token = tokens[(grab_pointer + i) % account_num]
+                        grab_index = (grab_pointer + i) % account_num
+                        grab_token = tokens[grab_index]
+                        grab_account = grab_index + 1
                         await asyncio.sleep(random.uniform(0.5, 3))  # Random delay between reactions
-                        await add_reaction(token, account, karuta_message_id, emoji, 0)
+                        await add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
             else:
                 # Set terminal window on top to notify user of invalid token
                 if TERMINAL_VISIBILITY:
