@@ -14,9 +14,9 @@ import ctypes
 TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
 SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
+KARUTA_PREFIX = "k"  # Karuta's bot prefix
 
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
-KARUTA_PREFIX = "k"  # Karuta's bot prefix
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 EMOJI_MAP = {
     '1️⃣': '[1]',
@@ -92,7 +92,7 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
                 print(f"❌ [Account #{account}] Message '{content}' failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = (await resp.json()).get('retry_after', 5)
+                retry_after = 5  # seconds
                 print(f"⚠️ [Account #{account}] Message '{content}' failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await send_message(token, account, content, rate_limited)  # Retry drop
@@ -110,7 +110,7 @@ async def get_user_id(token: str, account: int, rate_limited: int):
                 print(f"✅ [Account #{account}] Retrieved user ID.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = (await resp.json()).get('retry_after', 3)
+                retry_after = 3  # seconds
                 print(f"⚠️ [Account #{account}] Retrieve user ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await get_user_id(token, account, rate_limited)  # Retry getting user ID
@@ -136,7 +136,7 @@ async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
                         return msg.get('id') 
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = (await resp.json()).get('retry_after', 3)
+                retry_after = 3  # seconds
                 print(f"⚠️ [Account #{account}] Retrieve drop ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 return await get_karuta_drop_message(token, account, rate_limited)  # Retry getting message ID
@@ -162,7 +162,7 @@ async def add_reaction(token: str, account: int, message_id: str, emoji: str, ra
                 print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = (await resp.json()).get('retry_after', 3)
+                retry_after = 3  # seconds
                 print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
