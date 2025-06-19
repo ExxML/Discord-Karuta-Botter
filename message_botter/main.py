@@ -190,7 +190,8 @@ async def main():
         f"{KARUTA_PREFIX}view",
         f"{KARUTA_PREFIX}v",
         f"{KARUTA_PREFIX}collection",
-        f"{KARUTA_PREFIX}c"
+        f"{KARUTA_PREFIX}c",
+        f"{KARUTA_PREFIX}cd"
     ]
     emojis = ['1️⃣', '2️⃣', '3️⃣']
     
