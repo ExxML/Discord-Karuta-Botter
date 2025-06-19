@@ -60,6 +60,7 @@ class TokenGetter():
     def main(self):
         if len(ACCOUNTS) < 3:
             input("⚠️ Configuration Warning ⚠️\nYou are using less than 3 accounts. The script will not be able to auto-grab all dropped cards.\nPress `Enter` if you wish to continue.")
+            print("\n")
         tokens = []
         for account in ACCOUNTS:
             print("Loading new undetected Chrome...")
