@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 # List all accounts in the format: {"email": "example_email@gmail.com", "password": "example_password"}
-# Must enter AT LEAST 3 accounts for auto-grab to work properly
+### The number of accounts entered MUST be a multiple of 3 or else the script cannot auto-grab all cards!
 ACCOUNTS = [
 ]
 
@@ -58,8 +58,8 @@ class TokenGetter():
             return None
 
     def main(self):
-        if len(ACCOUNTS) < 3:
-            input("⚠️ Configuration Warning ⚠️\nYou are using less than 3 accounts. The script will not be able to auto-grab all dropped cards.\nPress `Enter` if you wish to continue.")
+        if len(ACCOUNTS) % 3 != 0:
+            input("⚠️ Configuration Warning ⚠️\nThe number of accounts you are using is not a multiple of 3. Therefore, the script cannot auto-grab all dropped cards due to grab cooldowns.\nPress `Enter` if you wish to continue.")
         tokens = []
         for account in ACCOUNTS:
             print("\nLoading new undetected Chrome...")
