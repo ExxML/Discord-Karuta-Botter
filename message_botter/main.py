@@ -179,8 +179,8 @@ async def main():
         grab_pointer = 0  # Token pointer for auto-grab
     else:
         grab_pointer = account_num - 3
-    random_addon = random.choice(['', ' ', ' !', ' :D', ' w'])  # Variance to avoid detection
-    drop_messages = [f"{KARUTA_PREFIX}drop{random_addon}", f"{KARUTA_PREFIX}d{random_addon}"]
+    random_addon = ['', ' ', ' !', ' :D', ' w']  # Variance to avoid detection
+    drop_messages = [f"{KARUTA_PREFIX}drop", f"{KARUTA_PREFIX}d"]
     random_messages = [
         f"{KARUTA_PREFIX}reminders", 
         f"{KARUTA_PREFIX}rm",
@@ -201,7 +201,7 @@ async def main():
         for index, token in enumerate(tokens):
             print(f"\n{datetime.now().strftime("%I:%M:%S %p").lstrip("0")}")  # Timestamp
             account = index + 1
-            drop_message = random.choice(drop_messages)  # Randomize message
+            drop_message = random.choice(drop_messages) + random.choice(random_addon)  # Randomize message
             sent = await send_message(token, account, drop_message, 0)
             if sent:
                 await asyncio.sleep(random.uniform(5, 8))  # Wait for drop message to fully load
