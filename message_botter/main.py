@@ -119,7 +119,7 @@ async def get_user_id(token: str, account: int, rate_limited: int):
             return (await resp.json()).get('id') if status == 200 else None
 
 async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=5"
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=10"
     headers = get_headers(token)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
