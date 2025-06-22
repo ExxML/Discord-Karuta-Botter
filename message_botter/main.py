@@ -77,7 +77,7 @@ def get_headers(token: str):
     return token_headers[token]
 
 async def check_command(token: str):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=3"
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=10"
     headers = get_headers(token)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
