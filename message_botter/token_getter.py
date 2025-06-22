@@ -59,13 +59,10 @@ class TokenGetter():
 
     def main(self):
         if len(ACCOUNTS) % 3 != 0:
-            fail_autograb_flag = True
             input("⚠️ Configuration Warning ⚠️\nThe number of accounts you are using is not a multiple of 3. Therefore, the script cannot auto-grab all dropped cards due to grab cooldowns.\nPress `Enter` if you wish to continue.")
-        else:
-            fail_autograb_flag = False
         tokens = []
         for account in ACCOUNTS:
-            print(f"{"\n" if fail_autograb_flag else ""}Loading new undetected Chrome...")
+            print("\nLoading new undetected Chrome...")
             self.setup()
             print(f"Processing {account['email']}...")
             token = self.get_discord_token(account["email"], account["password"])
