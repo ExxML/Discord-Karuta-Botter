@@ -16,6 +16,8 @@ SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
 KARUTA_PREFIX = "k"  # Karuta's bot prefix
 
+MESSAGE_COMMAND_PREFIX = f"{{{KARUTA_PREFIX}}}"
+ALL_ACCOUNT_FLAG = "all"
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 EMOJI_MAP = {
@@ -74,6 +76,58 @@ def get_headers(token: str):
         }
     return token_headers[token]
 
+async def check_command(token: str):
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=3"
+    headers = get_headers(token)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers = headers) as resp:
+            status = resp.status
+            if status == 200:
+                messages = await resp.json()
+                for msg in messages:
+                    try:
+                        msg_id = msg.get('id')
+                        raw_content = msg.get('content', '')
+                        if raw_content.startswith(MESSAGE_COMMAND_PREFIX) and msg_id not in executed_commands:
+                            executed_commands.append(msg_id)
+                            content = raw_content.removeprefix(MESSAGE_COMMAND_PREFIX).strip()
+                            account_str, command = content.split(" ", 1)
+                            if account_str.isdigit():
+                                account = int(account_str)
+                                if account < 1 or account > len(tokens):
+                                    print(f"❌ Error parsing command: Account number is not between 1 and {len(tokens)}.")
+                                    return None, None
+                            elif account_str.lower() == ALL_ACCOUNT_FLAG:
+                                account = ALL_ACCOUNT_FLAG
+                            else:
+                                print(f"❌ Error parsing command: Account number is not a number or 'all'.")
+                                return None, None
+                            command = KARUTA_PREFIX + command
+                            print(f"🤖 Sending '{command}' from {f"account #{account}" if isinstance(account, int) else "all accounts"}...")
+                            return account, command
+                    except Exception as e:
+                        print("❌ Error parsing command:", e)
+                        return None, None
+            else:
+                print(f"❌ Command check failed: Error code {status}.")
+                return None, None
+            # If status = 200 but no MESSAGE_COMMAND_PREFIX found
+            return None, None
+
+async def message_command():
+    while True:
+        account, command = await check_command(random.choice(tokens))  # Use a random account to check for message commands
+        if account == ALL_ACCOUNT_FLAG and command:
+            for index, token in enumerate(tokens):
+                account = index + 1
+                await send_message(token, account, command, RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
+                await asyncio.sleep(random.uniform(1, 3))
+            print("🤖 Message command executed.")
+        elif account and command:
+            await send_message(tokens[account - 1], account, command, RATE_LIMIT)
+            print("🤖 Message command executed.")
+        await asyncio.sleep(random.uniform(2, 5))  # Short delay to prevent getting rate-limited
+
 async def send_message(token: str, account: int, content: str, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
     headers = get_headers(token)
@@ -92,7 +146,7 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
                 print(f"❌ [Account #{account}] Message '{content}' failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 5  # seconds
+                retry_after = 2  # seconds
                 print(f"⚠️ [Account #{account}] Message '{content}' failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await send_message(token, account, content, rate_limited)  # Retry drop
@@ -110,7 +164,7 @@ async def get_user_id(token: str, account: int, rate_limited: int):
                 print(f"✅ [Account #{account}] Retrieved user ID.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 3  # seconds
+                retry_after = 2  # seconds
                 print(f"⚠️ [Account #{account}] Retrieve user ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await get_user_id(token, account, rate_limited)  # Retry getting user ID
@@ -131,12 +185,12 @@ async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
                     return None
                 messages = await resp.json()
                 for msg in messages:
-                    if msg.get('author', {}).get('id') == KARUTA_BOT_ID and f"<@{user_id}> is dropping 3 cards!" == msg.get('content', ''): # Return ID only if Karuta mentions user
+                    if msg.get('author', {}).get('id') == KARUTA_BOT_ID and f"<@{user_id}> is dropping 3 cards!" == msg.get('content', ''):  # Return ID only if Karuta mentions user
                         print(f"✅ [Account #{account}] Retrieved drop ID.")
                         return msg.get('id') 
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 3  # seconds
+                retry_after = 2  # seconds
                 print(f"⚠️ [Account #{account}] Retrieve drop ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 return await get_karuta_drop_message(token, account, rate_limited)  # Retry getting message ID
@@ -162,7 +216,7 @@ async def add_reaction(token: str, account: int, message_id: str, emoji: str, ra
                 print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 3  # seconds
+                retry_after = 2  # seconds
                 print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
@@ -170,6 +224,9 @@ async def add_reaction(token: str, account: int, message_id: str, emoji: str, ra
                 print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
 async def main():
+    # Launch the command message checker as a background task
+    asyncio.create_task(message_command())
+
     account_num = len(tokens)
     if account_num == 0:
         input("⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
@@ -214,7 +271,7 @@ async def main():
                         grab_token = tokens[grab_index]
                         grab_account = grab_index + 1
                         await add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
-                        await asyncio.sleep(random.uniform(0.5, 5))
+                        await asyncio.sleep(random.uniform(0, 3))
                         random_message = random.choice(random_messages)
                         await send_message(grab_token, grab_account, random_message, RATE_LIMIT)  # Won't retry even if rate-limited
             else:
@@ -243,4 +300,5 @@ if __name__ == "__main__":
         input("⛔ Configuration Error ⛔\nPlease use a valid server ID, channel ID, and Karuta bot ID in `main.py`.")
         sys.exit()
     tokens = TokenGetter().main()
+    executed_commands = []
     asyncio.run(main())
