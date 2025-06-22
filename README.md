@@ -11,8 +11,9 @@ Discord's Terms of Service explicitly prohibits self-bots (as of June 2025). Una
 Note: This script extracts user tokens from Discord accounts using Selenium and Undetected-ChromeDriver. To keep your accounts safe, DO NOT share these tokens with anyone else and remember to close the script after use.
 
 ## Installation
-1. Install Python 3.13.
-2. Initialize a virtual environment and install the required dependencies by running:
+1. Clone the repository.
+2. Install Python 3.13.
+3. Initialize a virtual environment, then install the required dependencies by running:
 ```bash
 pip install -r requirements.txt
 ```
@@ -21,4 +22,11 @@ pip install -r requirements.txt
 1. Edit `SERVER_ID`, `CHANNEL_ID`, and `KARUTA_PREFIX` in `main.py` to match your target server/channel and Karuta bot prefix.
 2. Edit `ACCOUNTS` in `token_getter.py` to match your account emails and passwords. **To successfully grab all cards dropped, the number of accounts you enter must be a multiple of 3.** Make sure all accounts have message access to the target server and channel. 
 3. Run `main.py`.
-- ⚠️ Note: **DO NOT** run this script too many times in a row because you will get rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
+4. To execute any Karuta command on an account using the script, simply send a message (from any account) to the target channel in the following format (without angle brackets):
+```bash
+{<KARUTA_PREFIX>} <account_number |OR| 'all'> <command>
+```
+- Ex 1. `{k} 1 collection o:wl` sends `kcollection o:wl` from Account #1 (of `ACCOUNTS` in `token_getter.py`)
+- Ex 2. `{k!} all cardinfo` sends `k!cardinfo` from ALL accounts
+
+#### ⚠️ Note: **DO NOT** run this script too many times in a row because you will get rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
