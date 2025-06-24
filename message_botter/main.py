@@ -121,7 +121,7 @@ async def check_command(token: str):
 
 async def check_give_card(token:str, account: int, command: str):
     if command.startswith(f"{KARUTA_PREFIX}g") or command.startswith(f"{KARUTA_PREFIX}give"):
-        await asyncio.sleep(random.uniform(5, 8))  # Wait for Karuta card transfer message
+        await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta card transfer message
         card_transfer_message = await get_karuta_message(token, account, KARUTA_CARD_TRANSFER_MESSAGE, RATE_LIMIT)
         if card_transfer_message:
             msg_id = card_transfer_message.get('id')
