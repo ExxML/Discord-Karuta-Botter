@@ -228,9 +228,9 @@ async def main():
     if MESSAGE_COMMAND_TOGGLE:
         # Launch the command message checker as a background task
         asyncio.create_task(message_command())
-        print("\nMessage commands enabled.")
+        print("\n🤖 Message commands enabled.")
     else:
-        print("\nMessage commands disabled.")
+        print("\n🤖 Message commands disabled.")
 
     account_num = len(tokens)
     if account_num == 0:
