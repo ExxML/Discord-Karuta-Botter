@@ -15,6 +15,7 @@ TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
 SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
 KARUTA_PREFIX = "k"  # Karuta's bot prefix
+MESSAGE_COMMAND_TOGGLE = True
 
 MESSAGE_COMMAND_PREFIX = f"{{{KARUTA_PREFIX}}}"
 ALL_ACCOUNT_FLAG = "all"
@@ -224,8 +225,12 @@ async def add_reaction(token: str, account: int, message_id: str, emoji: str, ra
                 print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
 async def main():
-    # Launch the command message checker as a background task
-    asyncio.create_task(message_command())
+    if MESSAGE_COMMAND_TOGGLE:
+        # Launch the command message checker as a background task
+        asyncio.create_task(message_command())
+        print("\nMessage commands enabled.")
+    else:
+        print("\nMessage commands disabled.")
 
     account_num = len(tokens)
     if account_num == 0:
@@ -271,7 +276,7 @@ async def main():
                         grab_token = tokens[grab_index]
                         grab_account = grab_index + 1
                         await add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
-                        await asyncio.sleep(random.uniform(0, 3))
+                        await asyncio.sleep(random.uniform(0, 1))
                         random_message = random.choice(random_messages)
                         await send_message(grab_token, grab_account, random_message, RATE_LIMIT)  # Won't retry even if rate-limited
             else:
