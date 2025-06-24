@@ -120,8 +120,7 @@ async def check_command(token: str):
             return None, None
 
 async def check_give_card(token:str, account: int, command: str):
-    raw_command = command.removeprefix(KARUTA_PREFIX).strip()
-    if raw_command.startswith("g") or raw_command.startswith("give"):
+    if command.startswith(f"{KARUTA_PREFIX}g") or command.startswith(f"{KARUTA_PREFIX}give"):
         await asyncio.sleep(random.uniform(5, 8))  # Wait for Karuta card transfer message
         card_transfer_message = await get_karuta_message(token, account, KARUTA_CARD_TRANSFER_MESSAGE, RATE_LIMIT)
         if card_transfer_message:
@@ -155,11 +154,11 @@ async def check_give_card(token:str, account: int, command: str):
                                 async with session.post(interaction_url, headers = headers, json = payload) as button_resp:
                                     status = button_resp.status
                                     if status == 204:
-                                        print(f"✅ [Account #{account}] Clicked check button successfully.")
+                                        print(f"✅ [Account #{account}] Confirmed card transfer successfully.")
                                     else:
-                                        print(f"❌ [Account #{account}] Click check button failed: Error code {status}.")
+                                        print(f"❌ [Account #{account}] Confirm card transfer failed: Error code {status}.")
                                 return
-                    print(f"❌ [Account #{account}] Click check button failed: Check button not found.")
+                    print(f"❌ [Account #{account}] Confirm card transfer failed: Check button not found.")
 
 async def message_command():
     while True:
@@ -296,7 +295,7 @@ async def main():
             drop_message = random.choice(drop_messages) + random.choice(random_addon)  # Randomize message
             sent = await send_message(token, account, drop_message, 0)
             if sent:
-                await asyncio.sleep(random.uniform(5, 8))  # Wait for drop message to fully load
+                await asyncio.sleep(random.uniform(4, 7))  # Wait for drop message to fully load
                 karuta_message = await get_karuta_message(token, account, KARUTA_DROP_MESSAGE, 0)
                 if karuta_message:
                     karuta_message_id = karuta_message.get('id')
