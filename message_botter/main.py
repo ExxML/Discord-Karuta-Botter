@@ -10,6 +10,7 @@ import json
 import random
 import sys
 import ctypes
+import uuid
 
 # Customize these settings
 TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
@@ -21,6 +22,9 @@ MESSAGE_COMMAND_TOGGLE = True
 MESSAGE_COMMAND_PREFIX = "{cmd}"
 ALL_ACCOUNT_FLAG = "all"
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
+KARUTA_DROP_MESSAGE = "is dropping 3 cards!"
+KARUTA_EXPIRED_DROP_MESSAGE = "This drop has expired and the cards can no longer be grabbed."
+KARUTA_CARD_TRANSFER_MESSAGE = "Card Transfer"
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 EMOJI_MAP = {
     '1️⃣': '[1]',
@@ -104,7 +108,7 @@ async def check_command(token: str):
                             else:
                                 print(f"❌ Error parsing command: Account number is not a number or 'all'.")
                                 return None, None
-                            print(f"🤖 Sending '{command}' from {f"account #{account}" if isinstance(account, int) else "all accounts"}...")
+                            print(f"🤖 Sending '{command}' from {f"Account #{account}" if isinstance(account, int) else "all accounts"}...")
                             return account, command
                     except Exception as e:
                         print("❌ Error parsing command:", e)
@@ -115,6 +119,48 @@ async def check_command(token: str):
             # If status = 200 but no MESSAGE_COMMAND_PREFIX found
             return None, None
 
+async def check_give_card(token:str, account: int, command: str):
+    raw_command = command.removeprefix(KARUTA_PREFIX).strip()
+    if raw_command.startswith("g") or raw_command.startswith("give"):
+        await asyncio.sleep(random.uniform(5, 8))  # Wait for Karuta card transfer message
+        card_transfer_message = await get_karuta_message(token, account, KARUTA_CARD_TRANSFER_MESSAGE, RATE_LIMIT)
+        if card_transfer_message:
+            msg_id = card_transfer_message.get('id')
+            if msg_id not in executed_card_transfers:
+                executed_card_transfers.append(msg_id)
+                # Find ✅ check button
+                components = card_transfer_message.get('components', [])
+                for action_row in components:
+                    for button in action_row.get('components', []):
+                        if button.get('emoji', {}).get('name') == '✅':
+                            custom_id = button.get('custom_id')
+                            # Simulate button click via interaction callback
+                            interaction_url = "https://discord.com/api/v10/interactions"
+                            payload = {
+                                "type": 3,  # Component interaction
+                                "nonce": str(uuid.uuid4().int >> 64),  # Unique interaction ID
+                                "guild_id": SERVER_ID,
+                                "channel_id": CHANNEL_ID,
+                                "message_flags": 0,
+                                "message_id": card_transfer_message.get('id'),
+                                "application_id": KARUTA_BOT_ID,
+                                "session_id": str(uuid.uuid4()),
+                                "data": {
+                                    "component_type": 2,
+                                    "custom_id": custom_id
+                                }
+                            }
+                            async with aiohttp.ClientSession() as session:
+                                headers = get_headers(token)
+                                async with session.post(interaction_url, headers = headers, json = payload) as button_resp:
+                                    status = button_resp.status
+                                    if status == 204:
+                                        print(f"✅ [Account #{account}] Clicked check button successfully.")
+                                    else:
+                                        print(f"❌ [Account #{account}] Click check button failed: Error code {status}.")
+                                return
+                    print(f"❌ [Account #{account}] Click check button failed: Check button not found.")
+
 async def message_command():
     while True:
         account, command = await check_command(random.choice(tokens))  # Use a random account to check for message commands
@@ -122,10 +168,12 @@ async def message_command():
             for index, token in enumerate(tokens):
                 account = index + 1
                 await send_message(token, account, command, RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
+                await check_give_card(token, account, command)
                 await asyncio.sleep(random.uniform(1, 3))
             print("🤖 Message command executed.")
         elif account and command:
             await send_message(tokens[account - 1], account, command, RATE_LIMIT)
+            await check_give_card(tokens[account - 1], account, command)
             print("🤖 Message command executed.")
         await asyncio.sleep(random.uniform(2, 5))  # Short delay to avoid getting rate-limited
 
@@ -155,51 +203,33 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
                 print(f"❌ [Account #{account}] Message '{content}' failed: Error code {status}.")
             return status == 200
 
-async def get_user_id(token: str, account: int, rate_limited: int):
-    url = "https://discord.com/api/v10/users/@me"
-    headers = get_headers(token)
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers = headers) as resp:
-            status = resp.status
-            if status == 200:
-                print(f"✅ [Account #{account}] Retrieved user ID.")
-            elif status == 429 and rate_limited < RATE_LIMIT:
-                rate_limited += 1
-                retry_after = 2  # seconds
-                print(f"⚠️ [Account #{account}] Retrieve user ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
-                await asyncio.sleep(retry_after)
-                await get_user_id(token, account, rate_limited)  # Retry getting user ID
-            else:
-                print(f"❌ [Account #{account}] Retrieve user ID failed: Error code {status}.")
-            return (await resp.json()).get('id') if status == 200 else None
-
-async def get_karuta_drop_message(token: str, account: int, rate_limited: int):
+async def get_karuta_message(token: str, account: int, search_content: str, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=10"
     headers = get_headers(token)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
             status = resp.status
             if status == 200:
-                user_id = await get_user_id(token, account, 0)
-                if user_id is None:
-                    print(f"❌ [Account #{account}] Retrieve drop ID failed: Failed to retrieve user ID.")
-                    return None
                 messages = await resp.json()
                 for msg in messages:
-                    if msg.get('author', {}).get('id') == KARUTA_BOT_ID and f"<@{user_id}> is dropping 3 cards!" == msg.get('content', ''):  # Return ID only if Karuta mentions user
-                        print(f"✅ [Account #{account}] Retrieved drop ID.")
-                        return msg.get('id') 
+                    if msg.get('author', {}).get('id') == KARUTA_BOT_ID:
+                        if search_content == KARUTA_DROP_MESSAGE in msg.get('content', '') and KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', ''):
+                                print(f"✅ [Account #{account}] Retrieved drop message.")
+                                return msg 
+                        elif search_content == KARUTA_CARD_TRANSFER_MESSAGE == msg['embeds'][0].get('title'):
+                                print(f"✅ [Account #{account}] Retrieved card transfer message.")
+                                return msg
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
                 retry_after = 2  # seconds
-                print(f"⚠️ [Account #{account}] Retrieve drop ID failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                print(f"⚠️ [Account #{account}] Retrieve message failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
-                return await get_karuta_drop_message(token, account, rate_limited)  # Retry getting message ID
+                return await get_karuta_message(token, account, search_content, rate_limited)  # Retry getting message
             else:
-                print(f"❌ [Account #{account}] Retrieve drop ID failed: Error code {status}.")
+                print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
                 return None
             # If status = 200 but no drop found
-            print(f"❌ [Account #{account}] Retrieve drop ID failed: No drop found in recent messages.")
+            print(f"❌ [Account #{account}] Retrieve message failed: Message '{search_content}' not found in recent messages.")
             return None
 
 async def add_reaction(token: str, account: int, message_id: str, emoji: str, rate_limited: int):
@@ -267,8 +297,9 @@ async def main():
             sent = await send_message(token, account, drop_message, 0)
             if sent:
                 await asyncio.sleep(random.uniform(5, 8))  # Wait for drop message to fully load
-                karuta_message_id = await get_karuta_drop_message(token, account, 0)
-                if karuta_message_id:
+                karuta_message = await get_karuta_message(token, account, KARUTA_DROP_MESSAGE, 0)
+                if karuta_message:
+                    karuta_message_id = karuta_message.get('id')
                     random.shuffle(emojis)
                     for i in range(0, 3):
                         emoji = emojis[i]
@@ -306,4 +337,5 @@ if __name__ == "__main__":
         sys.exit()
     tokens = TokenGetter().main()
     executed_commands = []
+    executed_card_transfers = []
     asyncio.run(main())
