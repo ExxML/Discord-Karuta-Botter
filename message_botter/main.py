@@ -11,13 +11,14 @@ import random
 import sys
 import ctypes
 
+# Customize these settings
 TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
 SERVER_ID = ""  # Enter your target server
 CHANNEL_ID = ""  # Enter your target channel
 KARUTA_PREFIX = "k"  # Karuta's bot prefix
 MESSAGE_COMMAND_TOGGLE = True
 
-MESSAGE_COMMAND_PREFIX = f"{{{KARUTA_PREFIX}}}"
+MESSAGE_COMMAND_PREFIX = "{cmd}"
 ALL_ACCOUNT_FLAG = "all"
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
@@ -103,7 +104,6 @@ async def check_command(token: str):
                             else:
                                 print(f"❌ Error parsing command: Account number is not a number or 'all'.")
                                 return None, None
-                            command = KARUTA_PREFIX + command
                             print(f"🤖 Sending '{command}' from {f"account #{account}" if isinstance(account, int) else "all accounts"}...")
                             return account, command
                     except Exception as e:
@@ -127,7 +127,7 @@ async def message_command():
         elif account and command:
             await send_message(tokens[account - 1], account, command, RATE_LIMIT)
             print("🤖 Message command executed.")
-        await asyncio.sleep(random.uniform(2, 5))  # Short delay to prevent getting rate-limited
+        await asyncio.sleep(random.uniform(2, 5))  # Short delay to avoid getting rate-limited
 
 async def send_message(token: str, account: int, content: str, rate_limited: int):
     url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages"
