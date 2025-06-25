@@ -28,10 +28,11 @@ pip install -r requirements.txt
 ```
 - Ex 1. `{cmd} all kcollection o:wishlist` sends `kcollection o:wishlist` from ALL accounts.
 - Ex 2. `{cmd} 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (of `ACCOUNTS` in `token_getter.py`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
-- Ex 3. `{cmd} 3 kmultitrade @ExxML` sends multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
+- Ex 3. `{cmd} 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
+- Ex 4. `{cmd} 1 kmultiburn <filter>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `{cmd} 1 {multiburn}` to confirm the multiburn. 
 
-##### Note #1: The `all` argument does not work with `give`, `multitrade`, or `lock` commands, for obvious reasons.
-##### Note #2: If you mistype the account number for `lock`, you must restart with a new multitrade.
-
+##### Note #1: The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{multiburn}` commands.
+##### Note #2: If you mistype the account number for the `{lock}` or `{multiburn}` command, you must restart the trade/burn process. Sorry!
+##### Note #3: Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
 #### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
