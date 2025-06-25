@@ -22,9 +22,13 @@ MESSAGE_COMMAND_TOGGLE = True
 MESSAGE_COMMAND_PREFIX = "{cmd}"
 ALL_ACCOUNT_FLAG = "all"
 KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
+INTERACTION_URL = "https://discord.com/api/v10/interactions"
 KARUTA_DROP_MESSAGE = "is dropping 3 cards!"
 KARUTA_EXPIRED_DROP_MESSAGE = "This drop has expired and the cards can no longer be grabbed."
 KARUTA_CARD_TRANSFER_MESSAGE = "Card Transfer"
+KARUTA_MULTITRADE_LOCK_MESSAGE = "Both sides must lock in before proceeding to the next step."
+KARUTA_MULTITRADE_CONFIRM_MESSAGE = "This trade has been locked."
+KARUTA_LOCK_COMMAND = "{lock}"
 RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 EMOJI_MAP = {
     '1️⃣': '[1]',
@@ -83,7 +87,7 @@ def get_headers(token: str):
     return token_headers[token]
 
 async def check_command(token: str):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=10"
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=3"
     headers = get_headers(token)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
@@ -92,87 +96,129 @@ async def check_command(token: str):
                 messages = await resp.json()
                 for msg in messages:
                     try:
-                        msg_id = msg.get('id')
                         raw_content = msg.get('content', '')
-                        if raw_content.startswith(MESSAGE_COMMAND_PREFIX) and msg_id not in executed_commands:
-                            executed_commands.append(msg_id)
+                        if raw_content.startswith(MESSAGE_COMMAND_PREFIX) and msg not in executed_commands:
+                            executed_commands.append(msg)
                             content = raw_content.removeprefix(MESSAGE_COMMAND_PREFIX).strip()
                             account_str, command = content.split(" ", 1)
                             if account_str.isdigit():
                                 account = int(account_str)
                                 if account < 1 or account > len(tokens):
                                     print(f"❌ Error parsing command: Account number is not between 1 and {len(tokens)}.")
-                                    return None, None
+                                    return None, None, None
                             elif account_str.lower() == ALL_ACCOUNT_FLAG:
                                 account = ALL_ACCOUNT_FLAG
                             else:
                                 print(f"❌ Error parsing command: Account number is not a number or 'all'.")
-                                return None, None
-                            print(f"🤖 Sending '{command}' from {f"Account #{account}" if isinstance(account, int) else "all accounts"}...")
-                            return account, command
+                                return None, None, None
+                            if command == KARUTA_LOCK_COMMAND and isinstance(account, int):
+                                print(f"🤖 Locking and confirming trade from Account #{account}...")
+                                send = False
+                            elif (command.startswith(f"{KARUTA_PREFIX}give") or command.startswith(f"{KARUTA_PREFIX}g")) and isinstance(account, int):
+                                print(f"🤖 Sending card transfer from Account #{account}...")
+                                send = True
+                            else:
+                                print(f"🤖 Sending '{command}' from {f"Account #{account}" if isinstance(account, int) else "all accounts"}...")
+                                send = True
+                            return send, account, command
                     except Exception as e:
                         print("❌ Error parsing command:", e)
-                        return None, None
+                        return None, None, None
             else:
                 print(f"❌ Command check failed: Error code {status}.")
-                return None, None
+                return None, None, None
             # If status = 200 but no MESSAGE_COMMAND_PREFIX found
-            return None, None
+            return None, None, None
 
-async def check_give_card(token:str, account: int, command: str):
-    if command.startswith(f"{KARUTA_PREFIX}g") or command.startswith(f"{KARUTA_PREFIX}give"):
-        await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta card transfer message
+async def find_button(account: int, emoji: str, message: dict):
+    try:
+        components = message.get('components', [])
+        for action_row in components:
+            for button in action_row.get('components', []):
+                if button.get('emoji', {}).get('name') == emoji:
+                    custom_id = button.get('custom_id')
+                    # Simulate button click via interaction callback
+                    payload = {
+                        "type": 3,  # Component interaction
+                        "nonce": str(uuid.uuid4().int >> 64),  # Unique interaction ID
+                        "guild_id": SERVER_ID,
+                        "channel_id": CHANNEL_ID,
+                        "message_flags": 0,
+                        "message_id": message.get('id'),
+                        "application_id": KARUTA_BOT_ID,
+                        "session_id": str(uuid.uuid4()),
+                        "data": {
+                            "component_type": 2,
+                            "custom_id": custom_id
+                        }
+                    }
+                    print(f"✅ [Account #{account}] Found {emoji} button successfully.")
+                    return payload
+    except Exception as e:
+        print(f"❌ [Account #{account}] Interaction failed: {emoji} button not found.")
+        return None
+
+async def check_card_transfer(token: str, account: int, command: str):
+    if command.startswith(f"{KARUTA_PREFIX}give") or command.startswith(f"{KARUTA_PREFIX}g"):
+        await asyncio.sleep(random.uniform(4, 7))  # Wait for Karuta card transfer message
         card_transfer_message = await get_karuta_message(token, account, KARUTA_CARD_TRANSFER_MESSAGE, RATE_LIMIT)
-        if card_transfer_message:
-            msg_id = card_transfer_message.get('id')
-            if msg_id not in executed_card_transfers:
-                executed_card_transfers.append(msg_id)
-                # Find ✅ check button
-                components = card_transfer_message.get('components', [])
-                for action_row in components:
-                    for button in action_row.get('components', []):
-                        if button.get('emoji', {}).get('name') == '✅':
-                            custom_id = button.get('custom_id')
-                            # Simulate button click via interaction callback
-                            interaction_url = "https://discord.com/api/v10/interactions"
-                            payload = {
-                                "type": 3,  # Component interaction
-                                "nonce": str(uuid.uuid4().int >> 64),  # Unique interaction ID
-                                "guild_id": SERVER_ID,
-                                "channel_id": CHANNEL_ID,
-                                "message_flags": 0,
-                                "message_id": card_transfer_message.get('id'),
-                                "application_id": KARUTA_BOT_ID,
-                                "session_id": str(uuid.uuid4()),
-                                "data": {
-                                    "component_type": 2,
-                                    "custom_id": custom_id
-                                }
-                            }
-                            async with aiohttp.ClientSession() as session:
-                                headers = get_headers(token)
-                                async with session.post(interaction_url, headers = headers, json = payload) as button_resp:
-                                    status = button_resp.status
+        if card_transfer_message and card_transfer_message not in card_transfer_messages:
+            card_transfer_messages.append(card_transfer_message)
+            # Find ✅ button
+            payload = await find_button(account, '✅', card_transfer_message)
+            if payload is not None:
+                async with aiohttp.ClientSession() as session:
+                    headers = get_headers(token)
+                    async with session.post(INTERACTION_URL, headers = headers, json = payload) as button_resp:
+                        status = button_resp.status
+                        if status == 204:
+                            print(f"✅ [Account #{account}] Confirmed card transfer.")
+                        else:
+                            print(f"❌ [Account #{account}] Confirm card transfer failed: Error code {status}.")
+
+async def check_multitrade(token: str, account: int, command: str):
+    if command == KARUTA_LOCK_COMMAND:
+        multitrade_lock_message = await get_karuta_message(token, account, KARUTA_MULTITRADE_LOCK_MESSAGE, RATE_LIMIT)
+        if multitrade_lock_message and multitrade_lock_message not in multitrade_messages:
+            multitrade_messages.append(multitrade_lock_message)
+            # Find 🔒 button
+            lock_payload = await find_button(account, '🔒', multitrade_lock_message)
+            if lock_payload is not None:
+                async with aiohttp.ClientSession() as session:
+                    headers = get_headers(token)
+                    async with session.post(INTERACTION_URL, headers = headers, json = lock_payload) as lock_resp:
+                        status = lock_resp.status
+                        if status == 204:
+                            print(f"✅ [Account #{account}] Locked multitrade.")
+                            await asyncio.sleep(random.uniform(4, 7))  # Wait for Karuta multitrade message to update
+                            multitrade_confirm_message = await get_karuta_message(token, account, KARUTA_MULTITRADE_CONFIRM_MESSAGE, RATE_LIMIT)
+                            # Find ✅ button
+                            check_payload = await find_button(account, '✅', multitrade_confirm_message)
+                            if check_payload is not None:
+                                async with session.post(INTERACTION_URL, headers = headers, json = check_payload) as check_resp:
+                                    status = check_resp.status
                                     if status == 204:
-                                        print(f"✅ [Account #{account}] Confirmed card transfer successfully.")
+                                        print(f"✅ [Account #{account}] Confirmed multitrade.")
                                     else:
-                                        print(f"❌ [Account #{account}] Confirm card transfer failed: Error code {status}.")
-                                return
-                    print(f"❌ [Account #{account}] Confirm card transfer failed: Check button not found.")
+                                        print(f"❌ [Account #{account}] Confirm multitrade failed: Error code {status}.")
+                        else:
+                            print(f"❌ [Account #{account}] Lock multitrade failed: Error code {status}.")
 
 async def message_command():
     while True:
-        account, command = await check_command(random.choice(tokens))  # Use a random account to check for message commands
-        if account == ALL_ACCOUNT_FLAG and command:
-            for index, token in enumerate(tokens):
-                account = index + 1
-                await send_message(token, account, command, RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
-                await check_give_card(token, account, command)
-                await asyncio.sleep(random.uniform(1, 3))
-            print("🤖 Message command executed.")
-        elif account and command:
-            await send_message(tokens[account - 1], account, command, RATE_LIMIT)
-            await check_give_card(tokens[account - 1], account, command)
+        send, account, command = await check_command(random.choice(tokens))  # Use a random account to check for message commands
+        if account and command:
+            if account == ALL_ACCOUNT_FLAG:
+                for index, token in enumerate(tokens):
+                    account = index + 1
+                    await send_message(token, account, command, RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
+                    await asyncio.sleep(random.uniform(1, 3))
+            else:
+                token = tokens[account - 1]
+                if send:
+                    await send_message(token, account, command, RATE_LIMIT)
+                await check_card_transfer(token, account, command)
+                await check_multitrade(token, account, command)
             print("🤖 Message command executed.")
         await asyncio.sleep(random.uniform(2, 5))  # Short delay to avoid getting rate-limited
 
@@ -203,7 +249,7 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
             return status == 200
 
 async def get_karuta_message(token: str, account: int, search_content: str, rate_limited: int):
-    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=10"
+    url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages?limit=20"
     headers = get_headers(token)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers = headers) as resp:
@@ -213,11 +259,17 @@ async def get_karuta_message(token: str, account: int, search_content: str, rate
                 for msg in messages:
                     if msg.get('author', {}).get('id') == KARUTA_BOT_ID:
                         if search_content == KARUTA_DROP_MESSAGE in msg.get('content', '') and KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', ''):
-                                print(f"✅ [Account #{account}] Retrieved drop message.")
-                                return msg 
+                            print(f"✅ [Account #{account}] Retrieved drop message.")
+                            return msg
                         elif search_content == KARUTA_CARD_TRANSFER_MESSAGE == msg['embeds'][0].get('title'):
-                                print(f"✅ [Account #{account}] Retrieved card transfer message.")
-                                return msg
+                            print(f"✅ [Account #{account}] Retrieved card transfer message.")
+                            return msg
+                        elif search_content == KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
+                            print(f"✅ [Account #{account}] Retrieved multitrade lock message.")
+                            return msg
+                        elif search_content == KARUTA_MULTITRADE_CONFIRM_MESSAGE in msg.get('content', ''):
+                            print(f"✅ [Account #{account}] Retrieved multitrade confirm message.")
+                            return msg
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
                 retry_after = 2  # seconds
@@ -336,5 +388,6 @@ if __name__ == "__main__":
         sys.exit()
     tokens = TokenGetter().main()
     executed_commands = []
-    executed_card_transfers = []
+    card_transfer_messages = []
+    multitrade_messages = []
     asyncio.run(main())
