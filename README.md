@@ -26,7 +26,12 @@ pip install -r requirements.txt
 ```bash
 {cmd} <account_number |OR| 'all'> <message>
 ```
-- Ex 1. `{cmd} 1 kcollection o:wishlist` sends `kcollection o:wishlist` from Account #1 (of `ACCOUNTS` in `token_getter.py`)
-- Ex 2. `{cmd} all kcardinfo` sends `kcardinfo` from ALL accounts
+- Ex 1. `{cmd} all kcollection o:wishlist` sends `kcollection o:wishlist` from ALL accounts.
+- Ex 2. `{cmd} 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (of `ACCOUNTS` in `token_getter.py`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
+- Ex 3. `{cmd} 3 kmultitrade @ExxML` sends multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
 
-#### ⚠️ Note: **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
+##### Note #1: The `all` argument does not work with `give`, `multitrade`, or `lock` commands, for obvious reasons.
+##### Note #2: If you mistype the account number for `lock`, you must restart with a new multitrade.
+
+
+#### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
