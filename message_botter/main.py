@@ -173,7 +173,7 @@ async def find_button(account: int, emoji: str, message: dict):
 
 async def check_card_transfer(token: str, account: int, command: str):
     if command.startswith(f"{KARUTA_PREFIX}give") or command.startswith(f"{KARUTA_PREFIX}g"):
-        await asyncio.sleep(random.uniform(4, 7))  # Wait for Karuta card transfer message
+        await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta card transfer message
         card_transfer_message = await get_karuta_message(token, account, KARUTA_CARD_TRANSFER_TITLE, RATE_LIMIT)
         if card_transfer_message and card_transfer_message not in card_transfer_messages:
             card_transfer_messages.append(card_transfer_message)
@@ -203,7 +203,7 @@ async def check_multitrade(token: str, account: int, command: str):
                         status = lock_resp.status
                         if status == 204:
                             print(f"✅ [Account #{account}] Locked multitrade.")
-                            await asyncio.sleep(random.uniform(4, 7))  # Wait for Karuta multitrade message to update
+                            await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multitrade message to update
                             multitrade_confirm_message = await get_karuta_message(token, account, KARUTA_MULTITRADE_CONFIRM_MESSAGE, RATE_LIMIT)
                             # Find ✅ button
                             check_payload = await find_button(account, '✅', multitrade_confirm_message)
@@ -219,7 +219,7 @@ async def check_multitrade(token: str, account: int, command: str):
 
 async def check_multiburn(token: str, account: int, command: str):
     if command.startswith(f"{KARUTA_PREFIX}multiburn") or command.startswith(f"{KARUTA_PREFIX}mb"):
-        await asyncio.sleep(random.uniform(4, 7))  # Wait for Karuta multiburn message
+        await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multiburn message
         multiburn_initial_message = await get_karuta_message(token, account, KARUTA_MULTIBURN_TITLE, RATE_LIMIT)
         if multiburn_initial_message and multiburn_initial_message not in multiburn_initial_messages:
             await asyncio.sleep(3)  # Longer delay to wait for check button to enable
@@ -250,7 +250,7 @@ async def confirm_multiburn(token: str, account: int, command: str):
                         status = fire_resp.status
                         if status == 204:
                             print(f"✅ [Account #{account}] Confirmed initial (1/2) multiburn.")
-                            await asyncio.sleep(random.uniform(4, 7))  # Wait for Karuta multiburn message to update
+                            await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multiburn message to update
                             multiburn_confirm_message = await get_karuta_message(token, account, KARUTA_MULTIBURN_TITLE, RATE_LIMIT)
                             # Find ✅ button
                             check_payload = await find_button(account, '✅', multiburn_confirm_message)
@@ -404,9 +404,13 @@ async def main():
         f"{KARUTA_PREFIX}v",
         f"{KARUTA_PREFIX}collection",
         f"{KARUTA_PREFIX}c",
+        f"{KARUTA_PREFIX}c o:wl",
+        f"{KARUTA_PREFIX}c o:p",
+        f"{KARUTA_PREFIX}c o:eff",
         f"{KARUTA_PREFIX}cardinfo",
         f"{KARUTA_PREFIX}ci",
-        f"{KARUTA_PREFIX}cd"
+        f"{KARUTA_PREFIX}cd",
+        f"{KARUTA_PREFIX}daily"
     ]
     emojis = ['1️⃣', '2️⃣', '3️⃣']
     
@@ -417,7 +421,7 @@ async def main():
             drop_message = random.choice(drop_messages) + random.choice(random_addon)  # Randomize message
             sent = await send_message(token, account, drop_message, 0)
             if sent:
-                await asyncio.sleep(random.uniform(4, 7))  # Wait for drop message to fully load
+                await asyncio.sleep(random.uniform(4, 6))  # Wait for drop message to fully load
                 karuta_message = await get_karuta_message(token, account, KARUTA_DROP_MESSAGE, 0)
                 if karuta_message:
                     karuta_message_id = karuta_message.get('id')
