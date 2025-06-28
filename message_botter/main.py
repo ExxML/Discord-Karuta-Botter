@@ -173,7 +173,7 @@ async def find_button(account: int, emoji: str, message: dict):
 
 async def check_card_transfer(token: str, account: int, command: str):
     if command.startswith(f"{KARUTA_PREFIX}give") or command.startswith(f"{KARUTA_PREFIX}g"):
-        await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta card transfer message
+        await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta card transfer message
         card_transfer_message = await get_karuta_message(token, account, KARUTA_CARD_TRANSFER_TITLE, RATE_LIMIT)
         if card_transfer_message and card_transfer_message not in card_transfer_messages:
             card_transfer_messages.append(card_transfer_message)
@@ -203,7 +203,7 @@ async def check_multitrade(token: str, account: int, command: str):
                         status = lock_resp.status
                         if status == 204:
                             print(f"✅ [Account #{account}] Locked multitrade.")
-                            await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multitrade message to update
+                            await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta multitrade message to update
                             multitrade_confirm_message = await get_karuta_message(token, account, KARUTA_MULTITRADE_CONFIRM_MESSAGE, RATE_LIMIT)
                             # Find ✅ button
                             check_payload = await find_button(account, '✅', multitrade_confirm_message)
@@ -219,7 +219,7 @@ async def check_multitrade(token: str, account: int, command: str):
 
 async def check_multiburn(token: str, account: int, command: str):
     if command.startswith(f"{KARUTA_PREFIX}multiburn") or command.startswith(f"{KARUTA_PREFIX}mb"):
-        await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multiburn message
+        await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta multiburn message
         multiburn_initial_message = await get_karuta_message(token, account, KARUTA_MULTIBURN_TITLE, RATE_LIMIT)
         if multiburn_initial_message and multiburn_initial_message not in multiburn_initial_messages:
             await asyncio.sleep(3)  # Longer delay to wait for check button to enable
@@ -250,7 +250,7 @@ async def confirm_multiburn(token: str, account: int, command: str):
                         status = fire_resp.status
                         if status == 204:
                             print(f"✅ [Account #{account}] Confirmed initial (1/2) multiburn.")
-                            await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multiburn message to update
+                            await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta multiburn message to update
                             multiburn_confirm_message = await get_karuta_message(token, account, KARUTA_MULTIBURN_TITLE, RATE_LIMIT)
                             # Find ✅ button
                             check_payload = await find_button(account, '✅', multiburn_confirm_message)
@@ -302,7 +302,7 @@ async def send_message(token: str, account: int, content: str, rate_limited: int
                 print(f"❌ [Account #{account}] Message '{content}' failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 2  # seconds
+                retry_after = 1  # seconds
                 print(f"⚠️ [Account #{account}] Message '{content}' failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await send_message(token, account, content, rate_limited)  # Retry drop
@@ -342,7 +342,7 @@ async def get_karuta_message(token: str, account: int, search_content: str, rate
                     return None
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 2  # seconds
+                retry_after = 1  # seconds
                 print(f"⚠️ [Account #{account}] Retrieve message failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 return await get_karuta_message(token, account, search_content, rate_limited)  # Retry getting message
@@ -368,7 +368,7 @@ async def add_reaction(token: str, account: int, message_id: str, emoji: str, ra
                 print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
             elif status == 429 and rate_limited < RATE_LIMIT:
                 rate_limited += 1
-                retry_after = 2  # seconds
+                retry_after = 1  # seconds
                 print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                 await asyncio.sleep(retry_after)
                 await add_reaction(token, account, message_id, emoji, rate_limited)  # Retry reaction
@@ -383,15 +383,15 @@ async def main():
     else:
         print("\n🤖 Message commands disabled.")
 
-    account_num = len(tokens)
-    if account_num == 0:
+    num_account = len(tokens)
+    if num_account == 0:
         input("⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
         sys.exit()
-    delay = 30 * 60 / account_num  # Karuta drop cooldown is 30 mins- set delay to spread out drops
-    if account_num < 3:
+    delay = 30 * 60 / num_account  # Karuta drop cooldown is 30 mins- set delay to spread out drops
+    if num_account < 3:
         grab_pointer = 0  # Token pointer for auto-grab
     else:
-        grab_pointer = account_num - 3
+        grab_pointer = num_account - 3
     random_addon = ['', ' ', ' !', ' :D', ' w']  # Variance to avoid detection
     drop_messages = [f"{KARUTA_PREFIX}drop", f"{KARUTA_PREFIX}d"]
     random_messages = [
@@ -421,14 +421,14 @@ async def main():
             drop_message = random.choice(drop_messages) + random.choice(random_addon)  # Randomize message
             sent = await send_message(token, account, drop_message, 0)
             if sent:
-                await asyncio.sleep(random.uniform(4, 6))  # Wait for drop message to fully load
+                await asyncio.sleep(random.uniform(3, 6))  # Wait for drop message to fully load
                 karuta_message = await get_karuta_message(token, account, KARUTA_DROP_MESSAGE, 0)
                 if karuta_message:
                     karuta_message_id = karuta_message.get('id')
                     random.shuffle(emojis)
                     for i in range(0, 3):
                         emoji = emojis[i]
-                        grab_index = (grab_pointer + i) % account_num
+                        grab_index = (grab_pointer + i) % num_account
                         grab_token = tokens[grab_index]
                         grab_account = grab_index + 1
                         await add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
@@ -446,8 +446,8 @@ async def main():
                         None, None, sys.executable, " ".join(sys.argv), None, TERMINAL_VISIBILITY
                     )
                 sys.exit()
-            grab_pointer = (grab_pointer + 3) % account_num  # Move pointer to next account (3 accounts per drop)
-            await asyncio.sleep(delay + random.uniform(0, 40))  # Additional random delay between drops
+            grab_pointer = (grab_pointer + 3) % num_account  # Move pointer to next account (3 accounts per drop)
+            await asyncio.sleep(delay + random.uniform(0, max(20, 120 / num_account)))  # Additional random delay between drops
 
 if __name__ == "__main__":
     # Flag to check if script relaunched
