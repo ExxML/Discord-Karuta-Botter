@@ -36,7 +36,6 @@ class TokenGetter():
             email_field.send_keys(email)
             password_field.send_keys(password)
             print("Filled in credentials")
-            time.sleep(1)  # Delay to mimic human behavior
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
             print("Clicked log in")
             WebDriverWait(self.driver, 10).until(lambda d: "/login" not in d.current_url)
