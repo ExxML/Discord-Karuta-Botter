@@ -12,7 +12,7 @@ import random
 import sys
 import ctypes
 
-class MessageBotter:
+class MessageBotter():
     def __init__(self):
         # Customize these settings
         self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
