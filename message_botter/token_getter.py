@@ -2,16 +2,13 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-
-# List all accounts in the format: {"email": "example_email@gmail.com", "password": "example_password"}
-### The number of accounts entered MUST be a multiple of 3 or else the script cannot auto-grab all cards!
-ACCOUNTS = [
-]
 
 class TokenGetter():
     def __init__(self):
-        pass
+        # List all accounts in the format: {"email": "example_email@gmail.com", "password": "example_password"}
+        ### The number of accounts entered MUST be a multiple of 3 or else the script cannot auto-grab all cards!
+        self.ACCOUNTS = [
+        ]
 
     def setup(self):
         options = uc.ChromeOptions()
@@ -57,12 +54,12 @@ class TokenGetter():
             return None
 
     def main(self):
-        account_warning = len(ACCOUNTS) % 3 != 0
+        account_warning = len(self.ACCOUNTS) % 3 != 0
         if account_warning:
             input("⚠️ Configuration Warning ⚠️\nThe number of accounts you are using is not a multiple of 3. Therefore, the script cannot auto-grab all dropped cards due to grab cooldowns.\nPress `Enter` if you wish to continue.")
         tokens = []
-        for account in ACCOUNTS:
-            if account == ACCOUNTS[0] and not account_warning:
+        for account in self.ACCOUNTS:
+            if account == self.ACCOUNTS[0] and not account_warning:
                 print("Loading new undetected Chrome...")
             else:
                 print("\nLoading new undetected Chrome...")  # \n ONLY if not first account or account_warning
