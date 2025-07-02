@@ -257,7 +257,7 @@ class MessageBotter():
                         )
                     sys.exit()
                 grab_pointer = (grab_pointer + 3) % num_account
-                await asyncio.sleep(delay + random.uniform(0, max(20, 120 / num_account)))
+                await asyncio.sleep(delay + random.uniform(0, max(40, 240 / num_account)))
 
 if __name__ == "__main__":
     bot = MessageBotter()
