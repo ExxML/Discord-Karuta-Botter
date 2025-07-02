@@ -24,7 +24,7 @@ class CommandChecker():
         self.ALL_ACCOUNT_FLAG = "all"
         self.INTERACTION_URL = "https://discord.com/api/v10/interactions"
         self.KARUTA_LOCK_COMMAND = "{lock}"
-        self.KARUTA_MULTIBURN_COMMAND = "{multiburn}"
+        self.KARUTA_MULTIBURN_COMMAND = "{burn}"
 
         self.executed_commands = []
         self.card_transfer_messages = []
