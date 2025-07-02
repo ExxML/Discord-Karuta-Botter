@@ -29,7 +29,8 @@ pip install -r requirements.txt
 - Ex 1. `{cmd} all kcollection o:wishlist` sends `kcollection o:wishlist` from ALL accounts.
 - Ex 2. `{cmd} 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (of `ACCOUNTS` in `token_getter.py`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
 - Ex 3. `{cmd} 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
-- Ex 4. `{cmd} 1 kmultiburn <filter>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `{cmd} 1 {multiburn}` to confirm the multiburn. 
+- Ex 4. `{cmd} 1 kmultiburn <filter>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `{cmd} 1 {burn}` to confirm the multiburn. 
+- Ex 5. `{cmd} play` / `{cmd} pause` plays/pauses all drops. When paused, message commands are still processed.
 
 ##### Note #1: The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{multiburn}` commands.
 ##### Note #2: If you mistype the account number for the `{lock}` or `{multiburn}` command, you must restart the trade/burn process. Sorry!
