@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-1. Edit `SERVER_ID`, `CHANNEL_ID`, and `KARUTA_PREFIX` in `main.py` to match your target server/channel and Karuta bot prefix.
+1. Edit `CHANNEL_ID` and `KARUTA_PREFIX` in `main.py` to match your target channel and Karuta bot prefix.
 2. Edit `ACCOUNTS` in `token_getter.py` to match your account emails and passwords. **To successfully grab all cards dropped, the number of accounts you enter must be a multiple of 3.** Make sure all accounts have message access to the target server and channel. 
 3. Run `main.py`. It is **highly** recommended to run the program in a private channel to avoid interruptions. If you choose to run the program in a public channel, turn off `MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
 4. To send a message from any account, manually send a message in the target channel with the following format (without angle brackets):

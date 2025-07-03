@@ -4,11 +4,10 @@ import random
 import uuid
 
 class CommandChecker():
-    def __init__(self, main, tokens, server_id, channel_id, karuta_prefix, karuta_bot_id, karuta_drop_message, karuta_expired_drop_message, 
+    def __init__(self, main, tokens, channel_id, karuta_prefix, karuta_bot_id, karuta_drop_message, karuta_expired_drop_message, 
                       karuta_card_transfer_title, karuta_multitrade_lock_message, karuta_multitrade_confirm_message, karuta_multiburn_title, rate_limit):
         self.main = main
         self.tokens = tokens
-        self.SERVER_ID = server_id
         self.CHANNEL_ID = channel_id
         self.KARUTA_PREFIX = karuta_prefix
         self.KARUTA_BOT_ID = karuta_bot_id
@@ -93,7 +92,6 @@ class CommandChecker():
                         payload = {
                             "type": 3,  # Component interaction
                             "nonce": str(uuid.uuid4().int >> 64),  # Unique interaction ID
-                            "guild_id": self.SERVER_ID,
                             "channel_id": self.CHANNEL_ID,
                             "message_flags": 0,
                             "message_id": message.get('id'),

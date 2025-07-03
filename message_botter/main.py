@@ -16,7 +16,6 @@ class MessageBotter():
     def __init__(self):
         # Customize these settings
         self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
-        self.SERVER_ID = ""  # Enter your target server
         self.CHANNEL_ID = ""  # Enter your target channel
         self.KARUTA_PREFIX = "k"  # Karuta's bot prefix
         self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
@@ -90,7 +89,6 @@ class MessageBotter():
                 "Referer": "https://discord.com/channels/@me",
                 "X-Context-Properties": base64.b64encode(json.dumps({
                     "location": "Channel",
-                    "location_guild_id": self.SERVER_ID,
                     "location_channel_id": self.CHANNEL_ID,
                     "location_channel_type": 1,
                 }).encode()).decode()
@@ -190,7 +188,6 @@ class MessageBotter():
             command_checker = CommandChecker(
                 main = self,
                 tokens = self.tokens,
-                server_id = self.SERVER_ID,
                 channel_id = self.CHANNEL_ID,
                 karuta_prefix = self.KARUTA_PREFIX,
                 karuta_bot_id = self.KARUTA_BOT_ID,
@@ -267,7 +264,7 @@ if __name__ == "__main__":
             None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, bot.TERMINAL_VISIBILITY
         )
         sys.exit()
-    if not all([bot.SERVER_ID, bot.CHANNEL_ID, bot.KARUTA_BOT_ID]):
+    if not all([bot.CHANNEL_ID, bot.KARUTA_BOT_ID]):
         input("⛔ Configuration Error ⛔\nPlease use a valid server ID, channel ID, and Karuta bot ID in [main.py](cci:7://file:///c:/Users/andyw/Documents/Projects/Discord-Message-Botter/message_botter/main.py:0:0-0:0).")
         sys.exit()
     bot.tokens = TokenGetter().main()
