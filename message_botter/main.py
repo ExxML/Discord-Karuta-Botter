@@ -1,6 +1,7 @@
 from token_getter import TokenGetter
 from command_checker import CommandChecker
 from datetime import datetime
+from collections import defaultdict
 import win32gui
 import win32con
 import win32console
@@ -11,12 +12,17 @@ import json
 import random
 import sys
 import ctypes
+import math
+import time
 
 class MessageBotter():
     def __init__(self):
         # Customize these settings
         self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
-        self.CHANNEL_ID = ""  # Enter your target channel
+        self.COMMAND_CHANNEL_ID = ""  # Enter your command channel to send message commands
+        # Enter your drop channels as strings separated by commas
+        self.DROP_CHANNEL_IDS = [
+        ]
         self.KARUTA_PREFIX = "k"  # Karuta's bot prefix
         self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
         self.RATE_LIMIT = 3  # Maximum number of rate limits before giving up
@@ -33,6 +39,17 @@ class MessageBotter():
 
         self.KARUTA_MULTIBURN_TITLE = "Burn Cards"
 
+        self.RANDOM_ADDON = ['', ' ', ' !', ' :D', ' w']
+        self.DROP_MESSAGES = [f"{self.KARUTA_PREFIX}drop", f"{self.KARUTA_PREFIX}d"]
+        self.RANDOM_MESSAGES = [
+            f"{self.KARUTA_PREFIX}reminders", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}lookup",
+            f"{self.KARUTA_PREFIX}lu", f"{self.KARUTA_PREFIX}vote", f"{self.KARUTA_PREFIX}view",
+            f"{self.KARUTA_PREFIX}v", f"{self.KARUTA_PREFIX}collection", f"{self.KARUTA_PREFIX}c",
+            f"{self.KARUTA_PREFIX}c o:wl", f"{self.KARUTA_PREFIX}c o:p", f"{self.KARUTA_PREFIX}c o:eff",
+            f"{self.KARUTA_PREFIX}cardinfo", f"{self.KARUTA_PREFIX}ci", f"{self.KARUTA_PREFIX}cd",
+            f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly", "bruh", "gg", "lmao", "wtf", "omg"
+        ]
+        self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
         self.EMOJI_MAP = {
             '1️⃣': '[1]',
             '2️⃣': '[2]',
@@ -89,14 +106,14 @@ class MessageBotter():
                 "Referer": "https://discord.com/channels/@me",
                 "X-Context-Properties": base64.b64encode(json.dumps({
                     "location": "Channel",
-                    "location_channel_id": self.CHANNEL_ID,
+                    "location_channel_id": self.token_channel_dict[token],
                     "location_channel_type": 1,
                 }).encode()).decode()
             }
         return self.token_headers[token]
 
     async def send_message(self, token: str, account: int, content: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{self.CHANNEL_ID}/messages"
+        url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages"
         headers = self.get_headers(token)
         payload = {
             "content": content,
@@ -122,7 +139,7 @@ class MessageBotter():
                 return status == 200
 
     async def get_karuta_message(self, token: str, account: int, search_content: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{self.CHANNEL_ID}/messages?limit=20"
+        url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages?limit=20"
         headers = self.get_headers(token)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
@@ -162,7 +179,7 @@ class MessageBotter():
                 return None
 
     async def add_reaction(self, token: str, account: int, message_id: str, emoji: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{self.CHANNEL_ID}/messages/{message_id}/reactions/{emoji}/@me"
+        url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages/{message_id}/reactions/{emoji}/@me"
         headers = self.get_headers(token)
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers=headers) as resp:
@@ -183,12 +200,12 @@ class MessageBotter():
                 else:
                     print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
-    async def run(self):
+    async def run_command_checker(self):
         if self.MESSAGE_COMMAND_TOGGLE:
             command_checker = CommandChecker(
                 main = self,
                 tokens = self.tokens,
-                channel_id = self.CHANNEL_ID,
+                command_channel_id = self.COMMAND_CHANNEL_ID,
                 karuta_prefix = self.KARUTA_PREFIX,
                 karuta_bot_id = self.KARUTA_BOT_ID,
                 karuta_drop_message = self.KARUTA_DROP_MESSAGE,
@@ -204,57 +221,69 @@ class MessageBotter():
         else:
             print("\n🤖 Message commands disabled.")
 
-        num_account = len(self.tokens)
-        if num_account == 0:
-            input("⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
-            sys.exit()
-        delay = 30 * 60 / num_account
-        grab_pointer = 0 if num_account < 3 else num_account - 3
-        random_addon = ['', ' ', ' !', ' :D', ' w']
-        drop_messages = [f"{self.KARUTA_PREFIX}drop", f"{self.KARUTA_PREFIX}d"]
-        random_messages = [
-            f"{self.KARUTA_PREFIX}reminders", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}lookup",
-            f"{self.KARUTA_PREFIX}lu", f"{self.KARUTA_PREFIX}vote", f"{self.KARUTA_PREFIX}view",
-            f"{self.KARUTA_PREFIX}v", f"{self.KARUTA_PREFIX}collection", f"{self.KARUTA_PREFIX}c",
-            f"{self.KARUTA_PREFIX}c o:wl", f"{self.KARUTA_PREFIX}c o:p", f"{self.KARUTA_PREFIX}c o:eff",
-            f"{self.KARUTA_PREFIX}cardinfo", f"{self.KARUTA_PREFIX}ci", f"{self.KARUTA_PREFIX}cd",
-            f"{self.KARUTA_PREFIX}daily"
-        ]
-        emojis = ['1️⃣', '2️⃣', '3️⃣']
+    async def set_token_dictionaries(self):
+        self.token_channel_dict = {}
+        for index, token in enumerate(self.tokens):
+            self.token_channel_dict[token] = self.DROP_CHANNEL_IDS[math.floor(index / 3)]  # Max 3 accounts per channel
+        self.channel_token_dict = defaultdict(list)
+        for k, v in self.token_channel_dict.items():
+            self.channel_token_dict[v].append(k)
 
-        while True:
-            for index, token in enumerate(self.tokens):
-                print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
-                account = index + 1
-                drop_message = random.choice(drop_messages) + random.choice(random_addon)
-                sent = await self.send_message(token, account, drop_message, 0)
-                if sent:
-                    await asyncio.sleep(random.uniform(3, 6))
-                    karuta_message = await self.get_karuta_message(token, account, self.KARUTA_DROP_MESSAGE, 0)
-                    if karuta_message:
-                        karuta_message_id = karuta_message.get('id')
-                        random.shuffle(emojis)
-                        for i in range(3):
-                            emoji = emojis[i]
-                            grab_index = (grab_pointer + i) % num_account
-                            grab_token = self.tokens[grab_index]
-                            grab_account = grab_index + 1
-                            await self.add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
-                            await asyncio.sleep(random.uniform(0, 1))
-                            random_message = random.choice(random_messages)
+    async def drop_and_grab(self, token: str, account: int, channel_tokens: list[str]):
+        print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+        num_channel_tokens = len(channel_tokens)
+        drop_message = random.choice(self.DROP_MESSAGES) + random.choice(self.RANDOM_ADDON)
+        sent = await self.send_message(token, account, drop_message, 0)
+        if sent:
+            await asyncio.sleep(random.uniform(3, 6))
+            karuta_message = await self.get_karuta_message(token, account, self.KARUTA_DROP_MESSAGE, 0)
+            if karuta_message:
+                karuta_message_id = karuta_message.get('id')
+                random.shuffle(self.EMOJIS)
+                for i in range(num_channel_tokens):
+                    emoji = self.EMOJIS[i]
+                    grab_token = channel_tokens[i]
+                    grab_account = self.tokens.index(grab_token) + 1
+                    await self.add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
+                    await asyncio.sleep(random.uniform(0.5, 2))
+                scrambled_channel_tokens = random.sample(channel_tokens, len(channel_tokens))
+                for i in range(num_channel_tokens):
+                    if random.choice([True, False]):
+                        grab_token = scrambled_channel_tokens[i]
+                        grab_account = self.tokens.index(grab_token) + 1
+                        for _ in range(random.randint(1, 3)):
+                            random_message = random.choice(self.RANDOM_MESSAGES)
                             await self.send_message(grab_token, grab_account, random_message, self.RATE_LIMIT)
-                else:
-                    if self.TERMINAL_VISIBILITY:
-                        hwnd = win32console.GetConsoleWindow()
-                        win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
-                        win32gui.SetForegroundWindow(hwnd)
-                        input("⛔ Request Error ⛔\nMalformed request. Possible causes include:\n 1. Invalid/expired token\n 2. Incorrectly inputted server/channel/bot ID\nPress `Enter` to restart the script.")
-                        ctypes.windll.shell32.ShellExecuteW(
-                            None, None, sys.executable, " ".join(sys.argv), None, self.TERMINAL_VISIBILITY
-                        )
-                    sys.exit()
-                grab_pointer = (grab_pointer + 3) % num_account
-                await asyncio.sleep(delay + random.uniform(0, max(40, 240 / num_account)))
+                            await asyncio.sleep(random.uniform(1, 3))
+        else:
+            if self.TERMINAL_VISIBILITY:
+                hwnd = win32console.GetConsoleWindow()
+                win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+                win32gui.SetForegroundWindow(hwnd)
+                input(f"⛔ Request Error ⛔\nMalformed request on Account #{account}. Possible reasons include:\n 1. Invalid/expired token\n 2. Incorrectly inputted server/channel/bot ID\nPress `Enter` to restart the script.")
+                ctypes.windll.shell32.ShellExecuteW(
+                    None, None, sys.executable, " ".join(sys.argv), None, self.TERMINAL_VISIBILITY
+                )
+            else:
+                sys.exit()
+
+    async def run_bot(self):
+        await self.run_command_checker()
+        await self.set_token_dictionaries()
+        self.min_num_account_per_channel = len(self.channel_token_dict[self.DROP_CHANNEL_IDS[-1]])  # Get the minimum number of accounts in channels (ideally 3 (if number of accounts is a multiple of 3))
+        self.DELAY = 30 * 60 / self.min_num_account_per_channel  # Ideally 10 min delay per account (3 accounts)
+        self.start_time = time.time()
+        while True:
+            for index in range(self.min_num_account_per_channel):
+                if time.time() - self.start_time >= 12 * 60 * 60:  # 12 hours
+                    input("⚠️ Script Runtime Warning ⚠️\nThe script has been running for 12 hours. Automatically pausing to avoid ban risk...\nPress `Enter` if you wish to continue running the script.")
+                scrambled_drop_channel_ids = random.sample(self.DROP_CHANNEL_IDS, len(self.DROP_CHANNEL_IDS))
+                for channel_id in scrambled_drop_channel_ids:
+                    channel_tokens = self.channel_token_dict[channel_id]
+                    token = channel_tokens[index]
+                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_tokens)
+                    await asyncio.sleep(random.uniform(1, 50))
+                await asyncio.sleep(self.DELAY + random.uniform(0, 40))
 
 if __name__ == "__main__":
     bot = MessageBotter()
@@ -264,8 +293,8 @@ if __name__ == "__main__":
             None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, bot.TERMINAL_VISIBILITY
         )
         sys.exit()
-    if not all([bot.CHANNEL_ID, bot.KARUTA_BOT_ID]):
-        input("⛔ Configuration Error ⛔\nPlease use a valid server ID, channel ID, and Karuta bot ID in [main.py](cci:7://file:///c:/Users/andyw/Documents/Projects/Discord-Message-Botter/message_botter/main.py:0:0-0:0).")
+    if not all([bot.COMMAND_CHANNEL_ID, bot.DROP_CHANNEL_IDS, bot.KARUTA_BOT_ID]):
+        input("⛔ Configuration Error ⛔\nPlease enter a non-empty command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
         sys.exit()
-    bot.tokens = TokenGetter().main()
-    asyncio.run(bot.run())
+    bot.tokens = TokenGetter().main(len(bot.DROP_CHANNEL_IDS))
+    asyncio.run(bot.run_bot())

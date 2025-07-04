@@ -6,7 +6,7 @@ This script is made for botting Karuta drops + grabs, but can be easily repurpos
 ## ⚠️ WARNING ⚠️
 Discord's Terms of Service explicitly prohibits self-bots (as of June 2025). Unauthorized use of this script *could* result in account bans. Use at your own risk.
 
-*In my experience, no accounts using this script have been banned, but I still recommend using throwaway accounts just to be safe.*
+*In my experience, no accounts using this script have been banned by Discord, but I still recommend using throwaway accounts just to be safe.*
 
 Note: This script extracts user tokens from Discord accounts using Selenium and Undetected-ChromeDriver. To keep your accounts safe, DO NOT share these tokens with anyone else and remember to close the script after use.
 
@@ -17,12 +17,16 @@ Note: This script extracts user tokens from Discord accounts using Selenium and 
 ```bash
 pip install -r requirements.txt
 ```
-
 ## Usage
-1. Edit `CHANNEL_ID` and `KARUTA_PREFIX` in `main.py` to match your target channel and Karuta bot prefix.
-2. Edit `ACCOUNTS` in `token_getter.py` to match your account emails and passwords. **To successfully grab all cards dropped, the number of accounts you enter must be a multiple of 3.** Make sure all accounts have message access to the target server and channel. 
-3. Run `main.py`. It is **highly** recommended to run the program in a private channel to avoid interruptions. If you choose to run the program in a public channel, turn off `MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
-4. To send a message from any account, manually send a message in the target channel with the following format (without angle brackets):
+1. Edit `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `KARUTA_PREFIX` in `main.py`. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards.
+2. Enter your emails and passwords in `ACCOUNTS` from `token_getter.py` using the following format:
+```python
+{"email": "example_email@gmail.com", "password": "example_password"}
+```
+❗For the script to work at maximum capacity, the number of accounts you enter must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Make sure all accounts have message access in the drop channels.❗
+
+3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. If you must run the program in a public channel, turn off `MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
+4. To send a message from any account, manually send a message in `self.COMMAND_CHANNEL` using the following format (without angle brackets):
 ```bash
 {cmd} <account_number |OR| 'all'> <message>
 ```
@@ -35,4 +39,5 @@ pip install -r requirements.txt
 ##### Note #2: If you mistype the account number for the `{lock}` or `{multiburn}` command, you must restart the trade/burn process. Sorry!
 ##### Note #3: Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
+#### ⚠️ **DO NOT** run the script for more than 12 consecutive hours. Karuta may flag your accounts for suspicious activity. After 12 hours, the script will automatically pause and display a warning in the terminal.
 #### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.

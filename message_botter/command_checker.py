@@ -4,11 +4,11 @@ import random
 import uuid
 
 class CommandChecker():
-    def __init__(self, main, tokens, channel_id, karuta_prefix, karuta_bot_id, karuta_drop_message, karuta_expired_drop_message, 
+    def __init__(self, main, tokens, command_channel_id, karuta_prefix, karuta_bot_id, karuta_drop_message, karuta_expired_drop_message, 
                       karuta_card_transfer_title, karuta_multitrade_lock_message, karuta_multitrade_confirm_message, karuta_multiburn_title, rate_limit):
         self.main = main
         self.tokens = tokens
-        self.CHANNEL_ID = channel_id
+        self.COMMAND_CHANNEL_ID = command_channel_id
         self.KARUTA_PREFIX = karuta_prefix
         self.KARUTA_BOT_ID = karuta_bot_id
         self.KARUTA_DROP_MESSAGE = karuta_drop_message
@@ -32,7 +32,7 @@ class CommandChecker():
         self.multiburn_fire_messages = []
 
     async def check_command(self, token: str):
-        url = f"https://discord.com/api/v10/channels/{self.CHANNEL_ID}/messages?limit=3"
+        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=3"
         headers = self.main.get_headers(token)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
@@ -92,7 +92,7 @@ class CommandChecker():
                         payload = {
                             "type": 3,  # Component interaction
                             "nonce": str(uuid.uuid4().int >> 64),  # Unique interaction ID
-                            "channel_id": self.CHANNEL_ID,
+                            "channel_id": self.COMMAND_CHANNEL_ID,
                             "message_flags": 0,
                             "message_id": message.get('id'),
                             "application_id": self.KARUTA_BOT_ID,

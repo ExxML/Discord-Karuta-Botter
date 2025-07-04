@@ -2,15 +2,18 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import sys
+import math
 
 class TokenGetter():
     def __init__(self):
         # List all accounts in the format: {"email": "example_email@gmail.com", "password": "example_password"}
-        ### The number of accounts entered MUST be a multiple of 3 or else the script cannot auto-grab all cards!
+        ### Enter at least 3 accounts so the script can auto-grab all cards!
+        ### The number of accounts entered should also be a multiple of 3 or else the script will not be able to function at full capacity!
         self.ACCOUNTS = [
         ]
 
-    def setup(self):
+    def load_chrome(self):
         options = uc.ChromeOptions()
         options.add_argument('--headless=new')  # Comment for non-headless mode if needed
         options.add_argument('--disable-blink-features=AutomationControlled')
@@ -21,7 +24,7 @@ class TokenGetter():
         self.driver = uc.Chrome(options = options, use_subprocess = True)
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")  # Browser spoofer
 
-    def get_discord_token(self, email, password):
+    def get_discord_token(self, email: str, password: str):
         try:
             # Navigate to Discord login
             self.driver.get("https://discord.com/login")
@@ -53,21 +56,45 @@ class TokenGetter():
             print(f"Error with {email}: {str(e)}")
             return None
 
-    def main(self):
-        account_warning = len(self.ACCOUNTS) % 3 != 0
-        if account_warning:
-            input("⚠️ Configuration Warning ⚠️\nThe number of accounts you are using is not a multiple of 3. Therefore, the script cannot auto-grab all dropped cards due to grab cooldowns.\nPress `Enter` if you wish to continue.")
+    def main(self, num_channels: int):
+        num_accounts = len(self.ACCOUNTS)
+        num_account_warning = num_accounts < 3
+        if num_accounts == 0:
+            input("⛔ Account Error ⛔\nNo accounts found. Please enter at least 1 account in token_getter.py.")
+            sys.exit()
+        elif num_accounts < 3:
+            input(f"⚠️ Configuration Warning ⚠️\nYou have entered less than 3 accounts. The script will only be able to auto-grab {num_accounts}/3 cards dropped.\nPress `Enter` if you wish to continue.")
+        
+        multiple_account_warning = num_accounts > 3 and num_accounts % 3 != 0
+        if multiple_account_warning:
+            for _ in range(num_accounts % 3):
+                del self.ACCOUNTS[-1]  # Trim number of accounts to a multiple of 3
+            input(f"⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3. \nThe script will only be functioning at {int((len(self.ACCOUNTS) / num_accounts) * 100)}% capacity.\nPress `Enter` if you wish to continue.")
+        
+        num_channels_need = math.ceil(len(self.ACCOUNTS) / 3)  # Maximum 3 accounts per channel
+        if  num_channels_need != num_channels:
+            input(f"⛔ Configuration Error ⛔\nYou have entered {num_channels} drop channel(s). You should have {num_channels_need} channel(s).")
+            sys.exit()
+
         tokens = []
         for account in self.ACCOUNTS:
-            if account == self.ACCOUNTS[0] and not account_warning:
+            if account == self.ACCOUNTS[0] and not multiple_account_warning and not num_account_warning:
                 print("Loading new undetected Chrome...")
             else:
                 print("\nLoading new undetected Chrome...")  # \n ONLY if not first account or account_warning
-            self.setup()
+            self.load_chrome()
             print(f"Processing {account['email']}...")
             token = self.get_discord_token(account["email"], account["password"])
             print("Closing Chrome...")
             self.driver.quit()
             if token:
                 tokens.append(token)
+
+        num_tokens = len(tokens)
+        if num_tokens == 0:
+            input("⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
+            sys.exit()
+        elif num_tokens != len(self.ACCOUNTS):
+            input(f"⚠️ Configuration Warning ⚠️\nYou entered {len(self.ACCOUNTS)} accounts, but only {num_tokens} tokens were found.\nPress `Enter` if you wish to continue.")
+        
         return tokens
