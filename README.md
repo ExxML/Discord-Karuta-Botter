@@ -25,6 +25,8 @@ pip install -r requirements.txt
 ```
 ❗For the script to work at maximum capacity, the number of accounts you enter must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Make sure all accounts have message access in the drop channels.❗
 
+Alternatively, you can enter your tokens in `self.TOKENS` in `token_getter.py` as strings, separated by commas. Leave `self.TOKENS` empty if you would like to use `self.ACCOUNTS` instead.
+
 3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. **If you must run the program in a public channel,** turn off `self.MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
 4. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
 ```bash
