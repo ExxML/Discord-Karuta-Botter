@@ -7,7 +7,7 @@ import math
 
 class TokenGetter():
     def __init__(self):
-        # List all accounts in the format: {"email": "example_email@gmail.com", "password": "example_password"}
+        # List your accounts (separated by commas) in the format: {"email": "example_email@gmail.com", "password": "example_password"}, ...
         ### Enter at least 3 accounts so the script can auto-grab all cards!
         ### The number of accounts entered should also be a multiple of 3 or else the script will not be able to function at full capacity!
         self.ACCOUNTS = [
