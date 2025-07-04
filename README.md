@@ -18,25 +18,25 @@ Note: This script extracts user tokens from Discord accounts using Selenium and 
 pip install -r requirements.txt
 ```
 ## Usage
-1. Edit `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `KARUTA_PREFIX` in `main.py`. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards.
-2. Enter your emails and passwords in `ACCOUNTS` from `token_getter.py` using the following format:
+1. Edit `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `self.KARUTA_PREFIX` in `main.py`. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be exactly 1 drop channel per 3 accounts used.**
+2. Enter your emails and passwords in `self.ACCOUNTS` in `token_getter.py` using the following format:
 ```python
-{"email": "example_email@gmail.com", "password": "example_password"}
+{"email": "example_email@gmail.com", "password": "example_password"}, ...
 ```
 ❗For the script to work at maximum capacity, the number of accounts you enter must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Make sure all accounts have message access in the drop channels.❗
 
-3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. If you must run the program in a public channel, turn off `MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
-4. To send a message from any account, manually send a message in `self.COMMAND_CHANNEL` using the following format (without angle brackets):
+3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. **If you must run the program in a public channel,** turn off `self.MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
+4. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
 ```bash
 {cmd} <account_number |OR| 'all'> <message>
 ```
 - Ex 1. `{cmd} all kcollection o:wishlist` sends `kcollection o:wishlist` from ALL accounts.
-- Ex 2. `{cmd} 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (of `ACCOUNTS` in `token_getter.py`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
+- Ex 2. `{cmd} 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (the first account listed in `self.ACCOUNTS`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
 - Ex 3. `{cmd} 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
 - Ex 4. `{cmd} 1 kmultiburn <filter>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `{cmd} 1 {burn}` to confirm the multiburn.
 
-##### Note #1: The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{multiburn}` commands.
-##### Note #2: If you mistype the account number for the `{lock}` or `{multiburn}` command, you must restart the trade/burn process. Sorry!
+##### Note #1: The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{burn}` commands.
+##### Note #2: If you mistype the account number for the `{lock}` or `{burn}` command, you must restart the trade/burn process. Sorry!
 ##### Note #3: Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
 #### ⚠️ **DO NOT** run the script for more than 12 consecutive hours. Karuta may flag your accounts for suspicious activity. After 12 hours, the script will automatically pause and display a warning in the terminal.
