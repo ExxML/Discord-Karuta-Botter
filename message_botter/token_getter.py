@@ -12,6 +12,10 @@ class TokenGetter():
         ### The number of accounts entered should also be a multiple of 3 or else the script will not be able to function at full capacity!
         self.ACCOUNTS = [
         ]
+        # If you would rather use tokens, you can enter them here as strings, separated by commas.
+        # LEAVE EMPTY if you would like to use account logins instead.
+        self.TOKENS = [
+        ]
 
     def load_chrome(self):
         options = uc.ChromeOptions()
@@ -57,28 +61,48 @@ class TokenGetter():
             return None
 
     def main(self, num_channels: int):
-        num_accounts = len(self.ACCOUNTS)
+        if self.TOKENS:
+            print("Using tokens instead of account logins...\n")
+            num_accounts = len(self.TOKENS)
+        else:
+            print("Using account logins instead of tokens...\n")
+            num_accounts = len(self.ACCOUNTS)
+
         num_account_warning = num_accounts < 3
         if num_accounts == 0:
             input("⛔ Account Error ⛔\nNo accounts found. Please enter at least 1 account in token_getter.py.")
             sys.exit()
-        elif num_accounts < 3:
+        elif num_account_warning:
             input(f"⚠️ Configuration Warning ⚠️\nYou have entered less than 3 accounts. The script will only be able to auto-grab {num_accounts}/3 cards dropped.\nPress `Enter` if you wish to continue.")
         
         multiple_account_warning = num_accounts > 3 and num_accounts % 3 != 0
         if multiple_account_warning:
-            for _ in range(num_accounts % 3):
-                del self.ACCOUNTS[-1]  # Trim number of accounts to a multiple of 3
-            input(f"⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3. \nThe script will only be functioning at {int((len(self.ACCOUNTS) / num_accounts) * 100)}% capacity.\nPress `Enter` if you wish to continue.")
+            if self.TOKENS:
+                for _ in range(num_accounts % 3):
+                    del self.TOKENS[-1]  # Trim number of accounts to a multiple of 3
+            else:
+                for _ in range(num_accounts % 3):
+                    del self.ACCOUNTS[-1]  # Trim number of accounts to a multiple of 3
+            if self.TOKENS:
+                input(f"⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3. \nThe script will only be functioning at {int((len(self.TOKENS) / num_accounts) * 100)}% capacity.\nPress `Enter` if you wish to continue.")
+            else:
+                input(f"⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3. \nThe script will only be functioning at {int((len(self.ACCOUNTS) / num_accounts) * 100)}% capacity.\nPress `Enter` if you wish to continue.")
         
-        num_channels_need = math.ceil(len(self.ACCOUNTS) / 3)  # Maximum 3 accounts per channel
+        if self.TOKENS:
+            num_channels_need = math.ceil(len(self.TOKENS) / 3)  # Maximum 3 accounts per channel
+        else:
+            num_channels_need = math.ceil(len(self.ACCOUNTS) / 3)  # Maximum 3 accounts per channel
         if  num_channels_need != num_channels:
             input(f"⛔ Configuration Error ⛔\nYou have entered {num_channels} drop channel(s). You should have {num_channels_need} channel(s).")
             sys.exit()
 
+        if self.TOKENS:
+            return self.TOKENS
+
+        # Executes if using account logins
         tokens = []
         for account in self.ACCOUNTS:
-            if account == self.ACCOUNTS[0] and not multiple_account_warning and not num_account_warning:
+            if account == self.ACCOUNTS[0] and not num_account_warning and not multiple_account_warning:
                 print("Loading new undetected Chrome...")
             else:
                 print("\nLoading new undetected Chrome...")  # \n ONLY if not first account or account_warning
