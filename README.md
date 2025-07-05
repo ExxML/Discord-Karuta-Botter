@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ```python
 {"email": "example_email@gmail.com", "password": "example_password"}, ...
 ```
-❗For the script to work at maximum capacity, the number of accounts you enter must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Make sure all accounts have message access in the drop channels.❗
+❗For the script to work at maximum capacity, the number of accounts you enter must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Finally, make sure no accounts have 2FA enabled. All accounts should have view access to `self.COMMAND_CHANNEL_ID` and can send messages in the `self.DROP_CHANNEL_IDS`.❗
 
 Alternatively, you can enter your tokens in `self.TOKENS` in `token_getter.py` as strings, separated by commas. Leave `self.TOKENS` empty if you would like to use `self.ACCOUNTS` instead.
 
