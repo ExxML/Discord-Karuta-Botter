@@ -18,7 +18,7 @@ class TokenExtractor():
         self.ACCOUNTS = [
         ]
 
-        self.SAVE_TOKENS = False  # Choose whether to save tokens to file (tokens.json)
+        self.SAVE_TOKENS = True  # Choose whether to save tokens to file (tokens.json)
 
         with open("tokens.json", "r") as tokens_file:
             self.TOKENS = json.load(tokens_file)
