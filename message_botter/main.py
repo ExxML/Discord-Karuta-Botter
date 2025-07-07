@@ -22,8 +22,10 @@ class MessageBotter():
         self.COMMAND_CHANNEL_ID = ""  # Enter your command channel to send message commands
         # Enter your drop channels as strings separated by commas
         self.DROP_CHANNEL_IDS = [
+            "",
         ]
         self.KARUTA_PREFIX = "k"  # Karuta's bot prefix
+        self.SHUFFLE_DROP_CHANNELS = True  # Improve randomness by changing where accounts drop every time the script runs
         self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
         self.RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 
@@ -272,6 +274,8 @@ class MessageBotter():
         await self.set_token_dictionaries()
         self.min_num_account_per_channel = len(self.channel_token_dict[self.DROP_CHANNEL_IDS[-1]])  # Get the minimum number of accounts in channels (ideally 3 (if number of accounts is a multiple of 3))
         self.DELAY = 30 * 60 / self.min_num_account_per_channel  # Ideally 10 min delay per account (3 accounts)
+        if self.SHUFFLE_DROP_CHANNELS:
+            random.shuffle(self.DROP_CHANNEL_IDS)
         self.start_time = time.time()
         while True:
             for index in range(self.min_num_account_per_channel):
@@ -293,8 +297,16 @@ if __name__ == "__main__":
             None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, bot.TERMINAL_VISIBILITY
         )
         sys.exit()
-    if not all([bot.COMMAND_CHANNEL_ID, bot.DROP_CHANNEL_IDS, bot.KARUTA_BOT_ID]):
-        input("⛔ Configuration Error ⛔\nPlease enter a non-empty command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+    try:
+        if (
+            not bot.COMMAND_CHANNEL_ID.isdigit() 
+            or not bot.KARUTA_BOT_ID.isdigit()
+            or not all(id.isdigit() for id in bot.DROP_CHANNEL_IDS)
+        ):
+            input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+            sys.exit()
+    except AttributeError:
+        input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
         sys.exit()
     bot.tokens = TokenGetter().main(len(bot.DROP_CHANNEL_IDS))
     asyncio.run(bot.run_bot())
