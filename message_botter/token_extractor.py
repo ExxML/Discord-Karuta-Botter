@@ -4,18 +4,27 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sys
 import math
+import json
 
-class TokenGetter():
+class TokenExtractor():
     def __init__(self):
-        # List your accounts (separated by commas) in the format: {"email": "example_email@gmail.com", "password": "example_password"}, ...
         ### Enter at least 3 accounts so the script can auto-grab all cards!
         ### The number of accounts entered should also be a multiple of 3 or else the script will not be able to function at full capacity!
+
+        # List your accounts (separated by commas) in the format: {"email": "example_email@gmail.com", "password": "example_password"}, ...
+        # If you would rather use tokens, you can enter them as a list of strings in tokens.json.
+        #   Example: ["token1", "token2", "token3"]
+        # LEAVE THE LIST in tokens.json EMPTY if you would like to use account logins (below) instead.
         self.ACCOUNTS = [
         ]
-        # If you would rather use tokens, you can enter them here as strings, separated by commas.
-        # LEAVE EMPTY if you would like to use account logins instead.
-        self.TOKENS = [
-        ]
+
+        self.SAVE_TOKENS = False  # Choose whether to save tokens to file (tokens.json)
+
+        with open("tokens.json", "r") as tokens_file:
+            self.TOKENS = json.load(tokens_file)
+        if not isinstance(self.TOKENS, list) or not all(isinstance(token, str) for token in self.TOKENS):
+            input('⛔ Token Format Error ⛔\nExpected a list of strings. Example: ["token1", "token2", "token3"]')
+            sys.exit()
 
     def load_chrome(self):
         options = uc.ChromeOptions()
@@ -28,7 +37,7 @@ class TokenGetter():
         self.driver = uc.Chrome(options = options, use_subprocess = True)
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")  # Browser spoofer
 
-    def get_discord_token(self, email: str, password: str):
+    def extract_discord_token(self, email: str, password: str):
         try:
             # Navigate to Discord login
             self.driver.get("https://discord.com/login")
@@ -45,7 +54,7 @@ class TokenGetter():
             WebDriverWait(self.driver, 10).until(lambda d: "/login" not in d.current_url)
             print("Discord loaded")
             
-            # Update page to get token from app
+            # Update page to extract token from app
             self.driver.get("https://discord.com/app")
 
             # Execute JS to grab token from local storage
@@ -62,7 +71,7 @@ class TokenGetter():
 
     def main(self, num_channels: int):
         if self.TOKENS:
-            print("Using tokens instead of account logins...\n")
+            print("Using tokens (from tokens.json) instead of account logins...\n")
             num_accounts = len(self.TOKENS)
         else:
             print("Using account logins instead of tokens...\n")
@@ -70,7 +79,7 @@ class TokenGetter():
 
         num_account_warning = num_accounts < 3
         if num_accounts == 0:
-            input("⛔ Account Error ⛔\nNo accounts found. Please enter at least 1 account in token_getter.py.")
+            input("⛔ Account Error ⛔\nNo accounts found. Please enter at least 1 account in token_extractor.py or tokens.json.")
             sys.exit()
         elif num_account_warning:
             input(f"⚠️ Configuration Warning ⚠️\nYou have entered less than 3 accounts. The script will only be able to auto-grab {num_accounts}/3 cards dropped.\nPress `Enter` if you wish to continue.")
@@ -108,7 +117,7 @@ class TokenGetter():
                 print("\nLoading new undetected Chrome...")  # \n ONLY if not first account or account_warning
             self.load_chrome()
             print(f"Processing {account['email']}...")
-            token = self.get_discord_token(account["email"], account["password"])
+            token = self.extract_discord_token(account["email"], account["password"])
             print("Closing Chrome...")
             self.driver.quit()
             if token:
@@ -121,4 +130,8 @@ class TokenGetter():
         elif num_tokens != len(self.ACCOUNTS):
             input(f"⚠️ Configuration Warning ⚠️\nYou entered {len(self.ACCOUNTS)} accounts, but only {num_tokens} tokens were found.\nPress `Enter` if you wish to continue.")
         
+        if self.SAVE_TOKENS:
+            with open("tokens.json", "w") as tokens_file:
+                json.dump(tokens, tokens_file)
+
         return tokens

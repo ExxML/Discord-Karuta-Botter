@@ -19,13 +19,13 @@ pip install -r requirements.txt
 ```
 ## Usage
 1. Edit `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `self.KARUTA_PREFIX` in `main.py`. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be exactly 1 drop channel per 3 accounts used.**
-2. Enter your emails and passwords in `self.ACCOUNTS` in `token_getter.py` using the following format:
+2. Enter your emails and passwords in `self.ACCOUNTS` in `token_extractor.py` using the following format:
 ```python
 {"email": "example_email@gmail.com", "password": "example_password"}, ...
 ```
 ❗For the script to work at maximum capacity, the number of accounts you enter must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Finally, make sure no accounts have 2FA enabled. All accounts should have view access to `self.COMMAND_CHANNEL_ID` and can send messages in the `self.DROP_CHANNEL_IDS`.❗
 
-Alternatively, you can enter your tokens in `self.TOKENS` in `token_getter.py` as strings, separated by commas. Leave `self.TOKENS` empty if you would like to use `self.ACCOUNTS` instead. **Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.**
+Alternatively, you can enter your tokens as a list of strings in `tokens.json`. Leave the list empty (but do not delete it!) if you would like to use `self.ACCOUNTS` instead. **Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.** If you don't have your tokens on hand, you can automatically extract and save your tokens to `tokens.json` by filling in your account credentials in `token_extractor.py`, setting `self.SAVE_TOKENS = True`, then running `main.py`.
 
 3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. **If you must run the program in a public channel,** turn off `self.MESSAGE_COMMAND_TOGGLE` in `main.py` to prevent other users controlling your accounts.
 4. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):

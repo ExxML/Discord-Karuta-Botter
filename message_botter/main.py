@@ -1,4 +1,4 @@
-from token_getter import TokenGetter
+from token_extractor import TokenExtractor
 from command_checker import CommandChecker
 from datetime import datetime
 from collections import defaultdict
@@ -308,5 +308,5 @@ if __name__ == "__main__":
     except AttributeError:
         input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
         sys.exit()
-    bot.tokens = TokenGetter().main(len(bot.DROP_CHANNEL_IDS))
+    bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS))
     asyncio.run(bot.run_bot())
