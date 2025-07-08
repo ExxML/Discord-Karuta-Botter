@@ -17,19 +17,20 @@ import time
 
 class MessageBotter():
     def __init__(self):
-        # Customize these settings
-        self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
+        ### CUSTOMIZE THESE SETTINGS ###
+        self.COMMAND_USER_ID = ""  # Enter the user ID of the account that can use message commands
         self.COMMAND_CHANNEL_ID = ""  # Enter your command channel to send message commands
         # Enter your drop channels as strings separated by commas
         self.DROP_CHANNEL_IDS = [
             "",
         ]
+        self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
         self.KARUTA_PREFIX = "k"  # Karuta's bot prefix
         self.SHUFFLE_DROP_CHANNELS = True  # Improve randomness by changing where accounts drop every time the script runs
         self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
         self.RATE_LIMIT = 3  # Maximum number of rate limits before giving up
 
-        # Do not modify these constants
+        ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
         self.KARUTA_DROP_MESSAGE = "is dropping 3 cards!"
         self.KARUTA_EXPIRED_DROP_MESSAGE = "This drop has expired and the cards can no longer be grabbed."
@@ -207,6 +208,7 @@ class MessageBotter():
             command_checker = CommandChecker(
                 main = self,
                 tokens = self.tokens,
+                command_user_id = self.COMMAND_USER_ID,
                 command_channel_id = self.COMMAND_CHANNEL_ID,
                 karuta_prefix = self.KARUTA_PREFIX,
                 karuta_bot_id = self.KARUTA_BOT_ID,
@@ -299,9 +301,10 @@ if __name__ == "__main__":
         sys.exit()
     try:
         if (
-            not bot.COMMAND_CHANNEL_ID.isdigit() 
-            or not bot.KARUTA_BOT_ID.isdigit()
+            (bot.COMMAND_USER_ID != "" and not bot.COMMAND_USER_ID.isdigit())
+            or not bot.COMMAND_CHANNEL_ID.isdigit()
             or not all(id.isdigit() for id in bot.DROP_CHANNEL_IDS)
+            or not bot.KARUTA_BOT_ID.isdigit()
         ):
             input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
             sys.exit()
