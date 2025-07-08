@@ -309,7 +309,7 @@ if __name__ == "__main__":
             input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
             sys.exit()
     except AttributeError:
-        input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID,command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+        input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
         sys.exit()
     bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS))
     asyncio.run(bot.run_bot())
