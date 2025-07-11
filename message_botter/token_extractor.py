@@ -28,8 +28,8 @@ class TokenExtractor():
 
     def load_chrome(self):
         options = uc.ChromeOptions()
-        options.add_argument('--headless=new')  # Comment for non-headless mode if needed
-        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--headless = new')  # Comment for non-headless mode if needed
+        options.add_argument('--disable-blink-features = AutomationControlled')
         options.add_argument('--disable-infobars')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
@@ -41,7 +41,7 @@ class TokenExtractor():
         try:
             # Navigate to Discord login
             self.driver.get("https://discord.com/login")
-            WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
+            WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@type = 'submit']")))
             print("Login page loaded")
             # Find login fields and submit
             email_field = self.driver.find_element(By.NAME, "email")
@@ -49,7 +49,7 @@ class TokenExtractor():
             email_field.send_keys(email)
             password_field.send_keys(password)
             print("Filled in credentials")
-            self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
+            self.driver.find_element(By.XPATH, "//button[@type = 'submit']").click()
             print("Clicked log in")
             WebDriverWait(self.driver, 10).until(lambda d: "/login" not in d.current_url)
             print("Discord loaded")

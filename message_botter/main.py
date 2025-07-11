@@ -93,7 +93,7 @@ class MessageBotter():
                 "client_event_source": None
             }
             x_super_props = base64.b64encode(
-                json.dumps(super_properties, separators=(',', ':')).encode()
+                json.dumps(super_properties, separators = (',', ':')).encode()
             ).decode()
 
             self.token_headers[token] = {
