@@ -71,7 +71,7 @@ class MessageBotter():
     def get_headers(self, token: str):
         if token not in self.token_headers:
             chrome_version = random.choice(["138.0.7204.119", "138.0.7204.46", "138.0.7204.100"])  # Recent Chrome versions (iOS, Android, and Desktop Chrome respectively) (July 2025)
-            build_number = random.choice([301456, 305789, 378984])  # Random Discord build version numbers
+            build_number = random.choice([378984, 417521, 415772])  # Random Discord build version numbers
             super_properties = {
                 "os": "Windows",
                 "browser": "Chrome",
