@@ -41,5 +41,5 @@ Alternatively, you can enter your tokens as a list of strings in `tokens.json`. 
 ##### Note #2: If you mistype the account number for the `{lock}` or `{burn}` command, you must restart the trade/burn process. Sorry!
 ##### Note #3: Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
-#### ⚠️ **DO NOT** run the script for more than 12 consecutive hours. Karuta may flag your accounts for suspicious activity. After 12 hours, the script will automatically pause and display a warning in the terminal.
+#### ⚠️ **DO NOT** run the script for more than 12 consecutive hours. Karuta may flag your accounts for suspicious activity. After 12 hours (default setting), the script will automatically pause and display a warning in the terminal.
 #### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.

@@ -29,6 +29,7 @@ class MessageBotter():
         self.SHUFFLE_DROP_CHANNELS = True  # Improve randomness by changing where accounts drop every time the script runs
         self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
         self.RATE_LIMIT = 3  # Maximum number of rate limits before giving up
+        self.TIME_LIMIT_HOURS = 12  # Time limit in hours before script automatically pauses (to avoid ban risk)
 
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
@@ -281,8 +282,8 @@ class MessageBotter():
         self.start_time = time.time()
         while True:
             for index in range(self.min_num_account_per_channel):
-                if time.time() - self.start_time >= 12 * 60 * 60:  # 12 hours
-                    input("⚠️ Script Runtime Warning ⚠️\nThe script has been running for 12 hours. Automatically pausing to avoid ban risk...\nPress `Enter` if you wish to continue running the script.")
+                if time.time() - self.start_time >= self.TIME_LIMIT_HOURS * 60 * 60:  # Time limit for automatic shutoff
+                    input(f"⚠️ Script Runtime Warning ⚠️\nThe script has been running for {self.TIME_LIMIT_HOURS} hours. Automatically pausing to avoid ban risk...\nPress `Enter` if you wish to continue running the script.")
                 scrambled_drop_channel_ids = random.sample(self.DROP_CHANNEL_IDS, len(self.DROP_CHANNEL_IDS))
                 for channel_id in scrambled_drop_channel_ids:
                     channel_tokens = self.channel_token_dict[channel_id]
