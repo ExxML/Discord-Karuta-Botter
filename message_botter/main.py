@@ -29,7 +29,7 @@ class MessageBotter():
         self.SHUFFLE_DROP_CHANNELS = True  # Improve randomness by changing where accounts drop every time the script runs
         self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
         self.RATE_LIMIT = 3  # Maximum number of rate limits before giving up
-        self.TIME_LIMIT_HOURS = 12  # Time limit in hours before script automatically pauses (to avoid ban risk)
+        self.TIME_LIMIT_HOURS = 8  # Time limit in hours before script automatically pauses (to avoid ban risk)
 
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
@@ -289,8 +289,8 @@ class MessageBotter():
                     channel_tokens = self.channel_token_dict[channel_id]
                     token = channel_tokens[index]
                     await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_tokens)
-                    await asyncio.sleep(random.uniform(1, 50))
-                await asyncio.sleep(self.DELAY + random.uniform(0, 40))
+                    await asyncio.sleep(random.uniform(10, 60))  # Wait 10-60 seconds between drops (so max 180s delay per 30 mins)
+                await asyncio.sleep(self.DELAY + random.uniform(0, 60))  # Wait 0-60 seconds per 30 mins (every cycle)
 
 if __name__ == "__main__":
     bot = MessageBotter()
