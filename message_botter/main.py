@@ -159,7 +159,7 @@ class MessageBotter():
             "tts": False,
         }
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=payload) as resp:
+            async with session.post(url, headers = headers, json = payload) as resp:
                 status = resp.status
                 if status == 200:
                     print(f"✅ [Account #{account}] Sent message '{content}'.")
@@ -181,7 +181,7 @@ class MessageBotter():
         url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages?limit=20"
         headers = self.get_headers(token)
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as resp:
+            async with session.get(url, headers = headers) as resp:
                 status = resp.status
                 if status == 200:
                     messages = await resp.json()
@@ -225,7 +225,7 @@ class MessageBotter():
         url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages/{message_id}/reactions/{emoji}/@me"
         headers = self.get_headers(token)
         async with aiohttp.ClientSession() as session:
-            async with session.put(url, headers=headers) as resp:
+            async with session.put(url, headers = headers) as resp:
                 status = resp.status
                 card_number = self.EMOJI_MAP.get(emoji)
                 if status == 204:
