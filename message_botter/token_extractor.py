@@ -74,10 +74,10 @@ class TokenExtractor():
 
     def main(self, num_channels: int):
         if self.TOKENS:
-            print("Using tokens (from tokens.json) instead of account logins...\n")
+            print("ℹ️ Using tokens (from tokens.json) instead of account logins...")
             num_accounts = len(self.TOKENS)
         else:
-            print("Using account logins instead of tokens...\n")
+            print("ℹ️ Using account logins instead of tokens...\n")
             num_accounts = len(self.ACCOUNTS)
 
         num_account_warning = num_accounts < 3
@@ -136,5 +136,6 @@ class TokenExtractor():
         if self.SAVE_TOKENS:
             with open("tokens.json", "w") as tokens_file:
                 json.dump(tokens, tokens_file)
+                print("ℹ️ Tokens saved to tokens.json")
 
         return tokens
