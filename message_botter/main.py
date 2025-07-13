@@ -25,11 +25,13 @@ class MessageBotter():
             "",
         ]
         self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
-        self.KARUTA_PREFIX = "k"  # Karuta's bot prefix
-        self.SHUFFLE_DROP_CHANNELS = True  # Improve randomness by changing where accounts drop every time the script runs
-        self.MESSAGE_COMMAND_TOGGLE = True  # Enable message commands
-        self.RATE_LIMIT = 3  # Maximum number of rate limits before giving up
-        self.TIME_LIMIT_HOURS = 8  # Time limit in hours before script automatically pauses (to avoid ban risk)
+        self.KARUTA_PREFIX = "k"  # (str) Karuta's bot prefix
+        self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs
+        self.MESSAGE_COMMAND_TOGGLE = True  # (bool) Enable message commands
+        self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up
+        self.TIME_LIMIT_SKIP_RATE = 8  # (int) There is a 1/self.TIME_LIMIT_SKIP_RATE chance of skipping the channel every time you run the script. Set to -1 if you wish to disable it.
+        self.TIME_LIMIT_HOURS_MIN = 5  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk)
+        self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk)
 
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
@@ -60,6 +62,8 @@ class MessageBotter():
             '3️⃣': '[3]'
         }
 
+        self.TIME_LIMIT_EXCEEDED_MESSAGES = ["stawp", "stoop", "quittin", "q", "exeeting", "exité", "ceeze", "cloze", '🛑', '🚫', '❌', '⛔']
+
         # Construct realistic Discord browser headers
         self.token_headers = {}
         self.tokens = []
@@ -68,6 +72,36 @@ class MessageBotter():
         self.multitrade_messages = []
         self.multiburn_initial_messages = []
         self.multiburn_fire_messages = []
+
+    def check_config(self):
+        try:
+            if not all([
+                (bot.COMMAND_USER_ID == "" or bot.COMMAND_USER_ID.isdigit()),
+                bot.COMMAND_CHANNEL_ID.isdigit(),
+                all(id.isdigit() for id in bot.DROP_CHANNEL_IDS),
+                bot.KARUTA_BOT_ID.isdigit()
+            ]):
+                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+                sys.exit()
+        except AttributeError:
+            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+            sys.exit()
+        if not all([
+            isinstance(self.TERMINAL_VISIBILITY, int),
+            self.TERMINAL_VISIBILITY in (0, 1),
+            isinstance(self.KARUTA_PREFIX, str),
+            isinstance(self.SHUFFLE_ACCOUNTS, bool),
+            isinstance(self.MESSAGE_COMMAND_TOGGLE, bool),
+            isinstance(self.RATE_LIMIT, int),
+            isinstance(self.TIME_LIMIT_SKIP_RATE, int),
+            isinstance(self.TIME_LIMIT_HOURS_MIN, int),
+            isinstance(self.TIME_LIMIT_HOURS_MAX, int)
+        ]):
+            input("⛔ Configuration Error ⛔\nPlease enter valid constant values in main.py.")
+            sys.exit()
+        if self.TIME_LIMIT_HOURS_MIN > self.TIME_LIMIT_HOURS_MAX:
+            input("⛔ Configuration Error ⛔\nPlease enter a maximum time limit greater than the minimum time limit in main.py.")
+            sys.exit()
 
     def get_headers(self, token: str):
         if token not in self.token_headers:
@@ -228,14 +262,15 @@ class MessageBotter():
 
     async def set_token_dictionaries(self):
         self.token_channel_dict = {}
-        for index, token in enumerate(self.tokens):
+        tokens = self.shuffled_tokens if self.shuffled_tokens else self.tokens
+        for index, token in enumerate(tokens):
             self.token_channel_dict[token] = self.DROP_CHANNEL_IDS[math.floor(index / 3)]  # Max 3 accounts per channel
         self.channel_token_dict = defaultdict(list)
         for k, v in self.token_channel_dict.items():
             self.channel_token_dict[v].append(k)
 
-    async def drop_and_grab(self, token: str, account: int, channel_tokens: list[str]):
-        print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+    async def drop_and_grab(self, token: str, account: int, channel_num: int, channel_tokens: list[str]):
+        print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
         num_channel_tokens = len(channel_tokens)
         drop_message = random.choice(self.DROP_MESSAGES) + random.choice(self.RANDOM_ADDON)
         sent = await self.send_message(token, account, drop_message, 0)
@@ -244,17 +279,18 @@ class MessageBotter():
             karuta_message = await self.get_karuta_message(token, account, self.KARUTA_DROP_MESSAGE, 0)
             if karuta_message:
                 karuta_message_id = karuta_message.get('id')
-                random.shuffle(self.EMOJIS)
+                random.shuffle(self.EMOJIS)  # Shuffle emojis for random emoji order
+                random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
                 for i in range(num_channel_tokens):
                     emoji = self.EMOJIS[i]
                     grab_token = channel_tokens[i]
                     grab_account = self.tokens.index(grab_token) + 1
                     await self.add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
-                    await asyncio.sleep(random.uniform(0.5, 2))
-                scrambled_channel_tokens = random.sample(channel_tokens, len(channel_tokens))
+                    await asyncio.sleep(random.uniform(0.5, 5))
+                random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
-                    if random.choice([True, False]):
-                        grab_token = scrambled_channel_tokens[i]
+                    if random.choice([True, False]):  # 50% chance of sending messages
+                        grab_token = channel_tokens[i]
                         grab_account = self.tokens.index(grab_token) + 1
                         for _ in range(random.randint(1, 3)):
                             random_message = random.choice(self.RANDOM_MESSAGES)
@@ -272,25 +308,46 @@ class MessageBotter():
             else:
                 sys.exit()
 
-    async def run_bot(self):
+    async def run_bot_instance(self, channel_num: int, start_delay: int, tokens: list[str], time_limit_seconds: int):
+        num_accounts = len(tokens)
+        self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
+        self.start_time = time.time()
+        await asyncio.sleep(start_delay)
+        while time_limit_seconds > 0:  # Run if not skipped
+            for token in tokens:
+                if time.time() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
+                    print(f"\n⚠️ Time Limit Warning ⚠️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
+                    await self.send_message(token, self.tokens.index(token) + 1, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
+                    return
+                await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, tokens)
+                await asyncio.sleep(self.DELAY + random.uniform(1 * 60, 7 * 60))  # Wait an additional 1-7 minutes per drop (totalling 33-51 mins per cycle)
+
+    async def run_script(self):
+        if self.SHUFFLE_ACCOUNTS:
+            self.shuffled_tokens = random.sample(self.tokens, len(self.tokens))
+        else:
+            self.shuffled_tokens = None
+
         await self.run_command_checker()
         await self.set_token_dictionaries()
-        self.min_num_account_per_channel = len(self.channel_token_dict[self.DROP_CHANNEL_IDS[-1]])  # Get the minimum number of accounts in channels (ideally 3 (if number of accounts is a multiple of 3))
-        self.DELAY = 30 * 60 / self.min_num_account_per_channel  # Ideally 10 min delay per account (3 accounts)
-        if self.SHUFFLE_DROP_CHANNELS:
-            random.shuffle(self.DROP_CHANNEL_IDS)
-        self.start_time = time.time()
-        while True:
-            for index in range(self.min_num_account_per_channel):
-                if time.time() - self.start_time >= self.TIME_LIMIT_HOURS * 60 * 60:  # Time limit for automatic shutoff
-                    input(f"⚠️ Script Runtime Warning ⚠️\nThe script has been running for {self.TIME_LIMIT_HOURS} hours. Automatically pausing to avoid ban risk...\nPress `Enter` if you wish to continue running the script.")
-                scrambled_drop_channel_ids = random.sample(self.DROP_CHANNEL_IDS, len(self.DROP_CHANNEL_IDS))
-                for channel_id in scrambled_drop_channel_ids:
-                    channel_tokens = self.channel_token_dict[channel_id]
-                    token = channel_tokens[index]
-                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_tokens)
-                    await asyncio.sleep(random.uniform(10, 60))  # Wait 10-60 seconds between drops (so max 180s delay per 30 mins)
-                await asyncio.sleep(self.DELAY + random.uniform(0, 60))  # Wait 0-60 seconds per 30 mins (every cycle)
+        
+        tasks = []
+        num_channels = len(self.DROP_CHANNEL_IDS)
+        start_delay_multipliers = random.sample(range(num_channels), num_channels)
+        for index, channel_id in enumerate(self.DROP_CHANNEL_IDS):
+            channel_num = index + 1
+            channel_tokens = self.channel_token_dict[channel_id]
+            start_delay_seconds = start_delay_multipliers[0] * 180 + random.uniform(5, 120)  # Randomly stagger start times
+            start_delay_multipliers.pop(0)
+            if self.TIME_LIMIT_SKIP_RATE > 0 and random.randint(1, self.TIME_LIMIT_SKIP_RATE) == 1:  # If SKIP_RATE == -1, never skip
+                channel_time_limit_seconds = 0
+            else:
+                channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
+            print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs after a {round(start_delay_seconds)}s delay:")
+            for token in channel_tokens:
+                print(f"  - Account #{self.tokens.index(token) + 1}")
+            tasks.append(asyncio.create_task(self.run_bot_instance(channel_num, start_delay_seconds, channel_tokens, channel_time_limit_seconds)))
+        await asyncio.gather(*tasks)
 
 if __name__ == "__main__":
     bot = MessageBotter()
@@ -300,17 +357,6 @@ if __name__ == "__main__":
             None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, bot.TERMINAL_VISIBILITY
         )
         sys.exit()
-    try:
-        if (
-            (bot.COMMAND_USER_ID != "" and not bot.COMMAND_USER_ID.isdigit())
-            or not bot.COMMAND_CHANNEL_ID.isdigit()
-            or not all(id.isdigit() for id in bot.DROP_CHANNEL_IDS)
-            or not bot.KARUTA_BOT_ID.isdigit()
-        ):
-            input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
-            sys.exit()
-    except AttributeError:
-        input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
-        sys.exit()
+    bot.check_config()
     bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS))
-    asyncio.run(bot.run_bot())
+    asyncio.run(bot.run_script())
