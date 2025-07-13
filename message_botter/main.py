@@ -187,7 +187,11 @@ class MessageBotter():
                     try:
                         for msg in messages:
                             if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
-                                if search_content == self.KARUTA_DROP_MESSAGE and self.KARUTA_DROP_MESSAGE in msg.get('content', '') and self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', ''):
+                                if all([
+                                    search_content == self.KARUTA_DROP_MESSAGE,
+                                    self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
+                                    self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
+                                ]):
                                     print(f"✅ [Account #{account}] Retrieved drop message.")
                                     return msg
                                 elif search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
@@ -295,31 +299,32 @@ class MessageBotter():
                         for _ in range(random.randint(1, 3)):
                             random_message = random.choice(self.RANDOM_MESSAGES)
                             await self.send_message(grab_token, grab_account, random_message, self.RATE_LIMIT)
-                            await asyncio.sleep(random.uniform(1, 3))
+                            await asyncio.sleep(random.uniform(1, 4))
         else:
             if self.TERMINAL_VISIBILITY:
                 hwnd = win32console.GetConsoleWindow()
                 win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
                 win32gui.SetForegroundWindow(hwnd)
-                input(f"⛔ Request Error ⛔\nMalformed request on Account #{account}. Possible reasons include:\n 1. Invalid/expired token\n 2. Incorrectly inputted server/channel/bot ID\nPress `Enter` to restart the script.")
+                input(f"⛔ Request Error ⛔\nMalformed request on Account #{account}. Possible reasons include:" +
+                        f"\n 1. Invalid/expired token\n 2. Incorrectly inputted server/channel/bot ID\nPress `Enter` to restart the script.")
                 ctypes.windll.shell32.ShellExecuteW(
                     None, None, sys.executable, " ".join(sys.argv), None, self.TERMINAL_VISIBILITY
                 )
             else:
                 sys.exit()
 
-    async def run_bot_instance(self, channel_num: int, start_delay: int, tokens: list[str], time_limit_seconds: int):
-        num_accounts = len(tokens)
+    async def run_instance(self, channel_num: int, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
+        num_accounts = len(channel_tokens)
         self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
         self.start_time = time.time()
         await asyncio.sleep(start_delay)
         while time_limit_seconds > 0:  # Run if not skipped
-            for token in tokens:
+            for token in channel_tokens:
                 if time.time() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
                     print(f"\n⚠️ Time Limit Warning ⚠️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
                     await self.send_message(token, self.tokens.index(token) + 1, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
-                await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, tokens)
+                await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, channel_tokens.copy())
                 await asyncio.sleep(self.DELAY + random.uniform(1 * 60, 7 * 60))  # Wait an additional 1-7 minutes per drop (totalling 33-51 mins per cycle)
 
     async def run_script(self):
@@ -343,10 +348,10 @@ class MessageBotter():
                 channel_time_limit_seconds = 0
             else:
                 channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
-            print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs after a {round(start_delay_seconds)}s delay:")
+            print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs starting in {round(start_delay_seconds)}s:")
             for token in channel_tokens:
                 print(f"  - Account #{self.tokens.index(token) + 1}")
-            tasks.append(asyncio.create_task(self.run_bot_instance(channel_num, start_delay_seconds, channel_tokens, channel_time_limit_seconds)))
+            tasks.append(asyncio.create_task(self.run_instance(channel_num, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
         await asyncio.gather(*tasks)
 
 if __name__ == "__main__":
