@@ -321,7 +321,7 @@ class MessageBotter():
         while True:
             for token in channel_tokens:
                 if time.time() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
-                    print(f"\n⚠️ Time Limit Warning ⚠️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
+                    print(f"\nℹ️ Time Limit Reached ℹ️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
                     await self.send_message(token, self.tokens.index(token) + 1, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
                 await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, channel_tokens.copy())
