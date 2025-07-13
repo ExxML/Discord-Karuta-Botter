@@ -1,6 +1,6 @@
 from token_extractor import TokenExtractor
 from command_checker import CommandChecker
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 import win32gui
 import win32con
@@ -309,10 +309,9 @@ class MessageBotter():
                 input(f"⛔ Request Error ⛔\nMalformed request on Account #{account}. Possible reasons include:" +
                         f"\n 1. Invalid/expired token\n 2. Incorrectly inputted server/channel/bot ID\nPress `Enter` to restart the script.")
                 ctypes.windll.shell32.ShellExecuteW(
-                    None, None, sys.executable, " ".join(sys.argv), None, self.TERMINAL_VISIBILITY
+                    None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, self.TERMINAL_VISIBILITY
                 )
-            else:
-                sys.exit()
+            sys.exit()
 
     async def run_instance(self, channel_num: int, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
         num_accounts = len(channel_tokens)
@@ -349,12 +348,18 @@ class MessageBotter():
                 start_delay_seconds = start_delay_multipliers[0] * 240 + random.uniform(5, 120)  # Randomly stagger start times
                 start_delay_multipliers.pop(0)
                 channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
-                print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs starting in {round(start_delay_seconds)}s:")
+                target_time = datetime.now() + timedelta(seconds = channel_time_limit_seconds)
+                print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs (until {target_time.strftime('%I:%M:%S %p').lstrip('0')}) starting in {round(start_delay_seconds)}s:")
                 for token in channel_tokens:
                     print(f"  - Account #{self.tokens.index(token) + 1}")
                 task_instances.append(asyncio.create_task(self.run_instance(channel_num, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
         await asyncio.sleep(3)  # Short delay to show user the account/channel information
         await asyncio.gather(*task_instances)
+        input("\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.")
+        ctypes.windll.shell32.ShellExecuteW(
+            None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, self.TERMINAL_VISIBILITY
+        )
+        sys.exit()
 
 if __name__ == "__main__":
     bot = MessageBotter()
