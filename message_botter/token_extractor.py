@@ -23,7 +23,7 @@ class TokenExtractor():
         with open("tokens.json", "r") as tokens_file:
             try:
                 self.TOKENS = json.load(tokens_file)
-            except json.JSONDecodeError:
+            except (FileNotFoundError, json.JSONDecodeError):
                 self.TOKENS = []
         if not isinstance(self.TOKENS, list) or not all(isinstance(token, str) for token in self.TOKENS):
             input('⛔ Token Format Error ⛔\nExpected a list of strings. Example: ["token1", "token2", "token3"]')
