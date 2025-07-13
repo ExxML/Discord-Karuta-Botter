@@ -21,10 +21,10 @@ pip install -r requirements.txt
 
 If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.com/product/discord-accounts-%7C-fully-verified-tokens (I am not affiliated with this shop). As of July 2025, there is plenty of cheap stock and customer service is excellent.
 
-❗For the script to work at maximum capacity, the number of accounts you input must be a **multiple of 3**. Additionally, if you enter **less than 3 accounts**, the script will not be able to auto-grab all the cards. Finally, make sure no accounts have 2FA enabled. All accounts should have view access to `self.COMMAND_CHANNEL_ID` and can send messages in the `self.DROP_CHANNEL_IDS`.❗
+❗For the script to auto-grab all cards, the number of accounts you input must be a **multiple of 3**. Make sure no accounts have 2FA enabled, and all accounts should have view access to `self.COMMAND_CHANNEL_ID` and can send messages in all the `self.DROP_CHANNEL_IDS`.❗
 
 ## Usage
-1. Edit `self.COMMAND_USER_ID`, `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `self.KARUTA_PREFIX` in `main.py`. `self.COMMAND_USER_ID` restricts message commands to this account- leave the string empty if you want to allow *any* user to send commands. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be exactly 1 drop channel per 3 accounts used.**
+1. Edit `self.COMMAND_USER_ID`, `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `self.KARUTA_PREFIX` in `main.py`. `self.COMMAND_USER_ID` restricts message commands to this account- leave the string empty if you want to allow *any* user to send commands. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be 1 drop channel per 3 accounts used.**
 2. Enter your emails and passwords in `self.ACCOUNTS` in `token_extractor.py` using the following format:
 ```python
 {"email": "example_email@gmail.com", "password": "example_password"}, ...
@@ -46,5 +46,5 @@ Alternatively, you can enter your tokens as a list of strings in `tokens.json`. 
 ##### Note #2: If you mistype the account number for the `{lock}` or `{burn}` command, you must restart the trade/burn process. Sorry!
 ##### Note #3: Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
-#### ⚠️ **DO NOT** run the script for more than 12 consecutive hours. Karuta may flag your accounts for suspicious activity. After 8 hours (default setting), the script will automatically pause and display a warning in the terminal.
+#### ⚠️ **DO NOT** run the script for more than 10 consecutive hours. Karuta may flag your accounts for suspicious activity. After a random time limit, the script will automatically stop and display a warning in the terminal.
 #### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
