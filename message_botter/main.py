@@ -53,7 +53,8 @@ class MessageBotter():
             f"{self.KARUTA_PREFIX}v", f"{self.KARUTA_PREFIX}collection", f"{self.KARUTA_PREFIX}c",
             f"{self.KARUTA_PREFIX}c o:wl", f"{self.KARUTA_PREFIX}c o:p", f"{self.KARUTA_PREFIX}c o:eff",
             f"{self.KARUTA_PREFIX}cardinfo", f"{self.KARUTA_PREFIX}ci", f"{self.KARUTA_PREFIX}cd",
-            f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly", "bruh", "gg", "lmao", "wtf", "omg"
+            f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly", "bruh", "gg", "lmao", "wtf", "omg",
+            "dam", "crazy", "look", "wow", "huh", "umm", "hey", "hellooo", "yo"
         ]
         self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
         self.EMOJI_MAP = {
