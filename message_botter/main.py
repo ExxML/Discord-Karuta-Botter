@@ -318,7 +318,7 @@ class MessageBotter():
         self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
         self.start_time = time.time()
         await asyncio.sleep(start_delay)
-        while time_limit_seconds > 0:  # Run if not skipped
+        while True:
             for token in channel_tokens:
                 if time.time() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
                     print(f"\n⚠️ Time Limit Warning ⚠️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
@@ -336,23 +336,24 @@ class MessageBotter():
         await self.run_command_checker()
         await self.set_token_dictionaries()
         
-        tasks = []
+        task_instances = []
         num_channels = len(self.DROP_CHANNEL_IDS)
         start_delay_multipliers = random.sample(range(num_channels), num_channels)
         for index, channel_id in enumerate(self.DROP_CHANNEL_IDS):
             channel_num = index + 1
-            channel_tokens = self.channel_token_dict[channel_id]
-            start_delay_seconds = start_delay_multipliers[0] * 180 + random.uniform(5, 120)  # Randomly stagger start times
-            start_delay_multipliers.pop(0)
             if self.TIME_LIMIT_SKIP_RATE > 0 and random.randint(1, self.TIME_LIMIT_SKIP_RATE) == 1:  # If SKIP_RATE == -1, never skip
-                channel_time_limit_seconds = 0
+                print(f"\nℹ️ Channel #{channel_num} will be skipped.")
             else:
+                channel_tokens = self.channel_token_dict[channel_id]
+                start_delay_seconds = start_delay_multipliers[0] * 180 + random.uniform(5, 120)  # Randomly stagger start times
+                start_delay_multipliers.pop(0)
                 channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
-            print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs starting in {round(start_delay_seconds)}s:")
-            for token in channel_tokens:
-                print(f"  - Account #{self.tokens.index(token) + 1}")
-            tasks.append(asyncio.create_task(self.run_instance(channel_num, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
-        await asyncio.gather(*tasks)
+                print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs starting in {round(start_delay_seconds)}s:")
+                for token in channel_tokens:
+                    print(f"  - Account #{self.tokens.index(token) + 1}")
+                task_instances.append(asyncio.create_task(self.run_instance(channel_num, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
+        await asyncio.sleep(3)  # Short delay to show user the account/channel information
+        await asyncio.gather(*task_instances)
 
 if __name__ == "__main__":
     bot = MessageBotter()
