@@ -326,7 +326,7 @@ class MessageBotter():
                     await self.send_message(token, self.tokens.index(token) + 1, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
                 await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, channel_tokens.copy())
-                await asyncio.sleep(self.DELAY + random.uniform(1 * 60, 7 * 60))  # Wait an additional 1-7 minutes per drop (totalling 33-51 mins per cycle)
+                await asyncio.sleep(self.DELAY + random.uniform(1 * 60, 7 * 60))  # Wait an additional 1-7 minutes per drop (totalling 33-51 mins per cycle of 3 accounts)
 
     async def run_script(self):
         if self.SHUFFLE_ACCOUNTS:
@@ -346,7 +346,7 @@ class MessageBotter():
                 print(f"\nℹ️ Channel #{channel_num} will be skipped.")
             else:
                 channel_tokens = self.channel_token_dict[channel_id]
-                start_delay_seconds = start_delay_multipliers[0] * 180 + random.uniform(5, 120)  # Randomly stagger start times
+                start_delay_seconds = start_delay_multipliers[0] * 240 + random.uniform(5, 120)  # Randomly stagger start times
                 start_delay_multipliers.pop(0)
                 channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
                 print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs starting in {round(start_delay_seconds)}s:")
