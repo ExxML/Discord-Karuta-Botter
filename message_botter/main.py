@@ -332,7 +332,7 @@ class MessageBotter():
                     return
                 print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
                 if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
-                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, channel_tokens.copy())
+                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_tokens.copy())
                 else:
                     print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
                 await asyncio.sleep(self.DELAY + random.uniform(0.5 * 60, 5 * 60))  # Wait an additional 0.5-5 minutes per drop
