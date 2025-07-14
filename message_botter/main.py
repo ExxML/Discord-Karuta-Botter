@@ -32,6 +32,7 @@ class MessageBotter():
         self.KARUTA_PREFIX = "k"  # (str) Karuta's bot prefix
         self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs
         self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up
+        self.DROP_FAIL_LIMIT = 3  # (int) Maximum number of failed drops across all channels before pausing script. Set to -1 if you wish to disable this limit.
         self.TIME_LIMIT_HOURS_MIN = 5  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
@@ -69,7 +70,7 @@ class MessageBotter():
 
         self.TIME_LIMIT_EXCEEDED_MESSAGES = ["stawp", "stoop", "quittin", "q", "exeeting", "exité", "ceeze", "cloze", '🛑', '🚫', '❌', '⛔']
 
-        # Construct realistic Discord browser headers
+        # Set up variables
         self.token_headers = {}
         self.tokens = []
         self.executed_commands = []
@@ -96,6 +97,7 @@ class MessageBotter():
             isinstance(self.KARUTA_PREFIX, str),
             isinstance(self.SHUFFLE_ACCOUNTS, bool),
             isinstance(self.RATE_LIMIT, int),
+            isinstance(self.DROP_FAIL_LIMIT, int),
             isinstance(self.TIME_LIMIT_HOURS_MIN, int),
             isinstance(self.TIME_LIMIT_HOURS_MAX, int),
             isinstance(self.CHANNEL_SKIP_RATE, int),
@@ -161,6 +163,7 @@ class MessageBotter():
         return self.token_headers[token]
 
     async def get_drop_message(self, token: str, account: int, channel_id: str):
+        global drop_fail_count
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=10"
         headers = self.get_headers(token)
         emoji = '3️⃣'  # Wait until the final reaction (3) is added to the drop message
@@ -187,12 +190,18 @@ class MessageBotter():
                             pass
                     elif status == 401:
                         print(f"❌ [Account #{account}] Retrieve drop message failed: Invalid token.")
+                        async with drop_fail_count_lock:
+                            drop_fail_count += 1
                         return None
                     elif status == 403:
                         print(f"❌ [Account #{account}] Retrieve drop message failed: Token banned or insufficient permissions.")
+                        async with drop_fail_count_lock:
+                            drop_fail_count += 1
                         return None
                 await asyncio.sleep(random.uniform(1, 2))
             print(f"❌ [Account #{account}] Retrieve drop message failed: Timeout reached ({timeout}s).")
+            async with drop_fail_count_lock:
+                drop_fail_count += 1
             return None
 
     async def send_message(self, token: str, account: int, channel_id: str, content: str, rate_limited: int):
@@ -349,6 +358,7 @@ class MessageBotter():
             sys.exit()
 
     async def run_instance(self, channel_num: int, channel_id: str, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
+        global drop_fail_count
         num_accounts = len(channel_tokens)
         self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
         self.start_time = time.monotonic()
@@ -364,6 +374,10 @@ class MessageBotter():
                     await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_id, channel_tokens.copy())
                 else:
                     print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
+                if self.DROP_FAIL_LIMIT >= 0 and drop_fail_count >= self.DROP_FAIL_LIMIT:  # If FAIL_LIMIT == -1 (or any neg num), never pause
+                    input(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.")
+                    async with drop_fail_count_lock:
+                        drop_fail_count = 0
                 await asyncio.sleep(self.DELAY + random.uniform(0.5 * 60, 5 * 60))  # Wait an additional 0.5-5 minutes per drop
 
     async def run_script(self):
@@ -412,4 +426,6 @@ if __name__ == "__main__":
         sys.exit()
     bot.check_config()
     bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS))
+    drop_fail_count = 0
+    drop_fail_count_lock = asyncio.Lock()
     asyncio.run(bot.run_script())
