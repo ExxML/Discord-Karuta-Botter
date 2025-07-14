@@ -92,7 +92,7 @@ class TokenExtractor():
 
         if num_accounts % 3 != 0:
             input(f"\n⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3." +
-                    f"\nThe script will only be able to auto-grab {num_accounts}/{num_accounts + (3 - (num_accounts % 3))} cards. Press `Enter` if you wish to continue.")
+                    f"\nThe script will only be able to auto-grab {(num_accounts * 3) - 2}/{num_accounts * 3} dropped cards. Press `Enter` if you wish to continue.")
 
         if self.TOKENS:
             return self.TOKENS
