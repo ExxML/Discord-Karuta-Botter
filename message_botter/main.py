@@ -29,9 +29,10 @@ class MessageBotter():
         self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs
         self.MESSAGE_COMMAND_TOGGLE = True  # (bool) Enable message commands
         self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up
-        self.TIME_LIMIT_SKIP_RATE = 8  # (int) There is a 1/self.TIME_LIMIT_SKIP_RATE chance of skipping the channel every time you run the script. Set to -1 if you wish to disable it.
         self.TIME_LIMIT_HOURS_MIN = 5  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk)
+        self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
+        self.DROP_SKIP_RATE = 14  # (int) Every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
 
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
@@ -89,14 +90,20 @@ class MessageBotter():
             sys.exit()
         if not all([
             isinstance(self.TERMINAL_VISIBILITY, int),
-            self.TERMINAL_VISIBILITY in (0, 1),
             isinstance(self.KARUTA_PREFIX, str),
             isinstance(self.SHUFFLE_ACCOUNTS, bool),
             isinstance(self.MESSAGE_COMMAND_TOGGLE, bool),
             isinstance(self.RATE_LIMIT, int),
-            isinstance(self.TIME_LIMIT_SKIP_RATE, int),
             isinstance(self.TIME_LIMIT_HOURS_MIN, int),
-            isinstance(self.TIME_LIMIT_HOURS_MAX, int)
+            isinstance(self.TIME_LIMIT_HOURS_MAX, int),
+            isinstance(self.CHANNEL_SKIP_RATE, int),
+            isinstance(self.DROP_SKIP_RATE, int),
+            self.TERMINAL_VISIBILITY in (0, 1),
+            self.RATE_LIMIT >= 0,
+            self.TIME_LIMIT_HOURS_MIN >= 0,
+            self.TIME_LIMIT_HOURS_MAX >= 0,
+            self.CHANNEL_SKIP_RATE != 0,
+            self.DROP_SKIP_RATE != 0
         ]):
             input("⛔ Configuration Error ⛔\nPlease enter valid constant values in main.py.")
             sys.exit()
@@ -274,8 +281,7 @@ class MessageBotter():
         for k, v in self.token_channel_dict.items():
             self.channel_token_dict[v].append(k)
 
-    async def drop_and_grab(self, token: str, account: int, channel_num: int, channel_tokens: list[str]):
-        print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+    async def drop_and_grab(self, token: str, account: int, channel_tokens: list[str]):
         num_channel_tokens = len(channel_tokens)
         drop_message = random.choice(self.DROP_MESSAGES) + random.choice(self.RANDOM_ADDON)
         sent = await self.send_message(token, account, drop_message, 0)
@@ -324,8 +330,12 @@ class MessageBotter():
                     print(f"\nℹ️ Time Limit Reached ℹ️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
                     await self.send_message(token, self.tokens.index(token) + 1, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
-                await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, channel_tokens.copy())
-                await asyncio.sleep(self.DELAY + random.uniform(1 * 60, 7 * 60))  # Wait an additional 1-7 minutes per drop (totalling 33-51 mins per cycle of 3 accounts)
+                print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+                if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
+                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_num, channel_tokens.copy())
+                else:
+                    print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
+                await asyncio.sleep(self.DELAY + random.uniform(0.5 * 60, 5 * 60))  # Wait an additional 0.5-5 minutes per drop
 
     async def run_script(self):
         if self.SHUFFLE_ACCOUNTS:
@@ -341,7 +351,7 @@ class MessageBotter():
         start_delay_multipliers = random.sample(range(num_channels), num_channels)
         for index, channel_id in enumerate(self.DROP_CHANNEL_IDS):
             channel_num = index + 1
-            if self.TIME_LIMIT_SKIP_RATE > 0 and random.randint(1, self.TIME_LIMIT_SKIP_RATE) == 1:  # If SKIP_RATE == -1, never skip
+            if self.CHANNEL_SKIP_RATE > 0 and random.randint(1, self.CHANNEL_SKIP_RATE) == 1:  # If SKIP_RATE == -1 (or any neg num), never skip
                 print(f"\nℹ️ Channel #{channel_num} will be skipped.")
             else:
                 channel_tokens = self.channel_token_dict[channel_id]
