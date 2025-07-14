@@ -4,11 +4,11 @@ import random
 import uuid
 
 class CommandChecker():
-    def __init__(self, main, tokens, command_user_id, command_channel_id, karuta_prefix, karuta_bot_id, karuta_drop_message, karuta_expired_drop_message, 
-                      karuta_card_transfer_title, karuta_multitrade_lock_message, karuta_multitrade_confirm_message, karuta_multiburn_title, rate_limit):
+    def __init__(self, main, tokens: list[str], command_user_ids: list[str], command_channel_id: str, karuta_prefix: str, karuta_bot_id: str, karuta_drop_message: str, karuta_expired_drop_message: str, 
+                      karuta_card_transfer_title: str, karuta_multitrade_lock_message: str, karuta_multitrade_confirm_message: str, karuta_multiburn_title: str, rate_limit: int):
         self.main = main
         self.tokens = tokens
-        self.COMMAND_USER_ID = command_user_id
+        self.COMMAND_USER_IDS = command_user_ids
         self.COMMAND_CHANNEL_ID = command_channel_id
         self.KARUTA_PREFIX = karuta_prefix
         self.KARUTA_BOT_ID = karuta_bot_id
@@ -43,7 +43,7 @@ class CommandChecker():
                     for msg in messages:
                         try:
                             raw_content = msg.get('content', '')
-                            if ((not self.COMMAND_USER_ID or (self.COMMAND_USER_ID and msg.get('author', {}).get('id') == self.COMMAND_USER_ID))
+                            if ((not self.COMMAND_USER_IDS or (self.COMMAND_USER_IDS and msg.get('author', {}).get('id') in self.COMMAND_USER_IDS))
                                 and raw_content.startswith(self.MESSAGE_COMMAND_PREFIX)
                                 and msg not in self.executed_commands
                             ):

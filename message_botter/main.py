@@ -18,16 +18,19 @@ import time
 class MessageBotter():
     def __init__(self):
         ### CUSTOMIZE THESE SETTINGS ###
-        self.COMMAND_USER_ID = ""  # Enter the user ID of the account that can use message commands
-        self.COMMAND_CHANNEL_ID = ""  # Enter your command channel to send message commands
-        # Enter your drop channels as strings separated by commas
+        # Enter a list of strings containing the user IDs that can use message commands. Leave the list empty to allow any account to use commands.
+        self.COMMAND_USER_IDS = [
+            "",
+        ]
+        # Enter your command channel (where commands can be sent) as a string. Leave the string empty to disable message commands.
+        self.COMMAND_CHANNEL_ID = ""
+        # Enter your drop channels as list of strings
         self.DROP_CHANNEL_IDS = [
             "",
         ]
         self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
         self.KARUTA_PREFIX = "k"  # (str) Karuta's bot prefix
         self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs
-        self.MESSAGE_COMMAND_TOGGLE = True  # (bool) Enable message commands
         self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up
         self.TIME_LIMIT_HOURS_MIN = 5  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk)
@@ -78,10 +81,10 @@ class MessageBotter():
     def check_config(self):
         try:
             if not all([
-                (bot.COMMAND_USER_ID == "" or bot.COMMAND_USER_ID.isdigit()),
-                bot.COMMAND_CHANNEL_ID.isdigit(),
-                all(id.isdigit() for id in bot.DROP_CHANNEL_IDS),
-                bot.KARUTA_BOT_ID.isdigit()
+                all(id.isdigit() for id in self.COMMAND_USER_IDS),
+                (self.COMMAND_CHANNEL_ID == "" or self.COMMAND_CHANNEL_ID.isdigit()),
+                all(id.isdigit() for id in self.DROP_CHANNEL_IDS),
+                self.KARUTA_BOT_ID.isdigit()
             ]):
                 input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
                 sys.exit()
@@ -92,7 +95,6 @@ class MessageBotter():
             isinstance(self.TERMINAL_VISIBILITY, int),
             isinstance(self.KARUTA_PREFIX, str),
             isinstance(self.SHUFFLE_ACCOUNTS, bool),
-            isinstance(self.MESSAGE_COMMAND_TOGGLE, bool),
             isinstance(self.RATE_LIMIT, int),
             isinstance(self.TIME_LIMIT_HOURS_MIN, int),
             isinstance(self.TIME_LIMIT_HOURS_MAX, int),
@@ -251,11 +253,11 @@ class MessageBotter():
                     print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
     async def run_command_checker(self):
-        if self.MESSAGE_COMMAND_TOGGLE:
+        if self.COMMAND_CHANNEL_ID:  # If command channel id field is not empty
             command_checker = CommandChecker(
                 main = self,
                 tokens = self.tokens,
-                command_user_id = self.COMMAND_USER_ID,
+                command_user_ids = self.COMMAND_USER_IDS,
                 command_channel_id = self.COMMAND_CHANNEL_ID,
                 karuta_prefix = self.KARUTA_PREFIX,
                 karuta_bot_id = self.KARUTA_BOT_ID,
