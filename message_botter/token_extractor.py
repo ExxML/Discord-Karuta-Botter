@@ -75,25 +75,24 @@ class TokenExtractor():
             print("ℹ️ Using tokens (from tokens.json) instead of account logins...")
             num_accounts = len(self.TOKENS)
         else:
-            print("ℹ️ Using account logins instead of tokens...\n")
+            print("ℹ️ Using account logins instead of tokens...")
             num_accounts = len(self.ACCOUNTS)
 
         if num_accounts == 0:
-            input("⛔ Account Error ⛔\nNo accounts found. Please enter at least 1 account in token_extractor.py or tokens.json.")
+            input("\n⛔ Account Error ⛔\nNo accounts found. Please enter at least 1 account in token_extractor.py or tokens.json.")
             sys.exit()
-        
-        num_account_warning = num_accounts % 3 != 0
-        if num_account_warning:
-            input(f"⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3." +
-                    f"\nThe script will only be able to auto-grab {num_accounts}/{num_accounts + (3 - (num_accounts % 3))} cards. Press `Enter` if you wish to continue.")
         
         if self.TOKENS:
             num_channels_need = math.ceil(len(self.TOKENS) / 3)  # Maximum 3 accounts per channel
         else:
             num_channels_need = math.ceil(len(self.ACCOUNTS) / 3)  # Maximum 3 accounts per channel
         if  num_channels_need != num_channels:
-            input(f"⛔ Configuration Error ⛔\nYou have entered {num_channels} drop channel(s). You should have {num_channels_need} channel(s).")
+            input(f"\n⛔ Configuration Error ⛔\nYou have entered {num_channels} drop channel(s). You should have {num_channels_need} channel(s).")
             sys.exit()
+
+        if num_accounts % 3 != 0:
+            input(f"\n⚠️ Configuration Warning ⚠️\nThe number of accounts you entered is not a multiple of 3." +
+                    f"\nThe script will only be able to auto-grab {num_accounts}/{num_accounts + (3 - (num_accounts % 3))} cards. Press `Enter` if you wish to continue.")
 
         if self.TOKENS:
             return self.TOKENS
@@ -101,10 +100,7 @@ class TokenExtractor():
         # Executes if using account logins
         tokens = []
         for account in self.ACCOUNTS:
-            if account == self.ACCOUNTS[0] and not num_account_warning:
-                print("Loading new undetected Chrome...")
-            else:
-                print("\nLoading new undetected Chrome...")  # \n ONLY if not first account or account_warning
+            print("\nLoading new undetected Chrome...")
             self.load_chrome()
             print(f"Processing {account['email']}...")
             token = self.extract_discord_token(account["email"], account["password"])
@@ -115,14 +111,14 @@ class TokenExtractor():
 
         num_tokens = len(tokens)
         if num_tokens == 0:
-            input("⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
+            input("\n⛔ Token Error ⛔\nNo tokens found. Please check your account info.")
             sys.exit()
         elif num_tokens != len(self.ACCOUNTS):
-            input(f"⚠️ Configuration Warning ⚠️\nYou entered {len(self.ACCOUNTS)} accounts, but only {num_tokens} tokens were found.\nPress `Enter` if you wish to continue.")
+            input(f"\n⚠️ Configuration Warning ⚠️\nYou entered {len(self.ACCOUNTS)} accounts, but only {num_tokens} tokens were found.\nPress `Enter` if you wish to continue.")
         
         if self.SAVE_TOKENS:
             with open("tokens.json", "w") as tokens_file:
                 json.dump(tokens, tokens_file)
-                print("ℹ️ Tokens saved to tokens.json")
+                print("\nℹ️ Tokens saved to tokens.json")
 
         return tokens
