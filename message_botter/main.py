@@ -158,8 +158,8 @@ class MessageBotter():
             }
         return self.token_headers[token]
 
-    async def send_message(self, token: str, account: int, content: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages"
+    async def send_message(self, token: str, account: int, channel_id: str, content: str, rate_limited: int):
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
         headers = self.get_headers(token)
         payload = {
             "content": content,
@@ -179,13 +179,13 @@ class MessageBotter():
                     retry_after = 1  # seconds
                     print(f"⚠️ [Account #{account}] Message '{content}' failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                     await asyncio.sleep(retry_after)
-                    await self.send_message(token, account, content, rate_limited)
+                    await self.send_message(token, account, channel_id, content, rate_limited)
                 else:
                     print(f"❌ [Account #{account}] Message '{content}' failed: Error code {status}.")
                 return status == 200
 
-    async def get_karuta_message(self, token: str, account: int, search_content: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages?limit=20"
+    async def get_karuta_message(self, token: str, account: int, channel_id: str, search_content: str, rate_limited: int):
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=20"
         headers = self.get_headers(token)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
@@ -221,15 +221,15 @@ class MessageBotter():
                     retry_after = 1
                     print(f"⚠️ [Account #{account}] Retrieve message failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                     await asyncio.sleep(retry_after)
-                    return await self.get_karuta_message(token, account, search_content, rate_limited)
+                    return await self.get_karuta_message(token, account, channel_id, search_content, rate_limited)
                 else:
                     print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
                     return None
                 print(f"❌ [Account #{account}] Retrieve message failed: Message '{search_content}' not found in recent messages.")
                 return None
 
-    async def add_reaction(self, token: str, account: int, message_id: str, emoji: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{self.token_channel_dict[token]}/messages/{message_id}/reactions/{emoji}/@me"
+    async def add_reaction(self, token: str, account: int, channel_id: str, message_id: str, emoji: str, rate_limited: int):
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me"
         headers = self.get_headers(token)
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers = headers) as resp:
@@ -246,7 +246,7 @@ class MessageBotter():
                     retry_after = 1
                     print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                     await asyncio.sleep(retry_after)
-                    await self.add_reaction(token, account, message_id, emoji, rate_limited)
+                    await self.add_reaction(token, account, channel_id, message_id, emoji, rate_limited)
                 else:
                     print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
@@ -281,13 +281,13 @@ class MessageBotter():
         for k, v in self.token_channel_dict.items():
             self.channel_token_dict[v].append(k)
 
-    async def drop_and_grab(self, token: str, account: int, channel_tokens: list[str]):
+    async def drop_and_grab(self, token: str, account: int, channel_id: str, channel_tokens: list[str]):
         num_channel_tokens = len(channel_tokens)
         drop_message = random.choice(self.DROP_MESSAGES) + random.choice(self.RANDOM_ADDON)
-        sent = await self.send_message(token, account, drop_message, 0)
+        sent = await self.send_message(token, account, channel_id, drop_message, 0)
         if sent:
             await asyncio.sleep(random.uniform(3, 6))
-            karuta_message = await self.get_karuta_message(token, account, self.KARUTA_DROP_MESSAGE, 0)
+            karuta_message = await self.get_karuta_message(token, account, channel_id, self.KARUTA_DROP_MESSAGE, 0)
             if karuta_message:
                 karuta_message_id = karuta_message.get('id')
                 random.shuffle(self.EMOJIS)  # Shuffle emojis for random emoji order
@@ -296,7 +296,7 @@ class MessageBotter():
                     emoji = self.EMOJIS[i]
                     grab_token = channel_tokens[i]
                     grab_account = self.tokens.index(grab_token) + 1
-                    await self.add_reaction(grab_token, grab_account, karuta_message_id, emoji, 0)
+                    await self.add_reaction(grab_token, grab_account, channel_id, karuta_message_id, emoji, 0)
                     await asyncio.sleep(random.uniform(0.5, 5))
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
@@ -305,7 +305,7 @@ class MessageBotter():
                         grab_account = self.tokens.index(grab_token) + 1
                         for _ in range(random.randint(1, 3)):
                             random_message = random.choice(self.RANDOM_MESSAGES)
-                            await self.send_message(grab_token, grab_account, random_message, self.RATE_LIMIT)
+                            await self.send_message(grab_token, grab_account, channel_id, random_message, self.RATE_LIMIT)
                             await asyncio.sleep(random.uniform(1, 4))
         else:
             if self.TERMINAL_VISIBILITY:
@@ -319,7 +319,7 @@ class MessageBotter():
                 )
             sys.exit()
 
-    async def run_instance(self, channel_num: int, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
+    async def run_instance(self, channel_num: int, channel_id: str, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
         num_accounts = len(channel_tokens)
         self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
         self.start_time = time.time()
@@ -328,11 +328,11 @@ class MessageBotter():
             for token in channel_tokens:
                 if time.time() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
                     print(f"\nℹ️ Time Limit Reached ℹ️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
-                    await self.send_message(token, self.tokens.index(token) + 1, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
+                    await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
                 print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
                 if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
-                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_tokens.copy())
+                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_id, channel_tokens.copy())
                 else:
                     print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
                 await asyncio.sleep(self.DELAY + random.uniform(0.5 * 60, 5 * 60))  # Wait an additional 0.5-5 minutes per drop
@@ -362,7 +362,7 @@ class MessageBotter():
                 print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs (until {target_time.strftime('%I:%M:%S %p').lstrip('0')}) starting in {round(start_delay_seconds)}s:")
                 for token in channel_tokens:
                     print(f"  - Account #{self.tokens.index(token) + 1}")
-                task_instances.append(asyncio.create_task(self.run_instance(channel_num, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
+                task_instances.append(asyncio.create_task(self.run_instance(channel_num, channel_id, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
         await asyncio.sleep(3)  # Short delay to show user the account/channel information
         await asyncio.gather(*task_instances)
         input("\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.")
