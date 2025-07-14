@@ -160,6 +160,41 @@ class MessageBotter():
             }
         return self.token_headers[token]
 
+    async def get_drop_message(self, token: str, account: int, channel_id: str):
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=10"
+        headers = self.get_headers(token)
+        emoji = '3️⃣'  # Wait until the final reaction (3) is added to the drop message
+        timeout = 10  # seconds
+        start_time = time.monotonic()
+        async with aiohttp.ClientSession() as session:
+            while (time.monotonic() - start_time) < timeout:
+                async with session.get(url, headers = headers) as resp:
+                    status = resp.status
+                    if status == 200:
+                        messages = await resp.json()
+                        try:
+                            for msg in messages:
+                                reactions = msg.get('reactions', [])
+                                if all([
+                                    msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
+                                    any(reaction.get('emoji', {}).get('name') == emoji for reaction in reactions),
+                                    self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
+                                    self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
+                                ]):
+                                    print(f"✅ [Account #{account}] Retrieved drop message.")
+                                    return msg
+                        except (KeyError, IndexError):
+                            pass
+                    elif status == 401:
+                        print(f"❌ [Account #{account}] Retrieve drop message failed: Invalid token.")
+                        return None
+                    elif status == 403:
+                        print(f"❌ [Account #{account}] Retrieve drop message failed: Token banned or insufficient permissions.")
+                        return None
+                await asyncio.sleep(random.uniform(1, 2))
+            print(f"❌ [Account #{account}] Retrieve drop message failed: Timeout reached ({timeout}s).")
+            return None
+
     async def send_message(self, token: str, account: int, channel_id: str, content: str, rate_limited: int):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
         headers = self.get_headers(token)
@@ -173,17 +208,17 @@ class MessageBotter():
                 if status == 200:
                     print(f"✅ [Account #{account}] Sent message '{content}'.")
                 elif status == 401:
-                    print(f"❌ [Account #{account}] Message '{content}' failed: Invalid token.")
+                    print(f"❌ [Account #{account}] Send message '{content}' failed: Invalid token.")
                 elif status == 403:
-                    print(f"❌ [Account #{account}] Message '{content}' failed: Token banned or no permission.")
+                    print(f"❌ [Account #{account}] Send message '{content}' failed: Token banned or insufficient permissions.")
                 elif status == 429 and rate_limited < self.RATE_LIMIT:
                     rate_limited += 1
                     retry_after = 1  # seconds
-                    print(f"⚠️ [Account #{account}] Message '{content}' failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                    print(f"⚠️ [Account #{account}] Send message '{content}' failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                     await asyncio.sleep(retry_after)
                     await self.send_message(token, account, channel_id, content, rate_limited)
                 else:
-                    print(f"❌ [Account #{account}] Message '{content}' failed: Error code {status}.")
+                    print(f"❌ [Account #{account}] Send message '{content}' failed: Error code {status}.")
                 return status == 200
 
     async def get_karuta_message(self, token: str, account: int, channel_id: str, search_content: str, rate_limited: int):
@@ -197,14 +232,7 @@ class MessageBotter():
                     try:
                         for msg in messages:
                             if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
-                                if all([
-                                    search_content == self.KARUTA_DROP_MESSAGE,
-                                    self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
-                                    self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
-                                ]):
-                                    print(f"✅ [Account #{account}] Retrieved drop message.")
-                                    return msg
-                                elif search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
+                                if search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
                                     print(f"✅ [Account #{account}] Retrieved card transfer message.")
                                     return msg
                                 elif search_content == self.KARUTA_MULTITRADE_LOCK_MESSAGE and self.KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
@@ -242,7 +270,7 @@ class MessageBotter():
                 elif status == 401:
                     print(f"❌ [Account #{account}] Grab card {card_number} failed: Invalid token.")
                 elif status == 403:
-                    print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or no permission.")
+                    print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or insufficient permissions.")
                 elif status == 429 and rate_limited < self.RATE_LIMIT:
                     rate_limited += 1
                     retry_after = 1
@@ -288,17 +316,16 @@ class MessageBotter():
         drop_message = random.choice(self.DROP_MESSAGES) + random.choice(self.RANDOM_ADDON)
         sent = await self.send_message(token, account, channel_id, drop_message, 0)
         if sent:
-            await asyncio.sleep(random.uniform(3, 6))
-            karuta_message = await self.get_karuta_message(token, account, channel_id, self.KARUTA_DROP_MESSAGE, 0)
-            if karuta_message:
-                karuta_message_id = karuta_message.get('id')
+            drop_message = await self.get_drop_message(token, account, channel_id)
+            if drop_message:
+                drop_message_id = drop_message.get('id')
                 random.shuffle(self.EMOJIS)  # Shuffle emojis for random emoji order
                 random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
                 for i in range(num_channel_tokens):
                     emoji = self.EMOJIS[i]
                     grab_token = channel_tokens[i]
                     grab_account = self.tokens.index(grab_token) + 1
-                    await self.add_reaction(grab_token, grab_account, channel_id, karuta_message_id, emoji, 0)
+                    await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
                     await asyncio.sleep(random.uniform(0.5, 5))
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
@@ -324,11 +351,11 @@ class MessageBotter():
     async def run_instance(self, channel_num: int, channel_id: str, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
         num_accounts = len(channel_tokens)
         self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
-        self.start_time = time.time()
+        self.start_time = time.monotonic()
         await asyncio.sleep(start_delay)
         while True:
             for token in channel_tokens:
-                if time.time() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
+                if time.monotonic() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
                     print(f"\nℹ️ Time Limit Reached ℹ️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
                     await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
@@ -361,7 +388,9 @@ class MessageBotter():
                 start_delay_multipliers.pop(0)
                 channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
                 target_time = datetime.now() + timedelta(seconds = channel_time_limit_seconds)
-                print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs (until {target_time.strftime('%I:%M:%S %p').lstrip('0')}) starting in {round(start_delay_seconds)}s:")
+                start_time = datetime.now() + timedelta(seconds = start_delay_seconds)
+                print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs (until {target_time.strftime('%I:%M %p').lstrip('0')}) " +
+                        f"starting in {round(start_delay_seconds)}s ({start_time.strftime('%I:%M:%S %p').lstrip('0')}):")
                 for token in channel_tokens:
                     print(f"  - Account #{self.tokens.index(token) + 1}")
                 task_instances.append(asyncio.create_task(self.run_instance(channel_num, channel_id, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
