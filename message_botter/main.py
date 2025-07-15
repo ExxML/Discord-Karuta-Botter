@@ -93,10 +93,10 @@ class MessageBotter():
                 all(id.isdigit() for id in self.DROP_CHANNEL_IDS),
                 self.KARUTA_BOT_ID.isdigit()
             ]):
-                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID(s), command server/channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
                 sys.exit()
         except AttributeError:
-            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID, command channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID(s), command server/channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
             sys.exit()
         if not all([
             isinstance(self.TERMINAL_VISIBILITY, int),
