@@ -192,17 +192,17 @@ class MessageBotter():
                         except (KeyError, IndexError):
                             pass
                     elif status == 401:
-                        print(f"❌ [Account #{account}] Retrieve drop message failed: Invalid token.")
+                        print(f"❌ [Account #{account}] Retrieve drop message failed ({drop_fail_count.value + 1}/{self.DROP_FAIL_LIMIT}): Invalid token.")
                         async with drop_fail_count_lock:
                             drop_fail_count.value += 1
                         return None
                     elif status == 403:
-                        print(f"❌ [Account #{account}] Retrieve drop message failed: Token banned or insufficient permissions.")
+                        print(f"❌ [Account #{account}] Retrieve drop message failed ({drop_fail_count.value + 1}/{self.DROP_FAIL_LIMIT}): Token banned or insufficient permissions.")
                         async with drop_fail_count_lock:
                             drop_fail_count.value += 1
                         return None
                 await asyncio.sleep(random.uniform(1, 2))
-            print(f"❌ [Account #{account}] Retrieve drop message failed: Timeout reached ({timeout}s).")
+            print(f"❌ [Account #{account}] Retrieve drop message failed ({drop_fail_count.value + 1}/{self.DROP_FAIL_LIMIT}): Timed out ({timeout}s).")
             async with drop_fail_count_lock:
                 drop_fail_count.value += 1
             return None
