@@ -173,10 +173,10 @@ class MessageBotter():
         return self.token_headers[token]
 
     async def get_drop_message(self, token: str, account: int, channel_id: str):
-        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=10"
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=5"
         headers = self.get_headers(token, is_command = False)
         emoji = '3️⃣'  # Wait until the final reaction (3) is added to the drop message
-        timeout = 10  # seconds
+        timeout = 15  # seconds
         start_time = time.monotonic()
         async with aiohttp.ClientSession() as session:
             while (time.monotonic() - start_time) < timeout:
