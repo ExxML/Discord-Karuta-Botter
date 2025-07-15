@@ -21,7 +21,8 @@ pip install -r requirements.txt
 
 If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.com/product/discord-accounts-%7C-fully-verified-tokens (I am not affiliated with this shop). As of July 2025, there is plenty of cheap stock and customer service is excellent.
 
-❗For the script to auto-grab all cards, the number of accounts you input must be a **multiple of 3**. Make sure no accounts have 2FA enabled, and all accounts should have message access in all of `self.COMMAND_CHANNEL_ID` and `self.DROP_CHANNEL_IDS`.❗
+> [!TIP]
+> For the script to auto-grab all cards, the number of accounts you input must be a **multiple of 3**. Make sure no accounts have 2FA enabled, and all accounts should have message access in all of `self.COMMAND_CHANNEL_ID` and `self.DROP_CHANNEL_IDS`.
 
 ## Usage
 1. Edit the `__init__` constants in `main.py`. `self.COMMAND_USER_IDS` restricts message commands to these accounts- leave the list empty if you want to allow *any* user to send commands. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be 1 drop channel per 3 accounts used.**
@@ -42,9 +43,10 @@ Alternatively, you can enter your tokens as a list of strings in `tokens.json`. 
 - Ex 3. `{cmd} 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
 - Ex 4. `{cmd} 1 kmultiburn <filter>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `{cmd} 1 {burn}` to confirm the multiburn.
 
-##### Note #1: The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{burn}` commands.
-##### Note #2: If you mistype the account number for the `{lock}` or `{burn}` command, you must restart the trade/burn process. Sorry!
-##### Note #3: Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
+> [!NOTE]
+> - The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{burn}` commands.
+> - If you mistype the account number for the `{lock}` or `{burn}` command, you must restart the trade/burn process. Sorry!
+> - Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
 #### ⚠️ **DO NOT** run the script for more than 10 consecutive hours. Karuta may flag your accounts for suspicious activity. After a random time limit, the script will automatically stop and display a warning in the terminal.
 #### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
