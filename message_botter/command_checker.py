@@ -34,7 +34,7 @@ class CommandChecker():
 
     async def check_command(self, token: str):
         url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=3"
-        headers = self.main.get_headers(token)
+        headers = self.main.get_headers(token, is_command = True)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
                 status = resp.status
@@ -122,7 +122,7 @@ class CommandChecker():
                 payload = await self.find_button(account, '✅', card_transfer_message)
                 if payload is not None:
                     async with aiohttp.ClientSession() as session:
-                        headers = self.main.get_headers(token)
+                        headers = self.main.get_headers(token, is_command = True)
                         async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
                             status = resp.status
                             if status == 204:
@@ -139,7 +139,7 @@ class CommandChecker():
                 lock_payload = await self.find_button(account, '🔒', multitrade_lock_message)
                 if lock_payload is not None:
                     async with aiohttp.ClientSession() as session:
-                        headers = self.main.get_headers(token)
+                        headers = self.main.get_headers(token, is_command = True)
                         async with session.post(self.INTERACTION_URL, headers = headers, json = lock_payload) as lock_resp:
                             status = lock_resp.status
                             if status == 204:
@@ -169,7 +169,7 @@ class CommandChecker():
                 payload = await self.find_button(account, '☑️', multiburn_initial_message)
                 if payload is not None:
                     async with aiohttp.ClientSession() as session:
-                        headers = self.main.get_headers(token)
+                        headers = self.main.get_headers(token, is_command = True)
                         async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
                             status = resp.status
                             if status == 204:
@@ -186,7 +186,7 @@ class CommandChecker():
                 fire_payload = await self.find_button(account, '🔥', multiburn_fire_message)
                 if fire_payload is not None:
                     async with aiohttp.ClientSession() as session:
-                        headers = self.main.get_headers(token)
+                        headers = self.main.get_headers(token, is_command = True)
                         async with session.post(self.INTERACTION_URL, headers = headers, json = fire_payload) as fire_resp:
                             status = fire_resp.status
                             if status == 204:

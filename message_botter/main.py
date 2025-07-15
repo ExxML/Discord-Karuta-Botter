@@ -119,7 +119,7 @@ class MessageBotter():
             input("⛔ Configuration Error ⛔\nPlease enter a maximum time limit greater than the minimum time limit in main.py.")
             sys.exit()
 
-    def get_headers(self, token: str):
+    def get_headers(self, token: str, is_command: bool):
         if token not in self.token_headers:
             chrome_version = random.choice(["138.0.7204.119", "138.0.7204.46", "138.0.7204.100"])  # Recent Chrome versions (iOS, Android, and Desktop Chrome respectively) (July 2025)
             build_number = random.choice([381653, 382032, 382201, 382355, 417521])  # Random Discord build version numbers
@@ -160,7 +160,7 @@ class MessageBotter():
                 "Referer": "https://discord.com/channels/@me",
                 "X-Context-Properties": base64.b64encode(json.dumps({
                     "location": "Channel",
-                    "location_channel_id": self.token_channel_dict[token],
+                    "location_channel_id": self.COMMAND_CHANNEL_ID if is_command else self.token_channel_dict[token],
                     "location_channel_type": 1,
                 }).encode()).decode()
             }
@@ -168,7 +168,7 @@ class MessageBotter():
 
     async def get_drop_message(self, token: str, account: int, channel_id: str):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=10"
-        headers = self.get_headers(token)
+        headers = self.get_headers(token, is_command = False)
         emoji = '3️⃣'  # Wait until the final reaction (3) is added to the drop message
         timeout = 10  # seconds
         start_time = time.monotonic()
@@ -209,7 +209,7 @@ class MessageBotter():
 
     async def send_message(self, token: str, account: int, channel_id: str, content: str, rate_limited: int):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages"
-        headers = self.get_headers(token)
+        headers = self.get_headers(token, is_command = False)
         payload = {
             "content": content,
             "tts": False,
@@ -235,7 +235,7 @@ class MessageBotter():
 
     async def get_karuta_message(self, token: str, account: int, channel_id: str, search_content: str, rate_limited: int):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=20"
-        headers = self.get_headers(token)
+        headers = self.get_headers(token, is_command = False)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
                 status = resp.status
@@ -272,7 +272,7 @@ class MessageBotter():
 
     async def add_reaction(self, token: str, account: int, channel_id: str, message_id: str, emoji: str, rate_limited: int):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me"
-        headers = self.get_headers(token)
+        headers = self.get_headers(token, is_command = False)
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers = headers) as resp:
                 status = resp.status
