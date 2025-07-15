@@ -24,7 +24,7 @@ If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.
 ❗For the script to auto-grab all cards, the number of accounts you input must be a **multiple of 3**. Make sure no accounts have 2FA enabled, and all accounts should have message access in all of `self.COMMAND_CHANNEL_ID` and `self.DROP_CHANNEL_IDS`.❗
 
 ## Usage
-1. Edit `self.COMMAND_USER_IDS`, `self.COMMAND_CHANNEL_ID`, `self.DROP_CHANNEL_IDS`, and `self.KARUTA_PREFIX` in `main.py`. `self.COMMAND_USER_IDS` restricts message commands to these accounts- leave the list empty if you want to allow *any* user to send commands. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be 1 drop channel per 3 accounts used.**
+1. Edit the `__init__` constants in `main.py`. `self.COMMAND_USER_IDS` restricts message commands to these accounts- leave the list empty if you want to allow *any* user to send commands. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be 1 drop channel per 3 accounts used.**
 2. Enter your emails and passwords in `self.ACCOUNTS` in `token_extractor.py` using the following format:
 ```python
 {"email": "example_email@gmail.com", "password": "example_password"}, ...
@@ -32,7 +32,7 @@ If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.
 
 Alternatively, you can enter your tokens as a list of strings in `tokens.json`. Leave the list empty if you would like to use `self.ACCOUNTS` instead. **Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.** If you don't have your tokens on hand, you can automatically extract and save your tokens to `tokens.json` by filling in your account credentials in `token_extractor.py`, setting `self.SAVE_TOKENS = True`, then running `main.py`.
 
-3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands.
+3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_SERVER_ID` and `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands.
 4. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
 ```bash
 {cmd} <account_number |OR| 'all'> <message>

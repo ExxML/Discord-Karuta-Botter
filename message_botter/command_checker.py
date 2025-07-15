@@ -4,11 +4,13 @@ import random
 import uuid
 
 class CommandChecker():
-    def __init__(self, main, tokens: list[str], command_user_ids: list[str], command_channel_id: str, karuta_prefix: str, karuta_bot_id: str, karuta_drop_message: str, karuta_expired_drop_message: str, 
-                      karuta_card_transfer_title: str, karuta_multitrade_lock_message: str, karuta_multitrade_confirm_message: str, karuta_multiburn_title: str, rate_limit: int):
+    def __init__(self, main, tokens: list[str], command_user_ids: list[str], command_server_id: str, command_channel_id: str, karuta_prefix: str, karuta_bot_id: str, karuta_drop_message: str, 
+                      karuta_expired_drop_message: str, karuta_card_transfer_title: str, karuta_multitrade_lock_message: str, karuta_multitrade_confirm_message: str, karuta_multiburn_title: str, 
+                      rate_limit: int):
         self.main = main
         self.tokens = tokens
         self.COMMAND_USER_IDS = command_user_ids
+        self.COMMAND_SERVER_ID = command_server_id
         self.COMMAND_CHANNEL_ID = command_channel_id
         self.KARUTA_PREFIX = karuta_prefix
         self.KARUTA_BOT_ID = karuta_bot_id
@@ -85,7 +87,7 @@ class CommandChecker():
                 # If status = 200 but no MESSAGE_COMMAND_PREFIX found
                 return None, None, None
 
-    async def find_button(self, account: int, emoji: str, message: dict):
+    async def get_payload(self, account: int, emoji: str, message: dict):
         try:
             components = message.get('components', [])
             for action_row in components:
@@ -96,6 +98,7 @@ class CommandChecker():
                         payload = {
                             "type": 3,  # Component interaction
                             "nonce": str(uuid.uuid4().int >> 64),  # Unique interaction ID
+                            "guild_id": self.COMMAND_SERVER_ID,
                             "channel_id": self.COMMAND_CHANNEL_ID,
                             "message_flags": 0,
                             "message_id": message.get('id'),
@@ -119,7 +122,7 @@ class CommandChecker():
             if card_transfer_message and card_transfer_message not in self.card_transfer_messages:
                 self.card_transfer_messages.append(card_transfer_message)
                 # Find ✅ button
-                payload = await self.find_button(account, '✅', card_transfer_message)
+                payload = await self.get_payload(account, '✅', card_transfer_message)
                 if payload is not None:
                     async with aiohttp.ClientSession() as session:
                         headers = self.main.get_headers(token, is_command = True)
@@ -136,7 +139,7 @@ class CommandChecker():
             if multitrade_lock_message and multitrade_lock_message not in self.multitrade_messages:
                 self.multitrade_messages.append(multitrade_lock_message)
                 # Find 🔒 button
-                lock_payload = await self.find_button(account, '🔒', multitrade_lock_message)
+                lock_payload = await self.get_payload(account, '🔒', multitrade_lock_message)
                 if lock_payload is not None:
                     async with aiohttp.ClientSession() as session:
                         headers = self.main.get_headers(token, is_command = True)
@@ -147,7 +150,7 @@ class CommandChecker():
                                 await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta multitrade message to update
                                 multitrade_confirm_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTITRADE_CONFIRM_MESSAGE, self.RATE_LIMIT)
                                 # Find ✅ button
-                                check_payload = await self.find_button(account, '✅', multitrade_confirm_message)
+                                check_payload = await self.get_payload(account, '✅', multitrade_confirm_message)
                                 if check_payload is not None:
                                     async with session.post(self.INTERACTION_URL, headers = headers, json = check_payload) as check_resp:
                                         status = check_resp.status
@@ -166,7 +169,7 @@ class CommandChecker():
                 await asyncio.sleep(3)  # Longer delay to wait for check button to enable
                 self.multiburn_initial_messages.append(multiburn_initial_message)
                 # Find ☑️ button
-                payload = await self.find_button(account, '☑️', multiburn_initial_message)
+                payload = await self.get_payload(account, '☑️', multiburn_initial_message)
                 if payload is not None:
                     async with aiohttp.ClientSession() as session:
                         headers = self.main.get_headers(token, is_command = True)
@@ -183,7 +186,7 @@ class CommandChecker():
             if multiburn_fire_message and multiburn_fire_message not in self.multiburn_fire_messages:
                 self.multiburn_fire_messages.append(multiburn_fire_message)
                 # Find 🔥 button
-                fire_payload = await self.find_button(account, '🔥', multiburn_fire_message)
+                fire_payload = await self.get_payload(account, '🔥', multiburn_fire_message)
                 if fire_payload is not None:
                     async with aiohttp.ClientSession() as session:
                         headers = self.main.get_headers(token, is_command = True)
@@ -194,7 +197,7 @@ class CommandChecker():
                                 await asyncio.sleep(random.uniform(3, 6))  # Wait for Karuta multiburn message to update
                                 multiburn_confirm_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTIBURN_TITLE, self.RATE_LIMIT)
                                 # Find ✅ button
-                                check_payload = await self.find_button(account, '✅', multiburn_confirm_message)
+                                check_payload = await self.get_payload(account, '✅', multiburn_confirm_message)
                                 if check_payload is not None:
                                     async with session.post(self.INTERACTION_URL, headers = headers, json =check_payload) as check_resp:
                                         status = check_resp.status

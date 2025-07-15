@@ -26,7 +26,8 @@ class MessageBotter():
         self.COMMAND_USER_IDS = [
             "",
         ]
-        # Enter your command channel (where commands can be sent) as a string. Leave the string empty to disable message commands.
+        # Enter your command server and channel (where commands can be sent) as a string. Leave the strings empty to disable message commands.
+        self.COMMAND_SERVER_ID = ""
         self.COMMAND_CHANNEL_ID = ""
         # Enter your drop channels as list of strings
         self.DROP_CHANNEL_IDS = [
@@ -87,6 +88,7 @@ class MessageBotter():
         try:
             if not all([
                 all(id.isdigit() for id in self.COMMAND_USER_IDS),
+                (self.COMMAND_SERVER_ID == "" or self.COMMAND_SERVER_ID.isdigit()),
                 (self.COMMAND_CHANNEL_ID == "" or self.COMMAND_CHANNEL_ID.isdigit()),
                 all(id.isdigit() for id in self.DROP_CHANNEL_IDS),
                 self.KARUTA_BOT_ID.isdigit()
@@ -293,11 +295,12 @@ class MessageBotter():
                     print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
 
     async def run_command_checker(self):
-        if self.COMMAND_CHANNEL_ID:  # If command channel id field is not empty
+        if all([self.COMMAND_SERVER_ID, self.COMMAND_CHANNEL_ID]):  # If command server id AND channel id field is not empty
             command_checker = CommandChecker(
                 main = self,
                 tokens = self.tokens,
                 command_user_ids = self.COMMAND_USER_IDS,
+                command_server_id = self.COMMAND_SERVER_ID,
                 command_channel_id = self.COMMAND_CHANNEL_ID,
                 karuta_prefix = self.KARUTA_PREFIX,
                 karuta_bot_id = self.KARUTA_BOT_ID,
