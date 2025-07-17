@@ -27,6 +27,8 @@ class CommandChecker():
         self.INTERACTION_URL = "https://discord.com/api/v10/interactions"
         self.KARUTA_LOCK_COMMAND = "{lock}"
         self.KARUTA_MULTIBURN_COMMAND = "{burn}"
+        self.KARUTA_PAUSE_COMMAND = "{pause}"
+        self.KARUTA_RESUME_COMMAND = "{resume}"
 
         self.executed_commands = []
         self.card_transfer_messages = []
@@ -51,38 +53,56 @@ class CommandChecker():
                             ):
                                 self.executed_commands.append(msg)
                                 content = raw_content.removeprefix(self.MESSAGE_COMMAND_PREFIX).strip()
-                                account_str, command = content.split(" ", 1)
+                                account_str, command = (content.split(" ", 1) + [""])[:2]
                                 if account_str.isdigit():
                                     account = int(account_str)
                                     if account < 1 or account > len(self.tokens):
-                                        print(f"❌ Error parsing command: Account number is not between 1 and {len(self.tokens)}.")
+                                        print(f"\n❌ Error parsing command: Account number is not between 1 and {len(self.tokens)}.")
                                         return None, None, None
                                 elif account_str.lower() == self.ALL_ACCOUNT_FLAG:
                                     account = self.ALL_ACCOUNT_FLAG
+                                elif account_str.lower() == self.KARUTA_PAUSE_COMMAND:
+                                    if self.main.pause_event.is_set():
+                                        self.main.pause_event.clear()  # Pause drops
+                                        print("\n🤖 Pausing all drops...")
+                                        await self.main.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "Pausing all drops...", 0)
+                                    else:
+                                        print("\n🤖 Drops are already paused.")
+                                        await self.main.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "Drops are already paused.", 0)
+                                    return None, None, None
+                                elif account_str.lower() == self.KARUTA_RESUME_COMMAND:
+                                    if not self.main.pause_event.is_set():
+                                        self.main.pause_event.set()  # Resume drops
+                                        print("\n🤖 Resuming all drops...")
+                                        await self.main.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "Resuming all drops...", 0)
+                                    else:
+                                        print("\n🤖 Drops have already resumed.")
+                                        await self.main.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "Drops have already resumed.", 0)
+                                    return None, None, None
                                 else:
-                                    print("❌ Error parsing command: Account number is not a number or 'all'.")
+                                    print("\n❌ Error parsing command: Account number is not a number or 'all'.")
                                     return None, None, None
                                 if (command.startswith(f"{self.KARUTA_PREFIX}give") or command.startswith(f"{self.KARUTA_PREFIX}g")) and isinstance(account, int):
-                                    print(f"🤖 Sending card transfer from Account #{account}...")
+                                    print(f"\n🤖 Sending card transfer from Account #{account}...")
                                     send = True
                                 elif command == self.KARUTA_LOCK_COMMAND and isinstance(account, int):
-                                    print(f"🤖 Locking and confirming trade from Account #{account}...")
+                                    print(f"\n🤖 Locking and confirming trade from Account #{account}...")
                                     send = False
                                 elif (command.startswith(f"{self.KARUTA_PREFIX}multiburn") or command.startswith(f"{self.KARUTA_PREFIX}mb")) and isinstance(account, int):
-                                    print(f"🤖 Multiburning on Account #{account}...")
+                                    print(f"\n🤖 Multiburning on Account #{account}...")
                                     send = True
                                 elif command == self.KARUTA_MULTIBURN_COMMAND and isinstance(account, int):
-                                    print(f"🤖 Confirming multiburn on Account #{account}...")
+                                    print(f"\n🤖 Confirming multiburn on Account #{account}...")
                                     send = False
                                 else:
-                                    print(f"🤖 Sending '{command}' from {f'Account #{account}' if isinstance(account, int) else 'all accounts'}...")
+                                    print(f"\n🤖 Sending '{command}' from {f'Account #{account}' if isinstance(account, int) else 'all accounts'}...")
                                     send = True
                                 return send, account, command
                         except Exception as e:
-                            print("❌ Error parsing command:", e)
+                            print("\n❌ Error parsing command:", e)
                             return None, None, None
                 else:
-                    print(f"❌ Command check failed: Error code {status}.")
+                    print(f"\n❌ Command check failed: Error code {status}.")
                     return None, None, None
                 # If status = 200 but no MESSAGE_COMMAND_PREFIX found
                 return None, None, None
@@ -132,6 +152,8 @@ class CommandChecker():
                                 print(f"✅ [Account #{account}] Confirmed card transfer.")
                             else:
                                 print(f"❌ [Account #{account}] Confirm card transfer failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Confirm card transfer failed: ✅ button not found.")
 
     async def check_multitrade(self, token: str, account: int, command: str):
         if command == self.KARUTA_LOCK_COMMAND:
@@ -158,8 +180,12 @@ class CommandChecker():
                                             print(f"✅ [Account #{account}] Confirmed multitrade.")
                                         else:
                                             print(f"❌ [Account #{account}] Confirm multitrade failed: Error code {status}.")
+                                else:
+                                    print(f"❌ [Account #{account}] Confirm multitrade failed: ✅ button not found.")
                             else:
                                 print(f"❌ [Account #{account}] Lock multitrade failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Lock multitrade failed: 🔒 button not found.")
 
     async def check_multiburn(self, token: str, account: int, command: str):
         if command.startswith(f"{self.KARUTA_PREFIX}multiburn") or command.startswith(f"{self.KARUTA_PREFIX}mb"):
@@ -179,6 +205,8 @@ class CommandChecker():
                                 print(f"✅ [Account #{account}] Confirmed initial (0/2) multiburn.")
                             else:
                                 print(f"❌ [Account #{account}] Confirm initial (0/2) multiburn failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Confirm initial (0/2) multiburn failed: ☑️ button not found.")
 
     async def confirm_multiburn(self, token: str, account: int, command: str):
         if command == self.KARUTA_MULTIBURN_COMMAND:
@@ -205,8 +233,12 @@ class CommandChecker():
                                             print(f"✅ [Account #{account}] Confirmed final (2/2) multiburn.")
                                         else:
                                             print(f"❌ [Account #{account}] Confirm final (2/2) multiburn failed: Error code {status}.")
+                                else:
+                                    print(f"❌ [Account #{account}] Confirm final (2/2) multiburn failed: ✅ button not found.")
                             else:
                                 print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: 🔥 button not found.")
 
     async def run(self):
         while True:
