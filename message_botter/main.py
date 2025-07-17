@@ -15,10 +15,6 @@ import ctypes
 import math
 import time
 
-class DropFailCount:
-    def __init__(self, value):
-        self.value = value
-
 class MessageBotter():
     def __init__(self):
         ### CUSTOMIZE THESE SETTINGS ###
@@ -79,7 +75,13 @@ class MessageBotter():
 
         self.TIME_LIMIT_EXCEEDED_MESSAGES = ["stawp", "stoop", "quittin", "q", "exeeting", "exité", "ceeze", "cloze", '🛑', '🚫', '❌', '⛔']
 
+        self.pause_event = asyncio.Event()
+        self.pause_event.set()
+        self.DROP_FAIL_LIMIT_REACHED_FLAG = "Drop Fail Limit Reached"
+        self.EXECUTION_COMPLETED_FLAG = "Execution Completed"
+
         # Set up variables
+        self.drop_fail_count = 0
         self.token_headers = {}
         self.tokens = []
         self.executed_commands = []
@@ -198,19 +200,16 @@ class MessageBotter():
                         except (KeyError, IndexError):
                             pass
                     elif status == 401:
-                        print(f"❌ [Account #{account}] Retrieve drop message failed ({drop_fail_count.value + 1}/{self.DROP_FAIL_LIMIT}): Invalid token.")
-                        async with drop_fail_count_lock:
-                            drop_fail_count.value += 1
+                        print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Invalid token.")
+                        self.drop_fail_count += 1
                         return None
                     elif status == 403:
-                        print(f"❌ [Account #{account}] Retrieve drop message failed ({drop_fail_count.value + 1}/{self.DROP_FAIL_LIMIT}): Token banned or insufficient permissions.")
-                        async with drop_fail_count_lock:
-                            drop_fail_count.value += 1
+                        print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Token banned or insufficient permissions.")
+                        self.drop_fail_count += 1
                         return None
                 await asyncio.sleep(random.uniform(1, 2))
-            print(f"❌ [Account #{account}] Retrieve drop message failed ({drop_fail_count.value + 1}/{self.DROP_FAIL_LIMIT}): Timed out ({timeout}s).")
-            async with drop_fail_count_lock:
-                drop_fail_count.value += 1
+            print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Timed out ({timeout}s).")
+            self.drop_fail_count += 1
             return None
 
     async def send_message(self, token: str, account: int, channel_id: str, content: str, rate_limited: int):
@@ -367,6 +366,23 @@ class MessageBotter():
                 )
             sys.exit()
 
+    async def async_input_handler(self, prompt: str, target_command: str, flag: str):
+        while True:
+            if self.pause_event.is_set():
+                self.pause_event.clear()  # Pause drops, but not commands
+            command = await asyncio.to_thread(input, prompt)
+            if command == target_command:  # Resume if target command is inputted
+                if flag == self.DROP_FAIL_LIMIT_REACHED_FLAG and self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:
+                    self.drop_fail_count = 0
+                    print("\nℹ️ Reset drop fail count. Resuming drops...")
+                elif flag == self.EXECUTION_COMPLETED_FLAG:
+                    ctypes.windll.shell32.ShellExecuteW(
+                        None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, self.TERMINAL_VISIBILITY
+                    )
+                    sys.exit()
+                self.pause_event.set()
+                break  # Continue the script
+
     async def run_instance(self, channel_num: int, channel_id: str, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
         num_accounts = len(channel_tokens)
         self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
@@ -374,19 +390,23 @@ class MessageBotter():
         await asyncio.sleep(start_delay)
         while True:
             for token in channel_tokens:
+                await self.pause_event.wait()  # Check if need to pause
+                print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
                 if time.monotonic() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
                     print(f"\nℹ️ Time Limit Reached ℹ️\nChannel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in the channel...")
                     await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                     return
-                print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
                 if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
                     await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_id, channel_tokens.copy())
                 else:
                     print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
-                if self.DROP_FAIL_LIMIT >= 0 and drop_fail_count.value >= self.DROP_FAIL_LIMIT:  # If FAIL_LIMIT == -1 (or any neg num), never pause
-                    input(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.")
-                    async with drop_fail_count_lock:
-                        drop_fail_count.value = 0
+                await self.pause_event.wait()  # Check if need to pause
+                if self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:  # If FAIL_LIMIT == -1 (or any neg num), never pause
+                    if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
+                        await self.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "⚠️ Drop fail limit reached ⚠️", 0)
+                    await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.",
+                                                                    "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
+                await self.pause_event.wait()  # Check if need to pause
                 await asyncio.sleep(self.DELAY + random.uniform(0.5 * 60, 5 * 60))  # Wait an additional 0.5-5 minutes per drop
 
     async def run_script(self):
@@ -419,11 +439,10 @@ class MessageBotter():
                 task_instances.append(asyncio.create_task(self.run_instance(channel_num, channel_id, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
         await asyncio.sleep(3)  # Short delay to show user the account/channel information
         await asyncio.gather(*task_instances)
-        input("\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.")
-        ctypes.windll.shell32.ShellExecuteW(
-            None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, self.TERMINAL_VISIBILITY
-        )
-        sys.exit()
+        if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
+            random_token = random.choice(self.tokens)
+            await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution Completed ✅", 0)
+        await self.async_input_handler(f"✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.", "", self.EXECUTION_COMPLETED_FLAG)
 
 if __name__ == "__main__":
     bot = MessageBotter()
@@ -435,6 +454,4 @@ if __name__ == "__main__":
         sys.exit()
     bot.check_config()
     bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS))
-    drop_fail_count = DropFailCount(0)
-    drop_fail_count_lock = asyncio.Lock()
     asyncio.run(bot.run_script())
