@@ -42,6 +42,7 @@ Alternatively, you can enter your tokens as a list of strings in `tokens.json`. 
 - Ex 2. `{cmd} 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (the first account listed in `self.ACCOUNTS`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
 - Ex 3. `{cmd} 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `{cmd} 3 {lock}` to lock and confirm the trade (from Account #3).
 - Ex 4. `{cmd} 1 kmultiburn <filter>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `{cmd} 1 {burn}` to confirm the multiburn.
+- Ex 5. `{cmd} {pause}` / `{cmd} {resume}` pauses and resumes the script.
 
 > [!NOTE]
 > - The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{burn}` commands.
