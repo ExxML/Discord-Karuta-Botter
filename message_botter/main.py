@@ -448,6 +448,7 @@ class MessageBotter():
                 task_instances.append(asyncio.create_task(self.run_instance(channel_num, channel_id, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
         await asyncio.sleep(3)  # Short delay to show user the account/channel information
         await asyncio.gather(*task_instances)
+        await asyncio.sleep(1)
         if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
             random_token = random.choice(self.tokens)
             await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution Completed ✅", 0)
