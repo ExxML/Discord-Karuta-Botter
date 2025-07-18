@@ -258,4 +258,4 @@ class CommandChecker():
                     await self.check_multiburn(token, account, command)
                     await self.confirm_multiburn(token, account, command)
                 print("🤖 Message command executed.")
-            await asyncio.sleep(random.uniform(1, 3))  # Short delay to avoid getting rate-limited
+            await asyncio.sleep(random.uniform(2, 3))  # Short delay to avoid getting rate-limited
