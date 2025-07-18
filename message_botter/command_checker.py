@@ -247,8 +247,10 @@ class CommandChecker():
                 if account == self.ALL_ACCOUNT_FLAG:
                     for index, token in enumerate(self.tokens):
                         account = index + 1
+                        await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, f"{account}", self.RATE_LIMIT)  # Show account number
+                        await asyncio.sleep(random.uniform(0.5, 1))
                         await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
-                        await asyncio.sleep(random.uniform(1, 2))
+                        await asyncio.sleep(random.uniform(0.5, 1.5))
                 else:
                     token = self.tokens[account - 1]
                     if send:
