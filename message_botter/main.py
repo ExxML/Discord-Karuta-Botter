@@ -34,7 +34,7 @@ class MessageBotter():
         self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs
         self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up
         self.DROP_FAIL_LIMIT = 3  # (int) Maximum number of failed drops across all channels before pausing script. Set to -1 if you wish to disable this limit.
-        self.TIME_LIMIT_HOURS_MIN = 5  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk)
+        self.TIME_LIMIT_HOURS_MIN = 6  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
         self.DROP_SKIP_RATE = 12  # (int) Every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
