@@ -99,10 +99,10 @@ class TokenExtractor():
 
         # Executes if using account logins
         tokens = []
-        for account in self.ACCOUNTS:
+        for index, account in enumerate(self.ACCOUNTS):
             print("\nLoading new undetected Chrome...")
             self.load_chrome()
-            print(f"Processing {account['email']}...")
+            print(f"Processing {index + 1}/{len(self.ACCOUNTS)}: {account['email']}...")
             token = self.extract_discord_token(account["email"], account["password"])
             print("Closing Chrome...")
             self.driver.quit()
