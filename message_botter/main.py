@@ -59,12 +59,12 @@ class MessageBotter():
             f"{self.KARUTA_PREFIX}v", f"{self.KARUTA_PREFIX}collection", f"{self.KARUTA_PREFIX}c", 
             f"{self.KARUTA_PREFIX}c o:wl", f"{self.KARUTA_PREFIX}c o:p", f"{self.KARUTA_PREFIX}c o:eff", 
             f"{self.KARUTA_PREFIX}cardinfo", f"{self.KARUTA_PREFIX}ci", f"{self.KARUTA_PREFIX}cd", 
-            f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly", "bruhh", "ggzz", "dude lmao", "tf what", 
-            "omg nice", "dam welp", "crazy stuf", "look at dis", "wowza", "wait huh", "umm what", "heyy", 
-            "hellooo", "yo", "hows it goin", "thats insane", "nice card", "pretty", "nice drop lol", "clean grab", 
-            "dannggg what I wanted that", "can I give u one of my cards for that", "yo i need that card", 
-            "gimme that", "how long have you had that??", "how do I check inv", "what's `multitrade`", 
-            "how do I trade cards with you"
+            f"{self.KARUTA_PREFIX}cooldowns", f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly", 
+            "bruhh", "ggzz", "dude lmao", "tf what", "omg nice", "dam welp", "crazy stuf", "look at dis", "wowza", 
+            "wait huh", "umm what", "heyy", "hellooo", "yo", "hows it goin", "thats insane", "nice card", "pretty", 
+            "nice drop lol", "clean grab", "dannggg what I wanted that", "can I give u one of my cards for that", 
+            "yo i need that card", "gimme that", "how long have you had that??", "check my inv lol", 
+            "dude accept the trade", "where should i kmt u?"
         ]
         self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
         self.EMOJI_MAP = {
