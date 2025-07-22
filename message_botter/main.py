@@ -436,7 +436,7 @@ class MessageBotter():
                 print(f"\nℹ️ Channel #{channel_num} will be skipped.")
             else:
                 channel_tokens = self.channel_token_dict[channel_id]
-                start_delay_seconds = start_delay_multipliers[0] * 240 + random.uniform(5, 120)  # Randomly stagger start times
+                start_delay_seconds = start_delay_multipliers[0] * 210 + random.uniform(5, 60)  # Randomly stagger start times
                 start_delay_multipliers.pop(0)
                 channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
                 target_time = datetime.now() + timedelta(seconds = channel_time_limit_seconds)
