@@ -52,7 +52,7 @@ class TokenExtractor():
             print("Filled in credentials")
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
             print("Clicked log in")
-            WebDriverWait(self.driver, 10).until(lambda d: "/login" not in d.current_url)
+            WebDriverWait(self.driver, 15).until(lambda d: "/login" not in d.current_url)
             print("Discord loaded")
             
             # Update page to extract token from app
