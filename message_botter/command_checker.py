@@ -39,7 +39,7 @@ class CommandChecker():
         self.multiburn_fire_messages = []
 
     async def check_command(self, token: str):
-        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=1"
+        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=3"
         headers = self.main.get_headers(token, is_command = True)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
