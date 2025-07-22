@@ -1,7 +1,9 @@
 import aiohttp
+from aiohttp import ClientConnectorError, ClientConnectorDNSError
 import asyncio
 import random
 import uuid
+from datetime import datetime
 
 class CommandChecker():
     def __init__(self, main, tokens: list[str], command_user_ids: list[str], command_server_id: str, command_channel_id: str, karuta_prefix: str, karuta_bot_id: str, karuta_drop_message: str, 
@@ -102,7 +104,7 @@ class CommandChecker():
                             print("\n❌ Error parsing command:", e)
                             return None, None, None
                 else:
-                    print(f"\n❌ Command check failed: Error code {status}.")
+                    print(f"\n❌ Command check failed on Account #{self.tokens.index(token) + 1} ({datetime.now().strftime('%I:%M:%S %p').lstrip('0')}): Error code {status}.")
                     return None, None, None
                 # If status = 200 but no MESSAGE_COMMAND_PREFIX found
                 return None, None, None
@@ -131,7 +133,7 @@ class CommandChecker():
                         }
                         print(f"✅ [Account #{account}] Found {emoji} button successfully.")
                         return payload
-        except Exception as e:
+        except Exception:
             print(f"❌ [Account #{account}] Interaction failed: {emoji} button not found.")
             return None
 
@@ -242,22 +244,35 @@ class CommandChecker():
 
     async def run(self):
         while True:
-            send, account, command = await self.check_command(random.choice(self.tokens))  # Use a random account to check for message commands
-            if account and command:
-                if account == self.ALL_ACCOUNT_FLAG:
-                    for index, token in enumerate(self.tokens):
-                        account = index + 1
-                        await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, f"{account}", self.RATE_LIMIT)  # Show account number
-                        await asyncio.sleep(random.uniform(0.5, 1))
-                        await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
-                        await asyncio.sleep(random.uniform(0.5, 1.5))
-                else:
-                    token = self.tokens[account - 1]
-                    if send:
-                        await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)
-                    await self.check_card_transfer(token, account, command)
-                    await self.check_multitrade(token, account, command)
-                    await self.check_multiburn(token, account, command)
-                    await self.confirm_multiburn(token, account, command)
-                print("🤖 Message command executed.")
-            await asyncio.sleep(random.uniform(2, 3))  # Short delay to avoid getting rate-limited
+            try:
+                send, account, command = await self.check_command(random.choice(self.tokens))  # Use a random account to check for message commands
+                if account and command:
+                    if account == self.ALL_ACCOUNT_FLAG:
+                        for index, token in enumerate(self.tokens):
+                            account = index + 1
+                            await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, f"{account}", self.RATE_LIMIT)  # Show account number
+                            await asyncio.sleep(random.uniform(0.1, 0.5))
+                            await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
+                            await asyncio.sleep(random.uniform(0.5, 1))
+                    else:
+                        token = self.tokens[account - 1]
+                        if send:
+                            await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)
+                        await self.check_card_transfer(token, account, command)
+                        await self.check_multitrade(token, account, command)
+                        await self.check_multiburn(token, account, command)
+                        await self.confirm_multiburn(token, account, command)
+                    print("🤖 Message command executed.")
+                await asyncio.sleep(random.uniform(2, 3))  # Short delay to avoid getting rate-limited
+            except ClientConnectorDNSError:
+                print("\n❌ Command checker DNS error.")
+                await asyncio.sleep(3)  # Short delay before retrying
+            except ClientConnectorError:
+                print("\n❌ Command checker connection error.")
+                await asyncio.sleep(3)
+            except aiohttp.ClientError:
+                print("\n❌ Command checker client error.")
+                await asyncio.sleep(3)
+            except Exception as e:
+                print("\n❌ Command checker unexpected error:", e)
+                break
