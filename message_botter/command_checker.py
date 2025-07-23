@@ -1,9 +1,10 @@
 import aiohttp
 from aiohttp import ClientConnectorError, ClientConnectorDNSError
+from datetime import datetime
 import asyncio
 import random
 import uuid
-from datetime import datetime
+import emoji
 
 class CommandChecker():
     def __init__(self, main, tokens: list[str], command_user_ids: list[str], command_server_id: str, command_channel_id: str, karuta_prefix: str, karuta_bot_id: str, karuta_drop_message: str, 
@@ -29,7 +30,7 @@ class CommandChecker():
         self.INTERACTION_URL = "https://discord.com/api/v10/interactions"
         self.KARUTA_LOCK_COMMAND = "{lock}"
         self.KARUTA_MULTIBURN_COMMAND = "{burn}"
-        self.KARUTA_PRESS_BUTTON_COMMAND = "{button}"
+        self.KARUTA_CLICK_BUTTON_COMMAND = "{btn}"
         self.KARUTA_PAUSE_COMMAND = "{pause}"
         self.KARUTA_RESUME_COMMAND = "{resume}"
 
@@ -97,6 +98,9 @@ class CommandChecker():
                                 elif command == self.KARUTA_MULTIBURN_COMMAND and isinstance(account, int):
                                     print(f"\n🤖 Confirming multiburn on Account #{account}...")
                                     send = False
+                                elif command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and emoji.is_emoji(command.split(" ", 1)[-1]) and isinstance(account, int):
+                                    print(f"\n🤖 Clicking {command.split(" ", 1)[-1]} button on Account #{account}...")
+                                    send = False
                                 else:
                                     print(f"\n🤖 Sending '{command}' from {f'Account #{account}' if isinstance(account, int) else 'all accounts'}...")
                                     send = True
@@ -133,29 +137,27 @@ class CommandChecker():
                     }
                     print(f"✅ [Account #{account}] Found {emoji} button successfully.")
                     return payload
+        return None
 
     async def check_card_transfer(self, token: str, account: int, command: str):
         if command.startswith(f"{self.KARUTA_PREFIX}give") or command.startswith(f"{self.KARUTA_PREFIX}g"):
-            await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta card transfer message
+            await asyncio.sleep(random.uniform(3, 5))  # Wait for Karuta card transfer message
             card_transfer_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_CARD_TRANSFER_TITLE, self.RATE_LIMIT)
             if card_transfer_message and card_transfer_message not in self.card_transfer_messages:
                 self.card_transfer_messages.append(card_transfer_message)
                 # Find ✅ button
-                try:
-                    payload = await self.get_payload(account, '✅', card_transfer_message)
-                    if payload is not None:
-                        async with aiohttp.ClientSession() as session:
-                            headers = self.main.get_headers(token, is_command = True)
-                            async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
-                                status = resp.status
-                                if status == 204:
-                                    print(f"✅ [Account #{account}] Confirmed card transfer.")
-                                else:
-                                    print(f"❌ [Account #{account}] Confirm card transfer failed: Error code {status}.")
-                    else:
-                        print(f"❌ [Account #{account}] Confirm card transfer failed: ✅ button not found.")
-                except Exception:
-                    print(f"❌ [Account #{account}] Interaction failed: ✅ button not found.")
+                payload = await self.get_payload(account, '✅', card_transfer_message)
+                if payload is not None:
+                    async with aiohttp.ClientSession() as session:
+                        headers = self.main.get_headers(token, is_command = True)
+                        async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
+                            status = resp.status
+                            if status == 204:
+                                print(f"✅ [Account #{account}] Confirmed card transfer.")
+                            else:
+                                print(f"❌ [Account #{account}] Confirm card transfer failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Confirm card transfer failed: ✅ button not found.")
 
     async def check_multitrade(self, token: str, account: int, command: str):
         if command == self.KARUTA_LOCK_COMMAND:
@@ -163,61 +165,52 @@ class CommandChecker():
             if multitrade_lock_message and multitrade_lock_message not in self.multitrade_messages:
                 self.multitrade_messages.append(multitrade_lock_message)
                 # Find 🔒 button
-                try:
-                    lock_payload = await self.get_payload(account, '🔒', multitrade_lock_message)
-                    if lock_payload is not None:
-                        async with aiohttp.ClientSession() as session:
-                            headers = self.main.get_headers(token, is_command = True)
-                            async with session.post(self.INTERACTION_URL, headers = headers, json = lock_payload) as lock_resp:
-                                status = lock_resp.status
-                                if status == 204:
-                                    print(f"✅ [Account #{account}] Locked multitrade.")
-                                    await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multitrade message to update
-                                    multitrade_confirm_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTITRADE_CONFIRM_MESSAGE, self.RATE_LIMIT)
-                                    # Find ✅ button
-                                    try:
-                                        check_payload = await self.get_payload(account, '✅', multitrade_confirm_message)
-                                        if check_payload is not None:
-                                            async with session.post(self.INTERACTION_URL, headers = headers, json = check_payload) as check_resp:
-                                                status = check_resp.status
-                                                if status == 204:
-                                                    print(f"✅ [Account #{account}] Confirmed multitrade.")
-                                                else:
-                                                    print(f"❌ [Account #{account}] Confirm multitrade failed: Error code {status}.")
+                lock_payload = await self.get_payload(account, '🔒', multitrade_lock_message)
+                if lock_payload is not None:
+                    async with aiohttp.ClientSession() as session:
+                        headers = self.main.get_headers(token, is_command = True)
+                        async with session.post(self.INTERACTION_URL, headers = headers, json = lock_payload) as lock_resp:
+                            status = lock_resp.status
+                            if status == 204:
+                                print(f"✅ [Account #{account}] Locked multitrade.")
+                                await asyncio.sleep(random.uniform(3, 5))  # Wait for Karuta multitrade message to update
+                                multitrade_confirm_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTITRADE_CONFIRM_MESSAGE, self.RATE_LIMIT)
+                                # Find ✅ button
+                                check_payload = await self.get_payload(account, '✅', multitrade_confirm_message)
+                                if check_payload is not None:
+                                    async with session.post(self.INTERACTION_URL, headers = headers, json = check_payload) as check_resp:
+                                        status = check_resp.status
+                                        if status == 204:
+                                            print(f"✅ [Account #{account}] Confirmed multitrade.")
                                         else:
-                                            print(f"❌ [Account #{account}] Confirm multitrade failed: ✅ button not found.")
-                                    except Exception:
-                                        print(f"❌ [Account #{account}] Interaction failed: ✅ button not found.")
+                                            print(f"❌ [Account #{account}] Confirm multitrade failed: Error code {status}.")
                                 else:
-                                    print(f"❌ [Account #{account}] Lock multitrade failed: Error code {status}.")
-                    else:
-                        print(f"❌ [Account #{account}] Lock multitrade failed: 🔒 button not found.")
-                except Exception:
-                    print(f"❌ [Account #{account}] Interaction failed: 🔒 button not found.")
+                                    print(f"❌ [Account #{account}] Confirm multitrade failed: ✅ button not found.")
+                            else:
+                                print(f"❌ [Account #{account}] Lock multitrade failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Lock multitrade failed: 🔒 button not found.")
 
     async def check_multiburn(self, token: str, account: int, command: str):
         if command.startswith(f"{self.KARUTA_PREFIX}multiburn") or command.startswith(f"{self.KARUTA_PREFIX}mb"):
-            await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multiburn message
+            await asyncio.sleep(random.uniform(3, 5))  # Wait for Karuta multiburn message
             multiburn_initial_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTIBURN_TITLE, self.RATE_LIMIT)
             if multiburn_initial_message and multiburn_initial_message not in self.multiburn_initial_messages:
                 await asyncio.sleep(3)  # Longer delay to wait for check button to enable
                 self.multiburn_initial_messages.append(multiburn_initial_message)
                 # Find ☑️ button
-                try:
-                    payload = await self.get_payload(account, '☑️', multiburn_initial_message)
-                    if payload is not None:
-                        async with aiohttp.ClientSession() as session:
-                            headers = self.main.get_headers(token, is_command = True)
-                            async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
-                                status = resp.status
-                                if status == 204:
-                                    print(f"✅ [Account #{account}] Confirmed initial (0/2) multiburn.")
-                                else:
-                                    print(f"❌ [Account #{account}] Confirm initial (0/2) multiburn failed: Error code {status}.")
-                    else:
-                        print(f"❌ [Account #{account}] Confirm initial (0/2) multiburn failed: ☑️ button not found.")
-                except Exception:
-                    print(f"❌ [Account #{account}] Interaction failed: ☑️ button not found.")
+                payload = await self.get_payload(account, '☑️', multiburn_initial_message)
+                if payload is not None:
+                    async with aiohttp.ClientSession() as session:
+                        headers = self.main.get_headers(token, is_command = True)
+                        async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
+                            status = resp.status
+                            if status == 204:
+                                print(f"✅ [Account #{account}] Confirmed initial (0/2) multiburn.")
+                            else:
+                                print(f"❌ [Account #{account}] Confirm initial (0/2) multiburn failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Confirm initial (0/2) multiburn failed: ☑️ button not found.")
 
     async def confirm_multiburn(self, token: str, account: int, command: str):
         if command == self.KARUTA_MULTIBURN_COMMAND:
@@ -225,40 +218,58 @@ class CommandChecker():
             if multiburn_fire_message and multiburn_fire_message not in self.multiburn_fire_messages:
                 self.multiburn_fire_messages.append(multiburn_fire_message)
                 # Find 🔥 button
-                try:
-                    fire_payload = await self.get_payload(account, '🔥', multiburn_fire_message)
-                    if fire_payload is not None:
-                        async with aiohttp.ClientSession() as session:
-                            headers = self.main.get_headers(token, is_command = True)
-                            async with session.post(self.INTERACTION_URL, headers = headers, json = fire_payload) as fire_resp:
-                                status = fire_resp.status
-                                if status == 204:
-                                    print(f"✅ [Account #{account}] Confirmed initial (1/2) multiburn.")
-                                    await asyncio.sleep(random.uniform(4, 6))  # Wait for Karuta multiburn message to update
-                                    multiburn_confirm_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTIBURN_TITLE, self.RATE_LIMIT)
-                                    # Find ✅ button
-                                    try:
-                                        check_payload = await self.get_payload(account, '✅', multiburn_confirm_message)
-                                        if check_payload is not None:
-                                            async with session.post(self.INTERACTION_URL, headers = headers, json =check_payload) as check_resp:
-                                                status = check_resp.status
-                                                if status == 204:
-                                                    print(f"✅ [Account #{account}] Confirmed final (2/2) multiburn.")
-                                                else:
-                                                    print(f"❌ [Account #{account}] Confirm final (2/2) multiburn failed: Error code {status}.")
+                fire_payload = await self.get_payload(account, '🔥', multiburn_fire_message)
+                if fire_payload is not None:
+                    async with aiohttp.ClientSession() as session:
+                        headers = self.main.get_headers(token, is_command = True)
+                        async with session.post(self.INTERACTION_URL, headers = headers, json = fire_payload) as fire_resp:
+                            status = fire_resp.status
+                            if status == 204:
+                                print(f"✅ [Account #{account}] Confirmed initial (1/2) multiburn.")
+                                await asyncio.sleep(random.uniform(3, 5))  # Wait for Karuta multiburn message to update
+                                multiburn_confirm_message = await self.main.get_karuta_message(token, account, self.COMMAND_CHANNEL_ID, self.KARUTA_MULTIBURN_TITLE, self.RATE_LIMIT)
+                                # Find ✅ button
+                                check_payload = await self.get_payload(account, '✅', multiburn_confirm_message)
+                                if check_payload is not None:
+                                    async with session.post(self.INTERACTION_URL, headers = headers, json = check_payload) as check_resp:
+                                        status = check_resp.status
+                                        if status == 204:
+                                            print(f"✅ [Account #{account}] Confirmed final (2/2) multiburn.")
                                         else:
-                                            print(f"❌ [Account #{account}] Confirm final (2/2) multiburn failed: ✅ button not found.")
-                                    except Exception:
-                                        print(f"❌ [Account #{account}] Interaction failed: ✅ button not found.")
+                                            print(f"❌ [Account #{account}] Confirm final (2/2) multiburn failed: Error code {status}.")
                                 else:
-                                    print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: Error code {status}.")
-                    else:
-                        print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: 🔥 button not found.")
-                except Exception:
-                    print(f"❌ [Account #{account}] Interaction failed: 🔥 button not found.")
+                                    print(f"❌ [Account #{account}] Confirm final (2/2) multiburn failed: ✅ button not found.")
+                            else:
+                                print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: Error code {status}.")
+                else:
+                    print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: 🔥 button not found.")
 
-    async def check_press_button(self, token: str, account: int, command: str):
-        pass
+    async def check_click_button(self, token: str, account: int, command: str):
+        if command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and emoji.is_emoji(command.split(" ", 1)[-1]):
+            emoji_string = command.split(" ", 1)[-1]
+            url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=5"
+            headers = self.main.get_headers(token, is_command = True)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers = headers) as resp:
+                    status = resp.status
+                    if status == 200:
+                        messages = await resp.json()
+                        for msg in messages:
+                            if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
+                                payload = await self.get_payload(account, emoji_string, msg)
+                                if payload is not None:
+                                    async with aiohttp.ClientSession() as session:
+                                        headers = self.main.get_headers(token, is_command = True)
+                                        async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
+                                            status = resp.status
+                                            if status == 204:
+                                                print(f"✅ [Account #{account}] Clicked {emoji_string} button.")
+                                            else:
+                                                print(f"❌ [Account #{account}] Click {emoji_string} button failed: Error code {status}.")
+                                            return
+                        print(f"❌ [Account #{account}] Click {emoji_string} button failed: {emoji_string} button not found.")
+                    else:
+                        print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
 
     async def run(self):
         while True:
@@ -280,7 +291,7 @@ class CommandChecker():
                         await self.check_multitrade(token, account, command)
                         await self.check_multiburn(token, account, command)
                         await self.confirm_multiburn(token, account, command)
-                        await self.check_press_button(token, account, command)
+                        await self.check_click_button(token, account, command)
                     print("🤖 Message command executed.")
                 await asyncio.sleep(random.uniform(1, 2))  # Short delay to avoid getting rate-limited
             except ClientConnectorDNSError:
