@@ -38,6 +38,7 @@ class MessageBotter():
         self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk)
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
         self.DROP_SKIP_RATE = 12  # (int) Every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
+        self.RANDOM_COMMAND_RATE = 480  # (int) Every 2-3 seconds, there is a 1/self.RANDOM_COMMAND_RATE chance of sending a random command.
 
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
@@ -124,12 +125,14 @@ class MessageBotter():
             isinstance(self.TIME_LIMIT_HOURS_MAX, int),
             isinstance(self.CHANNEL_SKIP_RATE, int),
             isinstance(self.DROP_SKIP_RATE, int),
+            isinstance(self.RANDOM_COMMAND_RATE, int),
             self.TERMINAL_VISIBILITY in (0, 1),
             self.RATE_LIMIT >= 0,
             self.TIME_LIMIT_HOURS_MIN >= 0,
             self.TIME_LIMIT_HOURS_MAX >= 0,
             self.CHANNEL_SKIP_RATE != 0,
-            self.DROP_SKIP_RATE != 0
+            self.DROP_SKIP_RATE != 0,
+            self.RANDOM_COMMAND_RATE > 0
         ]):
             input("⛔ Configuration Error ⛔\nPlease enter valid constant values in main.py.")
             sys.exit()
@@ -428,6 +431,8 @@ class MessageBotter():
                 for _ in range(num_delay_steps):
                     await self.pause_event.wait()  # Check if need to pause
                     await asyncio.sleep(random_delay_per_step)
+                    if random.randint(1, self.RANDOM_COMMAND_RATE) == 1:
+                        await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.RANDOM_COMMANDS), 0)
 
     async def run_script(self):
         if self.SHUFFLE_ACCOUNTS:
