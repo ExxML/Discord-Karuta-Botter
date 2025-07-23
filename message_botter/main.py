@@ -55,20 +55,21 @@ class MessageBotter():
         self.RANDOM_ADDON = ['', ' ', ' !', ' :D', ' w']
         self.DROP_MESSAGES = [f"{self.KARUTA_PREFIX}drop", f"{self.KARUTA_PREFIX}d"]
         self.RANDOM_COMMANDS = [
-            f"{self.KARUTA_PREFIX}reminders", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}lookup", 
+            f"{self.KARUTA_PREFIX}reminders", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}rm", 
+            f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}rm", 
+            f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}rm", 
+            f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}rm", f"{self.KARUTA_PREFIX}lookup", 
             f"{self.KARUTA_PREFIX}lu", f"{self.KARUTA_PREFIX}vote", f"{self.KARUTA_PREFIX}view", 
             f"{self.KARUTA_PREFIX}v", f"{self.KARUTA_PREFIX}collection", f"{self.KARUTA_PREFIX}c", 
             f"{self.KARUTA_PREFIX}c o:wl", f"{self.KARUTA_PREFIX}c o:p", f"{self.KARUTA_PREFIX}c o:eff", 
             f"{self.KARUTA_PREFIX}cardinfo", f"{self.KARUTA_PREFIX}ci", f"{self.KARUTA_PREFIX}cd", 
-            f"{self.KARUTA_PREFIX}cooldowns", f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly",
+            f"{self.KARUTA_PREFIX}cd", f"{self.KARUTA_PREFIX}cd", f"{self.KARUTA_PREFIX}cd", 
+            f"{self.KARUTA_PREFIX}cooldowns", f"{self.KARUTA_PREFIX}daily", f"{self.KARUTA_PREFIX}monthly", 
             f"{self.KARUTA_PREFIX}help", f"{self.KARUTA_PREFIX}wishlist", f"{self.KARUTA_PREFIX}wl", 
-            f"{self.KARUTA_PREFIX}jobboard", f"{self.KARUTA_PREFIX}jb", f"{self.KARUTA_PREFIX}shop",
-            f"{self.KARUTA_PREFIX}itemshop", f"{self.KARUTA_PREFIX}gemshop", f"{self.KARUTA_PREFIX}frameshop",
-            f"{self.KARUTA_PREFIX}inventory", f"{self.KARUTA_PREFIX}inv", f"{self.KARUTA_PREFIX}i",
-            f"{self.KARUTA_PREFIX}schedule", f"{self.KARUTA_PREFIX}tags", f"{self.KARUTA_PREFIX}gems",
-            f"{self.KARUTA_PREFIX}achievements", f"{self.KARUTA_PREFIX}nodes", f"{self.KARUTA_PREFIX}n",
-            f"{self.KARUTA_PREFIX}bits", f"{self.KARUTA_PREFIX}dyes", f"{self.KARUTA_PREFIX}blackmarket",
-            f"{self.KARUTA_PREFIX}bm"
+            f"{self.KARUTA_PREFIX}jobboard", f"{self.KARUTA_PREFIX}jb", f"{self.KARUTA_PREFIX}shop", 
+            f"{self.KARUTA_PREFIX}itemshop", f"{self.KARUTA_PREFIX}gemshop", f"{self.KARUTA_PREFIX}frameshop", 
+            f"{self.KARUTA_PREFIX}inventory", f"{self.KARUTA_PREFIX}inv", f"{self.KARUTA_PREFIX}i", 
+            f"{self.KARUTA_PREFIX}schedule", f"{self.KARUTA_PREFIX}blackmarket", f"{self.KARUTA_PREFIX}bm"
         ]
         self.RANDOM_MESSAGES = [
             "bruhh", "ggzz", "dude lmao", "tf what", "omg nice", "dam welp", "crazy stuf", "look at dis", "wowza", 
