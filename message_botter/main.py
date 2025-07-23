@@ -344,7 +344,7 @@ class MessageBotter():
                     grab_token = channel_tokens[i]
                     grab_account = self.tokens.index(grab_token) + 1
                     await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
-                    await asyncio.sleep(random.uniform(0.5, 5))
+                    await asyncio.sleep(random.uniform(0.5, 3.5))
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
                     if random.choice([True, False]):  # 50% chance of sending messages
