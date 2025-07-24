@@ -118,7 +118,7 @@ class CommandChecker():
                 else:
                     print(f"\n❌ Command check failed on Account #{self.tokens.index(token) + 1} ({datetime.now().strftime('%I:%M:%S %p').lstrip('0')}): Error code {status}.")
                     return None, None, None
-                # If status = 200 but no MESSAGE_COMMAND_PREFIX found
+                # If status = 200 but no MESSAGE_COMMAND_PREFIX found |OR| If status = 503 but not reached limit yet
                 return None, None, None
 
     async def get_payload(self, account: int, emoji: str, message: dict):
