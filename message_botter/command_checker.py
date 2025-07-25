@@ -34,8 +34,8 @@ class CommandChecker():
         self.KARUTA_PAUSE_COMMAND = "{pause}"
         self.KARUTA_RESUME_COMMAND = "{resume}"
 
-        self.discord_down_consec_count = 0  # Consecutive times HTTP error 503 is returned
-        self.DISCORD_DOWN_CONSEC_LIMIT = 5  # When HTTP error 503 is returned self.discord_service_down_limit times in a row, start displaying warnings
+        self.discord_down_consec_count = 0  # Consecutive times HTTP error 502/503 is returned
+        self.DISCORD_DOWN_CONSEC_LIMIT = 5  # When HTTP error 502/503 is returned self.discord_service_down_limit times in a row, start displaying warnings
         self.executed_commands = []
         self.card_transfer_messages = []
         self.multitrade_messages = []
@@ -111,14 +111,14 @@ class CommandChecker():
                         except Exception as e:
                             print("\n❌ Error parsing command:", e)
                             return None, None, None
-                elif status == 503:  # Discord servers under heavy load, not client-side error
+                elif status == 502 or status == 503:  # Discord servers under heavy load, not client-side error
                     self.discord_down_consec_count += 1
                     if self.discord_down_consec_count >= self.DISCORD_DOWN_CONSEC_LIMIT:
                         print(f"\n❌ Command check failed ({datetime.now().strftime('%I:%M:%S %p').lstrip('0')}): Discord servers down / under heavy load.")
                 else:
                     print(f"\n❌ Command check failed on Account #{self.tokens.index(token) + 1} ({datetime.now().strftime('%I:%M:%S %p').lstrip('0')}): Error code {status}.")
                     return None, None, None
-                # If status = 200 but no MESSAGE_COMMAND_PREFIX found |OR| If status = 503 but not reached limit yet
+                # If status = 200 but no MESSAGE_COMMAND_PREFIX found |OR| If status = 502/503 but not reached limit yet
                 return None, None, None
 
     async def get_payload(self, account: int, emoji: str, message: dict):
