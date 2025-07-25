@@ -423,8 +423,9 @@ class MessageBotter():
                 if self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:  # If FAIL_LIMIT == -1 (or any neg num), never pause
                     if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
                         await self.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "⚠️ Drop fail limit reached", 0)
-                    await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.",
-                                                                    "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
+                    if self.TERMINAL_VISIBILITY:
+                        await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.",
+                                                                        "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
                 # Breaking up delay into multiple steps to check if need to pause
                 random_delay = self.DELAY + random.uniform(0.5 * 60, 5 * 60)  # Wait an additional 0.5-5 minutes per drop
                 random_delay_per_step = random.uniform(2, 3)
@@ -469,7 +470,8 @@ class MessageBotter():
         if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
             random_token = random.choice(self.tokens)
             await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution completed", 0)
-        await self.async_input_handler(f"\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.", "", self.EXECUTION_COMPLETED_FLAG)
+        if self.TERMINAL_VISIBILITY:
+            await self.async_input_handler(f"\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.", "", self.EXECUTION_COMPLETED_FLAG)
 
 if __name__ == "__main__":
     bot = MessageBotter()
