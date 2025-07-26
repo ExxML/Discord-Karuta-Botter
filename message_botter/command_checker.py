@@ -25,7 +25,7 @@ class CommandChecker():
         self.KARUTA_MULTIBURN_TITLE = karuta_multiburn_title
         self.RATE_LIMIT = rate_limit
 
-        self.MESSAGE_COMMAND_PREFIX = "{cmd}"
+        self.MESSAGE_COMMAND_PREFIX = "cmd"
         self.ALL_ACCOUNT_FLAG = "all"
         self.INTERACTION_URL = "https://discord.com/api/v10/interactions"
         self.KARUTA_LOCK_COMMAND = "{lock}"
