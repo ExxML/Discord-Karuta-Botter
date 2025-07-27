@@ -118,26 +118,6 @@ class TokenExtractor():
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
             "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"
         })
-        
-        # Spoof canvas
-        canvas_script = """
-        const originalGetContext = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function(type, ...args) {
-            const ctx = originalGetContext.call(this, type, ...args);
-            if (type === '2d') {
-                const originalGetImageData = ctx.getImageData;
-                ctx.getImageData = function(x, y, w, h) {
-                    const imageData = originalGetImageData.call(this, x, y, w, h);
-                    for (let i = 0; i < imageData.data.length; i += 4) {
-                        imageData.data[i] = imageData.data[i] ^ 1;
-                    }
-                    return imageData;
-                }
-            }
-            return ctx;
-        };
-        """
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": canvas_script})
 
     def extract_discord_token(self, email: str, password: str):
         try:
