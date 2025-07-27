@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import sys
 import math
 import json
+import random
 
 class TokenExtractor():
     def __init__(self):
@@ -16,7 +17,7 @@ class TokenExtractor():
         self.ACCOUNTS = [
         ]
 
-        self.SAVE_TOKENS = True  # Choose whether to save tokens to file (tokens.json)
+        self.SAVE_TOKENS = True  # (bool) Choose whether to save tokens to file (tokens.json)
 
         try:
             with open("tokens.json", "r") as tokens_file:
@@ -27,6 +28,81 @@ class TokenExtractor():
             input('⛔ Token Format Error ⛔\nExpected a list of strings. Example: ["token1", "token2", "token3"]')
             sys.exit()
 
+        self.USER_AGENTS = [
+            # Chrome - Windows
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/115.0.5790.102 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/114.0.5735.198 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/113.0.5672.63 Safari/537.36",
+
+            # Chrome - macOS
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_6_3) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/115.0.5790.102 Safari/537.36",
+
+            # Chrome - Linux
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36",
+            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0",
+
+            # Firefox - Windows
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:116.0) Gecko/20100101 Firefox/116.0",
+            "Mozilla/5.0 (Windows NT 11.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0",
+
+            # Firefox - macOS
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 13.5; rv:116.0) Gecko/20100101 Firefox/116.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 12.6; rv:115.0) Gecko/20100101 Firefox/115.0",
+
+            # Edge - Windows
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36 Edg/116.0.1938.81",
+            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/115.0.5790.102 Safari/537.36 Edg/115.0.1901.188",
+
+            # Safari - macOS
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+            "Version/16.5 Safari/605.1.15",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_6_3) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+            "Version/16.4 Safari/605.1.15",
+
+            # Safari - iOS (iPhone)
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+            "Version/17.0 Mobile/15E148 Safari/604.1",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+            "Version/16.0 Mobile/15E148 Safari/604.1",
+
+            # Chrome - Android
+            "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Mobile Safari/537.36",
+            "Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/115.0.5790.102 Mobile Safari/537.36",
+
+            # Firefox - Android
+            "Mozilla/5.0 (Android 13; Mobile; rv:116.0) Gecko/116.0 Firefox/116.0",
+            "Mozilla/5.0 (Android 12; Mobile; rv:115.0) Gecko/115.0 Firefox/115.0",
+
+            # Opera - Windows
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36 OPR/102.0.4843.50",
+
+            # Opera - Android
+            "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Mobile Safari/537.36 OPR/70.0.3728.144",
+
+            # Brave Browser - Windows
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36 Brave/116.0.5845.97",
+
+            # Brave Browser - macOS
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/116.0.5845.97 Safari/537.36 Brave/116.0.5845.97"
+        ]
+
     def load_chrome(self):
         options = uc.ChromeOptions()
         options.add_argument('--headless=new')  # Comment for non-headless mode if needed
@@ -34,9 +110,34 @@ class TokenExtractor():
         options.add_argument('--disable-infobars')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        
+        options.add_argument(f'--user-agent={random.choice(self.USER_AGENTS)}')
+
         self.driver = uc.Chrome(options = options, use_subprocess = True)
-        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")  # Browser spoofer
+        
+        # Webdriver spoofer
+        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"
+        })
+        
+        # Spoof canvas
+        canvas_script = """
+        const originalGetContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+            const ctx = originalGetContext.call(this, type, ...args);
+            if (type === '2d') {
+                const originalGetImageData = ctx.getImageData;
+                ctx.getImageData = function(x, y, w, h) {
+                    const imageData = originalGetImageData.call(this, x, y, w, h);
+                    for (let i = 0; i < imageData.data.length; i += 4) {
+                        imageData.data[i] = imageData.data[i] ^ 1;
+                    }
+                    return imageData;
+                }
+            }
+            return ctx;
+        };
+        """
+        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": canvas_script})
 
     def extract_discord_token(self, email: str, password: str):
         try:
