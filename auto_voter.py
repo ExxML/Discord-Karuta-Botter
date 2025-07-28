@@ -8,7 +8,7 @@ import json
 import time
 import random
 
-### TO USE THE AUTO-VOTER, YOU MUST HAVE A LIST OF TOKEN(S) IN tokens.json. You cannot use account logins.
+### TO USE THE AUTO-VOTER, YOU MUST HAVE A LIST OF TOKEN(S) in tokens.json. You cannot use account logins.
 class AutoVoter():
     def __init__(self):
         try:
