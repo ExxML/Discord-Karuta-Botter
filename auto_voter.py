@@ -2,6 +2,7 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from datetime import datetime
 import ctypes
 import sys
 import json
@@ -161,11 +162,12 @@ class AutoVoter():
         if self.TOKENS:
             self.shuffled_tokens = random.sample(self.TOKENS, len(self.TOKENS))
         else:
-            input("\n⛔ Token Error ⛔\nNo tokens found. Please enter at least 1 token to vote with in tokens.json.")
+            input("⛔ Token Error ⛔\nNo tokens found. Please enter at least 1 token to vote with in tokens.json.")
             sys.exit()
 
         # Executes with tokens
         for account_idx in range(len(self.TOKENS)):
+            print(f"{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
             print("Loading new undetected Chrome...")
             self.load_chrome()
             print(f"Auto-voting on Account #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1} ({account_idx + 1}/{len(self.TOKENS)})...")
@@ -173,7 +175,7 @@ class AutoVoter():
             print("Closing Chrome...")
             self.driver.quit()
             delay = random.uniform(self.RAND_DELAY_MIN, self.RAND_DELAY_MAX) * 60  # Random delay between votes
-            print(f"Waiting {round(delay / 60)} minutes before voting again...")
+            print(f"Waiting {round(delay / 60)} minutes before voting again...\n")
             time.sleep(delay)
 
 if __name__ == "__main__":
