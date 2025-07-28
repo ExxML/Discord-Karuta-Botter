@@ -149,14 +149,14 @@ class AutoVoter():
             time.sleep(10)
 
             # Vote
-            vote_button = WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Vote')]")))
+            vote_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Vote')]")))
             vote_button.click()
             time.sleep(1)  # Short delay to ensure vote is registered
             print("  Clicked vote button")
             self.driver.quit()
 
         except Exception as e:
-            print(f"Error with Acccount #{account_idx + 1}:", e, "")
+            print(f"Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e, "")
     
     def main(self):
         if self.TOKENS:
@@ -166,11 +166,11 @@ class AutoVoter():
             sys.exit()
 
         # Executes with tokens
-        for account_idx in range(len(self.TOKENS)):
+        for account_idx in range(len(self.shuffled_tokens)):
             print(f"{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
             print("Loading new undetected Chrome...")
             self.load_chrome()
-            print(f"Auto-voting on Account #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1} ({account_idx + 1}/{len(self.TOKENS)})...")
+            print(f"Auto-voting on Account #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1} ({account_idx + 1}/{len(self.shuffled_tokens)})...")
             self.auto_vote(account_idx)
             print("Closing Chrome...")
             self.driver.quit()
