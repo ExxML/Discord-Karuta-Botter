@@ -115,17 +115,17 @@ class TokenExtractor():
             # Navigate to Discord login
             self.driver.get("https://discord.com/login")
             WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
-            print("Login page loaded")
+            print("  Login page loaded")
             # Find login fields and submit
             email_field = self.driver.find_element(By.NAME, "email")
             password_field = self.driver.find_element(By.NAME, "password")
             email_field.send_keys(email)
             password_field.send_keys(password)
-            print("Filled in credentials")
+            print("  Filled in credentials")
             self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
-            print("Clicked log in")
+            print("  Clicked log in")
             WebDriverWait(self.driver, 15).until(lambda d: "/login" not in d.current_url)
-            print("Discord loaded")
+            print("  Discord loaded")
             
             # Update page to extract token from app
             self.driver.get("https://discord.com/app")
@@ -133,10 +133,10 @@ class TokenExtractor():
             # Execute JS to grab token from local storage
             token = self.driver.execute_script("return window.localStorage.getItem('token');")
             if token:
-                print("Token extracted")
+                print("  Token extracted")
                 return token[1:-1]  # Trim quotes
             else:
-                print(f"No token found for {email}")
+                print(f"  No token found for {email}")
                 return None
         except Exception as e:
             print(f"Error with {email}: {str(e)}")
