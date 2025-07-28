@@ -158,7 +158,7 @@ class TokenExtractor():
             num_channels_need = math.ceil(len(self.TOKENS) / 3)  # Maximum 3 accounts per channel
         else:
             num_channels_need = math.ceil(len(self.ACCOUNTS) / 3)  # Maximum 3 accounts per channel
-        if  num_channels_need != num_channels:
+        if num_channels_need != num_channels:
             input(f"\n⛔ Configuration Error ⛔\nYou have entered {num_channels} drop channel(s). You should have {num_channels_need} channel(s).")
             sys.exit()
 
