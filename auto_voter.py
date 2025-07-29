@@ -110,7 +110,8 @@ class AutoVoter():
         try:
             # Navigate to Discord login
             self.driver.get("https://discord.com/login")
-            WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
+            WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
+            print("  Opened Discord")
 
             inject_token_script = f"""
                 let token = "{self.shuffled_tokens[account_idx]}";
@@ -125,10 +126,12 @@ class AutoVoter():
                 login(token);
             """
             self.driver.execute_script(inject_token_script)
+            print("  Injected token")
 
             # Wait for Discord to fully load
             WebDriverWait(self.driver, 15).until(lambda d: "/login" not in d.current_url)
             print("  Logged into Discord")
+            time.sleep(2)  # Short delay to ensure Discord fully loads
             
             # Open top.gg
             self.driver.get("https://top.gg/bot/646937666251915264/vote")
@@ -137,13 +140,14 @@ class AutoVoter():
             print("  Opened Top.gg")
 
             # Wait for redirect to authorisation page
-            WebDriverWait(self.driver, 10).until(lambda d: "/vote" not in d.current_url)
+            WebDriverWait(self.driver, 15).until(lambda d: "/vote" not in d.current_url)
+            print("  Redirected to authorisation page")
             
             # Authorise
             self.driver.get(self.driver.current_url)
-            discord_authorize_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Auth')]")))
+            discord_authorize_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Auth')]")))
             discord_authorize_button.click()
-            print("  Authorised Discord account")
+            print("  Authorised Discord account- waiting 10s to vote...")
 
             # Wait 10s (watch ad to vote)
             time.sleep(10)
@@ -156,7 +160,7 @@ class AutoVoter():
             self.driver.quit()
 
         except Exception as e:
-            print(f"Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e, "")
+            print(f"Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
     
     def main(self):
         if self.TOKENS:
