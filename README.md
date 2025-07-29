@@ -43,7 +43,7 @@ cmd <account_number |OR| 'all'> <message>
 - Ex 2. `cmd 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (the first account listed in `self.ACCOUNTS`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
 - Ex 3. `cmd 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `cmd 3 {lock}` to lock and confirm the trade (from Account #3).
 - Ex 4. `cmd 1 kmultiburn <filters>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `cmd 1 {burn}` to confirm the multiburn.
-- Ex 5. `cmd 1 {btn} <emoji>` clicks the button with the specified emoji from Account #1. For example, `cmd 1 {btn} ✅`.
+- Ex 5. `cmd 1 {btn} <emoji / label>` clicks the button with the specified emoji or label from Account #1. For example, `cmd 1 {btn} ✅` or `cmd 1 {btn} Confirm`.
 - Ex 6. `cmd {pause}` / `cmd {resume}` pauses and resumes the script.
 
 > [!NOTE]

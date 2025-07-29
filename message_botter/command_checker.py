@@ -4,7 +4,6 @@ from datetime import datetime
 import asyncio
 import random
 import uuid
-import emoji
 
 class CommandChecker():
     def __init__(self, main, tokens: list[str], command_user_ids: list[str], command_server_id: str, command_channel_id: str, karuta_prefix: str, karuta_bot_id: str, karuta_drop_message: str, 
@@ -17,6 +16,7 @@ class CommandChecker():
         self.COMMAND_CHANNEL_ID = command_channel_id
         self.KARUTA_PREFIX = karuta_prefix
         self.KARUTA_BOT_ID = karuta_bot_id
+        self.BUTTON_BOT_IDS = [self.KARUTA_BOT_ID, "408785106942164992"]  # List of bot IDs to look for when pressing button (i.e. OwO)
         self.KARUTA_DROP_MESSAGE = karuta_drop_message
         self.KARUTA_EXPIRED_DROP_MESSAGE = karuta_expired_drop_message
         self.KARUTA_CARD_TRANSFER_TITLE = karuta_card_transfer_title
@@ -101,7 +101,7 @@ class CommandChecker():
                                 elif command == self.KARUTA_MULTIBURN_COMMAND and isinstance(account, int):
                                     print(f"\n🤖 Confirming multiburn on Account #{account}...")
                                     send = False
-                                elif command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and emoji.is_emoji(command.split(" ", 1)[-1]) and isinstance(account, int):
+                                elif command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_CLICK_BUTTON_COMMAND and isinstance(account, int):
                                     print(f"\n🤖 Clicking {command.split(" ", 1)[-1]} button on Account #{account}...")
                                     send = False
                                 else:
@@ -121,11 +121,14 @@ class CommandChecker():
                 # If status = 200 but no MESSAGE_COMMAND_PREFIX found |OR| If status = 502/503 but not reached limit yet
                 return None, None, None
 
-    async def get_payload(self, account: int, emoji: str, message: dict):
+    async def get_payload(self, account: int, button_string: str, message: dict):
+        button_bot_id = message.get('author', {}).get('id')
         components = message.get('components', [])
         for action_row in components:
             for button in action_row.get('components', []):
-                if button.get('emoji', {}).get('name') == emoji:
+                button_emoji = button.get('emoji', {}).get('name') or ''
+                button_label = button.get('label', '')
+                if button_string in button_emoji + button_label:
                     custom_id = button.get('custom_id')
                     # Simulate button click via interaction callback
                     payload = {
@@ -135,14 +138,14 @@ class CommandChecker():
                         "channel_id": self.COMMAND_CHANNEL_ID,
                         "message_flags": 0,
                         "message_id": message.get('id'),
-                        "application_id": self.KARUTA_BOT_ID,
+                        "application_id": button_bot_id,
                         "session_id": str(uuid.uuid4()),
                         "data": {
                             "component_type": 2,
                             "custom_id": custom_id
                         }
                     }
-                    print(f"✅ [Account #{account}] Found {emoji} button successfully.")
+                    print(f"✅ [Account #{account}] Found {button_string} button successfully.")
                     return payload
         return None
 
@@ -252,8 +255,8 @@ class CommandChecker():
                     print(f"❌ [Account #{account}] Confirm initial (1/2) multiburn failed: 🔥 button not found.")
 
     async def check_click_button(self, token: str, account: int, command: str):
-        if command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and emoji.is_emoji(command.split(" ", 1)[-1]):
-            emoji_string = command.split(" ", 1)[-1]
+        if command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_CLICK_BUTTON_COMMAND:
+            button_string = command.split(" ", 1)[-1]
             url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=20"
             headers = self.main.get_headers(token, is_command = True)
             async with aiohttp.ClientSession() as session:
@@ -262,19 +265,19 @@ class CommandChecker():
                     if status == 200:
                         messages = await resp.json()
                         for msg in messages:
-                            if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
-                                payload = await self.get_payload(account, emoji_string, msg)
+                            if msg.get('author', {}).get('id') in self.BUTTON_BOT_IDS:
+                                payload = await self.get_payload(account, button_string, msg)
                                 if payload is not None:
                                     async with aiohttp.ClientSession() as session:
                                         headers = self.main.get_headers(token, is_command = True)
                                         async with session.post(self.INTERACTION_URL, headers = headers, json = payload) as resp:
                                             status = resp.status
                                             if status == 204:
-                                                print(f"✅ [Account #{account}] Clicked {emoji_string} button.")
+                                                print(f"✅ [Account #{account}] Clicked {button_string} button.")
                                             else:
-                                                print(f"❌ [Account #{account}] Click {emoji_string} button failed: Error code {status}.")
+                                                print(f"❌ [Account #{account}] Click {button_string} button failed: Error code {status}.")
                                             return
-                        print(f"❌ [Account #{account}] Click {emoji_string} button failed: {emoji_string} button not found.")
+                        print(f"❌ [Account #{account}] Click {button_string} button failed: {button_string} button not found.")
                     else:
                         print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
 
