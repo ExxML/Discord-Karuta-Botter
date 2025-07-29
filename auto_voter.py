@@ -156,11 +156,11 @@ class AutoVoter():
             vote_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Vote')]")))
             vote_button.click()
             time.sleep(1)  # Short delay to ensure vote is registered
-            print("  Clicked vote button")
+            print("  ✅ Clicked vote button")
             self.driver.quit()
 
         except Exception as e:
-            print(f"Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
+            print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
     
     def main(self):
         if self.TOKENS:
