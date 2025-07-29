@@ -77,7 +77,16 @@ class MessageBotter():
             "wait huh", "umm what", "heyy", "hellooo", "yo", "hows it goin", "thats insane", "nice card", "pretty", 
             "nice drop lol", "clean grab", "dannggg what I wanted that", "can I give u one of my cards for that", 
             "yo i need that card", "gimme that", "how long have you had that??", "check my inv lol", 
-            "dude accept the trade", "where should i kmt u?"
+            "dude accept the trade", "where should i kmt u?", "ayoo that's clean", "no way you dropped that", 
+            "i was just about to grab", "hold up fr?", "yo what are the odds", "someone always steals my pull 😭", 
+            "bro got my dream card", "real lucky today huh", "wait how rare is that", "gg bro", "wait lemme check wiki", 
+            "nah that's a flex card fr", "i swear my luck is cursed", "yo who boosting drops rn", "bruh that was mine 😤", 
+            "bet you won't trade that", "wait lemme drop too", "someone check its value lol", "bro always grabs fast af", 
+            "kmt timer almost ready", "who tryna kmt", "u online for trade?", "can i see ur favs?", "i swear it's rigged", 
+            "dawg i was afk noooo", "nah fr that's wild", "yo queue me real quick", "yo why so many rares today", 
+            "i swear u always pull good stuff", "damn stop stealing my luck lol", "wait that's full res right?", 
+            "hold up is that event art?", "bruh where my luck at", "yo let's duel after this", "tryna 1v1 for it?", 
+            "how tf u keep dropping bangers", "wait i missed it 😭"
         ]
         self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
         self.EMOJI_MAP = {
