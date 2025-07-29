@@ -18,7 +18,8 @@ Note: This script extracts user tokens from Discord accounts using Selenium and 
 pip install -r requirements.txt
 ```
 4. Ensure the Karuta drop mode is set to reactions, NOT buttons (`kdropmode`).
-5. Create/buy accounts for the script to use! I **highly recommend** purchasing FULLY VERIFIED alt accounts from a trusted shop. A fully verified account means that it has a verified email AND phone number- a phone number connected to the account is imperative because Discord frequently phone-locks suspicious accounts. (You don't need to have access to the phone, it just needs to be connected to your account.)
+5. All accounts should ONLY drop 3 cards, not 4. If an accounts drops 4 cards, the fourth card will not be auto-grabbed.
+6. Create/buy accounts for the script to use! I **highly recommend** purchasing FULLY VERIFIED alt accounts from a trusted shop. A fully verified account means that it has a verified email AND phone number- a phone number connected to the account is imperative because Discord frequently phone-locks suspicious accounts. (You don't need to have access to the phone, it just needs to be connected to your account.)
 
 If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.com/product/discord-accounts-%7C-fully-verified-tokens (I am not affiliated with this shop). As of July 2025, there is plenty of cheap stock and customer service is excellent.
 
@@ -34,8 +35,9 @@ If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.
 
 Alternatively, you can enter your tokens as a list of strings in `tokens.json`. Leave the list empty if you would like to use `self.ACCOUNTS` instead. **Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.** If you don't have your tokens on hand, you can automatically extract and save your tokens to `tokens.json` by filling in your account credentials in `token_extractor.py`, setting `self.SAVE_TOKENS = True`, then running `main.py`.
 
-3. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_SERVER_ID` and `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands.
-4. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
+3. If there is a special event going on in Karuta, you can set `self.SPECIAL_EVENT = True` in `main.py` AND enter a **single** token (a string) in `special_event_token.json` to automatically react to drops with the event emoji (if there is one). The token must, of course, have access to all `self.DROP_CHANNEL_IDS`. If there is no special event, you MUST set `self.SPECIAL_EVENT = False`.
+4. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_SERVER_ID` and `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands.
+5. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
 ```bash
 cmd <account_number |OR| 'all'> <message>
 ```
