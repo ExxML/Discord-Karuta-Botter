@@ -22,11 +22,11 @@ class TokenExtractor():
         try:
             with open("tokens.json", "r") as tokens_file:
                 self.TOKENS = json.load(tokens_file)
+                if not isinstance(self.TOKENS, list) or not all(isinstance(token, str) for token in self.TOKENS):
+                    input('⛔ Token Format Error ⛔\nExpected a list of strings. Example: ["token1", "token2", "token3"]')
+                    sys.exit()
         except (FileNotFoundError, json.JSONDecodeError):
             self.TOKENS = []
-        if not isinstance(self.TOKENS, list) or not all(isinstance(token, str) for token in self.TOKENS):
-            input('⛔ Token Format Error ⛔\nExpected a list of strings. Example: ["token1", "token2", "token3"]')
-            sys.exit()
 
         self.USER_AGENTS = [
             # Brave Browser - Windows 10/11
