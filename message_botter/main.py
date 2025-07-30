@@ -183,7 +183,7 @@ class MessageBotter():
                     f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"  # Brave Browser - Windows 10/11 (Brave bypasses most Cloudflare detections)
                 ),
                 "browser_version": browser_version,
-                "os_version": {windows_version.split(".")[0]},  # Ex. 10.0 -> 10
+                "os_version": windows_version.split(".")[0],  # Ex. 10.0 -> 10
                 "referrer": "https://discord.com/channels/@me",
                 "referring_domain": "discord.com",
                 "referrer_current": "https://discord.com/channels/@me",
