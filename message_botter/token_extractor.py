@@ -35,7 +35,15 @@ class TokenExtractor():
         options.add_argument('--disable-infobars')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        options.add_argument(f'--user-agent={random.choice(self.USER_AGENTS)}')
+
+        windows_version = random.choice(self.WINDOWS_VERSIONS)
+        browser_version = random.choice(self.BROWSER_VERSIONS)
+        user_agent = (
+            f"Mozilla/5.0 (Windows NT {windows_version}; Win64; x64) "
+            f"AppleWebKit/537.36 (KHTML, like Gecko) "
+            f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"
+        )
+        options.add_argument(f'--user-agent={user_agent}')
 
         self.driver = uc.Chrome(options = options, use_subprocess = True)
         
@@ -96,8 +104,9 @@ class TokenExtractor():
             print(f"Error with {email}: {str(e)}")
             return None
 
-    def main(self, num_channels: int, user_agents: list[str]):
-        self.USER_AGENTS = user_agents
+    def main(self, num_channels: int, windows_versions: list[str], browser_versions: list[str]):
+        self.WINDOWS_VERSIONS = windows_versions
+        self.BROWSER_VERSIONS = browser_versions
         if self.TOKENS:
             print("ℹ️ Using tokens (from tokens.json) instead of account logins...")
             num_accounts = len(self.TOKENS)

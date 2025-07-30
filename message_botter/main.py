@@ -102,50 +102,19 @@ class MessageBotter():
         self.DROP_FAIL_LIMIT_REACHED_FLAG = "Drop Fail Limit Reached"
         self.EXECUTION_COMPLETED_FLAG = "Execution Completed"
 
-        self.USER_AGENTS = [
-            # Brave Browser - Windows 10/11
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.198 Safari/537.36 Brave/114.0.5735.198", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.5790.170 Safari/537.36 Brave/115.0.5790.170", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.5790.114 Safari/537.36 Brave/115.0.5790.114", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Safari/537.36 Brave/116.0.5845.111", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.97 Safari/537.36 Brave/116.0.5845.97", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5938.149 Safari/537.36 Brave/117.0.5938.149", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5938.132 Safari/537.36 Brave/117.0.5938.132", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5938.62 Safari/537.36 Brave/117.0.5938.62", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.117 Safari/537.36 Brave/118.0.5993.117", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.90 Safari/537.36 Brave/118.0.5993.90", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.88 Safari/537.36 Brave/118.0.5993.88", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.160 Safari/537.36 Brave/119.0.6045.160", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.123 Safari/537.36 Brave/119.0.6045.123", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36 Brave/119.0.6045.105", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.224 Safari/537.36 Brave/120.0.6099.224", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.110 Safari/537.36 Brave/120.0.6099.110", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.72 Safari/537.36 Brave/120.0.6099.72", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.184 Safari/537.36 Brave/121.0.6167.184", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.139 Safari/537.36 Brave/121.0.6167.139", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36 Brave/121.0.6167.85", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.174 Safari/537.36 Brave/122.0.6261.174", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.128 Safari/537.36 Brave/122.0.6261.128", 
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.111 Safari/537.36 Brave/122.0.6261.111", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36 Brave/122.0.6261.95", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.122 Safari/537.36 Brave/123.0.6312.122", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.106 Safari/537.36 Brave/123.0.6312.106", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.87 Safari/537.36 Brave/123.0.6312.87", 
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.86 Safari/537.36 Brave/123.0.6312.86", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.207 Safari/537.36 Brave/124.0.6367.207", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.112 Safari/537.36 Brave/124.0.6367.112", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.91 Safari/537.36 Brave/124.0.6367.91", 
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.91 Safari/537.36 Brave/124.0.6367.91", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.113 Safari/537.36 Brave/125.0.6422.113", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Safari/537.36 Brave/125.0.6422.112", 
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.76 Safari/537.36 Brave/125.0.6422.76", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.60 Safari/537.36 Brave/125.0.6422.60", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.127 Safari/537.36 Brave/126.0.6478.127", 
-            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.93 Safari/537.36 Brave/126.0.6478.93", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.61 Safari/537.36 Brave/126.0.6478.61", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.57 Safari/537.36 Brave/126.0.6478.57", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.112 Safari/537.36 Brave/127.0.6533.112", 
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.77 Safari/537.36 Brave/127.0.6533.77"
+        self.WINDOWS_VERSIONS = ["10.0", "11.0"]
+        self.BROWSER_VERSIONS = [
+            "114.0.5735.198", "115.0.5790.170", "115.0.5790.114", "116.0.5845.111", 
+            "116.0.5845.97", "117.0.5938.149", "117.0.5938.132", "117.0.5938.62", 
+            "118.0.5993.117", "118.0.5993.90", "118.0.5993.88", "119.0.6045.160", 
+            "119.0.6045.123", "119.0.6045.105", "120.0.6099.224", "120.0.6099.110", 
+            "120.0.6099.72", "121.0.6167.184", "121.0.6167.139", "121.0.6167.85", 
+            "122.0.6261.174", "122.0.6261.128", "122.0.6261.111", "122.0.6261.95", 
+            "123.0.6312.122", "123.0.6312.106", "123.0.6312.87", "123.0.6312.86", 
+            "124.0.6367.207", "124.0.6367.112", "124.0.6367.91", "124.0.6367.91", 
+            "125.0.6422.113", "125.0.6422.112", "125.0.6422.76", "125.0.6422.60", 
+            "126.0.6478.127", "126.0.6478.93", "126.0.6478.61", "126.0.6478.57", 
+            "127.0.6533.112", "127.0.6533.77"
         ]
 
         # Set up variables
@@ -200,20 +169,21 @@ class MessageBotter():
 
     def get_headers(self, token: str, channel_id: str):
         if token not in self.token_headers:
-            chrome_version = random.choice(["138.0.7204.119", "138.0.7204.46", "138.0.7204.100"])  # Recent Chrome versions (iOS, Android, and Desktop Chrome respectively) (July 2025)
+            windows_version = random.choice(self.WINDOWS_VERSIONS)
+            browser_version = random.choice(self.BROWSER_VERSIONS)
             build_number = random.choice([381653, 382032, 382201, 382355, 417521])  # Random Discord build version numbers
             super_properties = {
                 "os": "Windows",
                 "browser": "Chrome",
                 "device": "",
                 "system_locale": "en-US",
-                "browser_user_agent": (
-                    f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "browser_user_agent": (  # Brave Browser - Windows 10/11
+                    f"Mozilla/5.0 (Windows NT {windows_version}; Win64; x64) "
                     f"AppleWebKit/537.36 (KHTML, like Gecko) "
-                    f"Chrome/{chrome_version} Safari/537.36"
+                    f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"
                 ),
-                "browser_version": chrome_version,
-                "os_version": "10",
+                "browser_version": browser_version,
+                "os_version": {windows_version.split(".")[0]},  # Ex. 10.0 -> 10
                 "referrer": "https://discord.com/channels/@me",
                 "referring_domain": "discord.com",
                 "referrer_current": "https://discord.com/channels/@me",
@@ -248,7 +218,7 @@ class MessageBotter():
     async def get_drop_message(self, token: str, account: int, channel_id: str, wait_for_emoji: bool):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=5"
         headers = self.get_headers(token, channel_id)
-        timeout = 15  # seconds
+        timeout = 30  # seconds
         start_time = time.monotonic()
         async with aiohttp.ClientSession() as session:
             while (time.monotonic() - start_time) < timeout:
@@ -584,5 +554,5 @@ if __name__ == "__main__":
         )
         sys.exit()
     bot.check_config()
-    bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS), bot.USER_AGENTS)
+    bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS), bot.WINDOWS_VERSIONS, bot.BROWSER_VERSIONS)
     asyncio.run(bot.run_script())
