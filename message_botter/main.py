@@ -177,10 +177,10 @@ class MessageBotter():
                 "browser": "Chrome",
                 "device": "",
                 "system_locale": "en-US",
-                "browser_user_agent": (  # Brave Browser - Windows 10/11
+                "browser_user_agent": (
                     f"Mozilla/5.0 (Windows NT {windows_version}; Win64; x64) "
                     f"AppleWebKit/537.36 (KHTML, like Gecko) "
-                    f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"
+                    f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"  # Brave Browser - Windows 10/11 (Brave bypasses most Cloudflare detections)
                 ),
                 "browser_version": browser_version,
                 "os_version": {windows_version.split(".")[0]},  # Ex. 10.0 -> 10

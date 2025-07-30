@@ -52,7 +52,7 @@ class AutoVoter():
         user_agent = (
             f"Mozilla/5.0 (Windows NT {windows_version}; Win64; x64) "
             f"AppleWebKit/537.36 (KHTML, like Gecko) "
-            f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"
+            f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"  # Brave Browser - Windows 10/11 (Brave bypasses most Cloudflare detections)
         )
         options.add_argument(f'--user-agent={user_agent}')
         
