@@ -182,6 +182,9 @@ class AutoVoter():
             print(f"Waiting {round(delay / 60)} minutes before voting again...\n")
             time.sleep(delay)
 
+        input("✅ All accounts have been voted on. Press `Enter` to exit.")
+        sys.exit()
+
 if __name__ == "__main__":
     RELAUNCH_FLAG = "--no-relaunch"
     if RELAUNCH_FLAG not in sys.argv:
