@@ -82,7 +82,7 @@ class MessageBotter():
             "BRO just got my dream card", "real lucky today huh", "wait how rare is that", "gg bro", "wait lemme check wiki", 
             "nah that's a flex card fr", "i swear my luck is cursed", "yo who boosting drops rn", "bruh that was mine 😤", 
             "bet you won't trade that", "wait lemme drop too", "someone check its value lol", "bro always grabs fast af", 
-            "kmt me", "who tryna kmt", "u online for trade?", "can i see ur favs?", "i swear it's rigged", 
+            "here kmt me", "who tryna kmt", "u online for trade?", "can i see ur favs?", "i swear it's rigged", 
             "dawg i was afk nooOO", "nah fr that's wild", "yo queue with me real quick", "yo why so many rares today", 
             "i swear u always pull good stuff", "damn stop stealing my luck lol", "wait that's mint condition right?", 
             "hold up is that sketch art?", "bruh where my luck at", "yo let's duel after this", "tryna 1v1 for it?", 
