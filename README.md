@@ -43,14 +43,14 @@ cmd <account_number |OR| 'all'> <message>
 ```
 - Ex 1. `cmd all kcollection o:wishlist` sends `kcollection o:wishlist` from ALL accounts.
 - Ex 2. `cmd 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (the first account listed in `self.ACCOUNTS`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
-- Ex 3. `cmd 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `cmd 3 {lock}` to lock and confirm the trade (from Account #3).
-- Ex 4. `cmd 1 kmultiburn <filters>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `cmd 1 {burn}` to confirm the multiburn.
-- Ex 5. `cmd 1 {btn} <emoji / label>` clicks the button with the specified emoji or label from Account #1. For example, `cmd 1 {btn} ✅` or `cmd 1 {btn} Confirm`.
-- Ex 6. `cmd {pause}` / `cmd {resume}` pauses and resumes the script.
+- Ex 3. `cmd 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `cmd 3 /lock` to lock and confirm the trade (from Account #3).
+- Ex 4. `cmd 1 kmultiburn <filters>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `cmd 1 /burn` to confirm the multiburn.
+- Ex 5. `cmd 1 /b <emoji / label>` clicks the button with the specified emoji OR label from Account #1. For example, `cmd 1 /b ✅` or `cmd 1 /b Confirm`.
+- Ex 6. `cmd /pause` / `cmd /resume` pauses and resumes the script.
 
 > [!NOTE]
-> - The `all` argument does not work with `give`, `multitrade`, `{lock}`, `multiburn`, or `{burn}` commands.
-> - If you mistype the account number for the `{lock}` or `{burn}` command, you must restart the trade/burn process. Sorry!
+> - The `all` argument does not work with `give`, `multitrade`, `/lock`, `multiburn`, or `/burn` commands.
+> - If you mistype the account number for the `/lock` or `/burn` command, you must restart the trade/burn process. Sorry!
 > - Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
 
 #### ⚠️ **DO NOT** run the script for more than 10 consecutive hours. Karuta may flag your accounts for suspicious activity. After a random time limit, the script will automatically stop and display a warning in the terminal.

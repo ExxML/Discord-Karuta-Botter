@@ -28,11 +28,11 @@ class CommandChecker():
         self.MESSAGE_COMMAND_PREFIX = "cmd"
         self.ALL_ACCOUNT_FLAG = "all"
         self.INTERACTION_URL = "https://discord.com/api/v10/interactions"
-        self.KARUTA_LOCK_COMMAND = "{lock}"
-        self.KARUTA_MULTIBURN_COMMAND = "{burn}"
-        self.KARUTA_CLICK_BUTTON_COMMAND = "{btn}"
-        self.KARUTA_PAUSE_COMMAND = "{pause}"
-        self.KARUTA_RESUME_COMMAND = "{resume}"
+        self.KARUTA_LOCK_COMMAND = "/lock"
+        self.KARUTA_MULTIBURN_COMMAND = "/burn"
+        self.KARUTA_CLICK_BUTTON_COMMAND = "/b"
+        self.KARUTA_PAUSE_COMMAND = "/pause"
+        self.KARUTA_RESUME_COMMAND = "/resume"
 
         self.discord_down_consec_count = 0  # Consecutive times HTTP error 502/503 is returned
         self.DISCORD_DOWN_CONSEC_LIMIT = 5  # When HTTP error 502/503 is returned self.discord_service_down_limit times in a row, start displaying warnings
