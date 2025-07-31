@@ -112,11 +112,11 @@ class AutoVoter():
             
             # Open top.gg
             self.driver.get("https://top.gg/bot/646937666251915264/vote")
-            login_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
-            login_button.click()
             print("  Opened Top.gg")
 
-            # Wait for redirect to authorisation page
+            # Redirect to authorisation page
+            login_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
+            login_button.click()
             WebDriverWait(self.driver, 15).until(lambda d: "/vote" not in d.current_url)
             print("  Redirected to authorisation page")
             
