@@ -132,8 +132,16 @@ class AutoVoter():
             # Vote
             vote_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Vote')]")))
             vote_button.click()
-            time.sleep(1)  # Short delay to ensure vote is registered
-            print("  ✅ Clicked vote button")
+            print("  Clicked vote button")
+
+            # Check if voted successfully
+            WebDriverWait(self.driver, 10).until(lambda d: "Thanks for voting!" in d.page_source or "You have already voted" in d.page_source)
+            if "Thanks for voting!" in self.driver.page_source:
+                print("  ✅ Voted successfully")
+            elif "You have already voted" in self.driver.page_source:
+                print("  ℹ️ Already voted")
+            else:
+                print("  ❌ Unexpected result after clicking vote")
             self.driver.quit()
 
         except Exception as e:
