@@ -36,6 +36,8 @@ class CommandChecker():
 
         self.discord_down_consec_count = 0  # Consecutive times HTTP error 502/503 is returned
         self.DISCORD_DOWN_CONSEC_LIMIT = 5  # When HTTP error 502/503 is returned self.discord_service_down_limit times in a row, start displaying warnings
+        self.exception_count = 0  # Consecutive times an exception is thrown
+        self.EXCEPTION_LIMIT = 5  # Max consecutive times an exception is thrown before stopping command checker
         self.executed_commands = []
         self.card_transfer_messages = []
         self.multitrade_messages = []
@@ -303,6 +305,7 @@ class CommandChecker():
                         await self.confirm_multiburn(token, account, command)
                         await self.check_click_button(token, account, command)
                     print("🤖 Message command executed.")
+                self.exception_count = 0
                 await asyncio.sleep(random.uniform(1, 2))  # Short delay to avoid getting rate-limited
             except ClientConnectorDNSError:
                 print("\n❌ Command checker DNS error.")
@@ -314,5 +317,9 @@ class CommandChecker():
                 print("\n❌ Command checker client error.")
                 await asyncio.sleep(3)
             except Exception as e:
-                print("\n❌ Command checker unexpected error:", e)
-                break
+                self.exception_count += 1
+                print(f"\n❌ Command checker unexpected error ({self.exception_count}/{self.EXCEPTION_LIMIT}):", e)
+                if self.exception_count >= self.EXCEPTION_LIMIT:
+                    print("❌ Terminating command checker due to too many exceptions.")
+                    break
+                await asyncio.sleep(5)
