@@ -44,8 +44,6 @@ class AutoVoter():
         options.add_argument('--headless=new')  # Comment for non-headless mode if needed
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--disable-infobars')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
         
         windows_version = random.choice(self.WINDOWS_VERSIONS)
         browser_version = random.choice(self.BROWSER_VERSIONS)
@@ -105,10 +103,15 @@ class AutoVoter():
             self.driver.execute_script(inject_token_script)
             print("  Injected token")
 
+            # Force page refresh to ensure Discord has no loading errors
+            time.sleep(4)
+            self.driver.execute_cdp_cmd("Network.clearBrowserCache", {})
+            self.driver.refresh()
+
             # Wait for Discord to fully load
-            WebDriverWait(self.driver, 15).until(lambda d: "/login" not in d.current_url)
+            WebDriverWait(self.driver, 15).until(lambda d: d.current_url == "https://discord.com/channels/@me")
             print("  Logged into Discord")
-            time.sleep(2)  # Short delay to ensure Discord fully loads
+            time.sleep(1)  # Short delay to ensure Discord fully loads
             
             # Open top.gg
             self.driver.get("https://top.gg/bot/646937666251915264/vote")
@@ -117,7 +120,7 @@ class AutoVoter():
             # Redirect to authorisation page
             login_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
             login_button.click()
-            WebDriverWait(self.driver, 15).until(lambda d: "/vote" not in d.current_url)
+            WebDriverWait(self.driver, 15).until(lambda d: "https://discord.com/oauth2/authorize" in d.current_url)
             print("  Redirected to authorisation page")
             
             # Authorise
@@ -129,17 +132,19 @@ class AutoVoter():
             # Wait 10s (watch ad to vote)
             time.sleep(10)
 
+            if "You have already voted" in self.driver.page_source:
+                print("  ℹ️ Already voted")
+                return
+
             # Vote
             vote_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Vote')]")))
             vote_button.click()
             print("  Clicked vote button")
 
-            # Check if voted successfully
-            WebDriverWait(self.driver, 10).until(lambda d: "Thanks for voting!" in d.page_source or "You have already voted" in d.page_source)
+            # Check if voted successfully (long timeout because potential captcha)
+            WebDriverWait(self.driver, 10).until(lambda d: "Thanks for voting!" in d.page_source)
             if "Thanks for voting!" in self.driver.page_source:
                 print("  ✅ Voted successfully")
-            elif "You have already voted" in self.driver.page_source:
-                print("  ℹ️ Already voted")
             else:
                 print("  ❌ Unexpected result after clicking vote")
             self.driver.quit()
