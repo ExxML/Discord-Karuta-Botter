@@ -2,6 +2,7 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
 import ctypes
 import sys
@@ -127,14 +128,20 @@ class AutoVoter():
             self.driver.get(self.driver.current_url)
             discord_authorize_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Auth')]")))
             discord_authorize_button.click()
-            print("  Authorised Discord account- waiting 10s to vote...")
+            print("  Authorised Discord account")
 
             # Wait 10s (watch ad to vote)
+            WebDriverWait(self.driver, 10).until(lambda d: d.current_url == "https://top.gg/bot/646937666251915264/vote")
+            self.driver.get(self.driver.current_url)
+            print("  Redirected to vote page, waiting 10s to vote..")
             time.sleep(10)
 
-            if "You have already voted" in self.driver.page_source:
+            try:
+                WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'You have already voted')]")))
                 print("  ℹ️ Already voted")
                 return
+            except:
+                pass
 
             # Vote
             vote_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Vote')]")))
@@ -142,10 +149,10 @@ class AutoVoter():
             print("  Clicked vote button")
 
             # Check if voted successfully (long timeout because potential captcha)
-            WebDriverWait(self.driver, 10).until(lambda d: "Thanks for voting!" in d.page_source)
-            if "Thanks for voting!" in self.driver.page_source:
+            try:
+                WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Thanks for voting!')]")))
                 print("  ✅ Voted successfully")
-            else:
+            except:
                 print("  ❌ Unexpected result after clicking vote")
             self.driver.quit()
 
