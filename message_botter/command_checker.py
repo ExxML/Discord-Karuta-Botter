@@ -30,7 +30,7 @@ class CommandChecker():
         self.INTERACTION_URL = "https://discord.com/api/v10/interactions"
         self.KARUTA_LOCK_COMMAND = "/lock"
         self.KARUTA_MULTIBURN_COMMAND = "/burn"
-        self.KARUTA_CLICK_BUTTON_COMMAND = "/b"
+        self.KARUTA_CLICK_BUTTON_COMMAND = "/b "
         self.KARUTA_PAUSE_COMMAND = "/pause"
         self.KARUTA_RESUME_COMMAND = "/resume"
 
