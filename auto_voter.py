@@ -158,7 +158,6 @@ class AutoVoter():
                 print("  ✅ Voted successfully")
             except:
                 print("  ❌ Unexpected result after clicking vote")
-            self.driver.quit()
 
         except Exception as e:
             print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
