@@ -2,5 +2,6 @@ aiohttp==3.12.12
 selenium==4.33.0
 setuptools==80.9.0
 undetected_chromedriver==3.5.5
+webdriver-manager==4.0.2
 pywin32==310
 emoji==2.14.1
