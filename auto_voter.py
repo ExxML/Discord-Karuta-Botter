@@ -104,7 +104,7 @@ class AutoVoter():
             print("  Injected token")
 
             # Force page refresh to ensure Discord has no loading errors
-            time.sleep(4)
+            time.sleep(8)
             self.driver.execute_cdp_cmd("Network.clearBrowserCache", {})
             self.driver.refresh()
 
@@ -116,6 +116,11 @@ class AutoVoter():
             # Open top.gg
             self.driver.get("https://top.gg/bot/646937666251915264/vote")
             print("  Opened Top.gg")
+
+            # Force page refresh to ensure Top.gg has no loading errors
+            time.sleep(5)
+            self.driver.execute_cdp_cmd("Network.clearBrowserCache", {})
+            self.driver.refresh()
 
             # Redirect to authorisation page
             login_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
