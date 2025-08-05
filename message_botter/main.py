@@ -88,7 +88,7 @@ class MessageBotter():
             "hold up is that sketch art?", "bruh where my luck at", "yo let's duel after this", "tryna 1v1 for it?", 
             "how tf u keep dropping bangers", "wait i missed it BRUH", "i got scammed in trade lol"
             "yo i blinked and missed it", "how u pull sm heat", "who boosting rn lol", "lemme borrow ur luck", 
-            "stoppp that's too clean", "yo fr stop hoggin", "wait that's signed right?", "pls trade it to me", 
+            "stoppp that's too clean", "yo fr stop hoggin", "wait that's signed right?", "please trade it to me", 
             "you farming rn?", "yo gimme that theme", "bruh stop stealing drops", "i swear that was mine", 
             "how's that even possible lol", "yo ggs on that pull", "can't believe u got that", "W pull fr", 
             "yo thats actually cracked", "nah you cheating fr", "how that even drop here", "yo can i see ur binder", 
@@ -100,7 +100,7 @@ class MessageBotter():
             "i'll trade u 3 for it fr", "you pull like a whale", "yo check auction prices", "nah im done lmao", 
             "yo queue now or i'm stealing", "why so many good cards today", "i got baited smh", "yo that's a set piece?", 
             "wait was that a dupe?", "i need that in my favs", "nah u got god luck today", "yo stop sniping me", 
-            "i was lagging bruh", "pls i'll overpay", "yo is that new art?"
+            "i was lagging bruh", "pleaseeee i'll overpay", "yo is that new art?"
         ]
         self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
         self.EMOJI_MAP = {
