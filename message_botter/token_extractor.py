@@ -1,4 +1,6 @@
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -29,7 +31,7 @@ class TokenExtractor():
             self.TOKENS = []
 
     def load_chrome(self):
-        options = uc.ChromeOptions()
+        options = webdriver.ChromeOptions()
         options.add_argument('--headless=new')  # Comment for non-headless mode if needed
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--disable-infobars')
@@ -45,7 +47,8 @@ class TokenExtractor():
         )
         options.add_argument(f'--user-agent={user_agent}')
 
-        self.driver = uc.Chrome(options = options, use_subprocess = True)
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service = service, options = options)
         
         # Webdriver spoofer
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
@@ -136,7 +139,7 @@ class TokenExtractor():
         # Executes if using account logins
         tokens = []
         for index, account in enumerate(self.ACCOUNTS):
-            print("\nLoading new undetected Chrome...")
+            print("\nLoading new Chrome...")
             self.load_chrome()
             print(f"Processing {index + 1}/{len(self.ACCOUNTS)}: {account['email']}...")
             token = self.extract_discord_token(account["email"], account["password"])
