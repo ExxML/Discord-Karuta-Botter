@@ -1,4 +1,4 @@
-import undetected_chromedriver as uc
+import undetected_chromedriver as uc  # MUST use undetected_chromedriver to bypass Cloudflare bot detection
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -65,7 +65,7 @@ class AutoVoter():
 
     def auto_vote(self, account_idx: int):
         try:
-            max_attempts = 15
+            max_attempts = 30
             for attempt in range(max_attempts):
                 try:
                     if attempt > 0:
