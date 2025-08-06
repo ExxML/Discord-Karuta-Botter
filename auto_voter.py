@@ -8,10 +8,17 @@ import sys
 import json
 import time
 import random
+import signal
+import atexit
 
 ### TO USE THE AUTO-VOTER, YOU MUST HAVE A LIST OF TOKEN(S) in tokens.json. You cannot use account logins.
 class AutoVoter():
     def __init__(self):
+        self.driver = None
+        atexit.register(self.cleanup)
+        signal.signal(signal.SIGINT, self.cleanup)
+        signal.signal(signal.SIGTERM, self.cleanup)
+        
         try:
             with open("tokens.json", "r") as tokens_file:
                 self.TOKENS = json.load(tokens_file)
@@ -56,35 +63,29 @@ class AutoVoter():
         
         self.driver = uc.Chrome(options = options, use_subprocess = True)
 
-        # Webdriver spoofer
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"
-        })
-
-        # Spoof canvas
-        canvas_script = """
-        const originalGetContext = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function(type, ...args) {
-            const ctx = originalGetContext.call(this, type, ...args);
-            if (type === '2d') {
-                const originalGetImageData = ctx.getImageData;
-                ctx.getImageData = function(x, y, w, h) {
-                    const imageData = originalGetImageData.call(this, x, y, w, h);
-                    for (let i = 0; i < imageData.data.length; i += 4) {
-                        imageData.data[i] = imageData.data[i] ^ 1;
-                    }
-                    return imageData;
-                }
-            }
-            return ctx;
-        };
-        """
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": canvas_script})
-
     def auto_vote(self, account_idx: int):
         try:
-            # Navigate to Discord login
-            self.driver.get("https://discord.com/login")
+            max_attempts = 15
+            for attempt in range(max_attempts):
+                try:
+                    if attempt > 0:
+                        print(f"  ⚠️ Retry initialization attempt #{attempt + 1}/{max_attempts}")
+                        if self.driver:
+                            self.driver.quit()
+                            self.driver = None
+                        self.load_chrome()
+                    
+                    # Navigate to Discord login
+                    self.driver.get("https://discord.com/login")
+                    break
+                except Exception as e:
+                    if attempt >= max_attempts - 1:
+                        print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
+                        return
+                    if self.driver:
+                        self.driver.quit()
+                        self.driver = None
+                    time.sleep(2)
             WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
             print("  Opened Discord")
 
@@ -162,6 +163,13 @@ class AutoVoter():
         except Exception as e:
             print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
     
+    def cleanup(self, *args):
+        if self.driver:
+            try:
+                self.driver.quit()
+            except:
+                pass
+            
     def main(self):
         if self.TOKENS:
             self.shuffled_tokens = random.sample(self.TOKENS, len(self.TOKENS))
