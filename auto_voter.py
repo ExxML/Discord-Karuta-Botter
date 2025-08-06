@@ -60,7 +60,6 @@ class AutoVoter():
             f"Chrome/{browser_version} Safari/537.36 Brave/{browser_version}"  # Brave Browser - Windows 10/11 (Brave bypasses most Cloudflare detections)
         )
         options.add_argument(f'--user-agent={user_agent}')
-        print(f"User-Agent: {user_agent}")
         
         self.driver = uc.Chrome(options = options, use_subprocess = True)
 
