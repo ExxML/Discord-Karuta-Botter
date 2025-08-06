@@ -29,7 +29,7 @@ class AutoVoter():
             sys.exit()
 
         self.RAND_DELAY_MIN = 10  # (int) Minimum amount of MINUTES to wait between votes
-        self.RAND_DELAY_MAX = 25 # (int) Maximum amount of MINUTES to wait between votes
+        self.RAND_DELAY_MAX = 20 # (int) Maximum amount of MINUTES to wait between votes
 
         self.WINDOWS_VERSIONS = ["10.0", "11.0"]
         self.BROWSER_VERSIONS = [
@@ -66,7 +66,7 @@ class AutoVoter():
 
     def auto_vote(self, account_idx: int):
         try:
-            max_attempts = 30
+            max_attempts = 45
             for attempt in range(max_attempts):
                 try:
                     if attempt > 0:
@@ -75,7 +75,7 @@ class AutoVoter():
                             self.driver.quit()
                             self.driver = None
                         self.load_chrome()
-                        time.sleep(5)
+                    time.sleep(1)
                     
                     # Navigate to Discord login
                     self.driver.get("https://discord.com/login")
