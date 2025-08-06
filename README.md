@@ -62,5 +62,6 @@ cmd <account_number |OR| 'all'> <message>
 ### Usage
 1. Follow the usage steps above (for Discord Message Botter) to obtain a list of tokens in `tokens.json`.
 2. Ensure your (normal) Chrome browser is up-to-date.
-3. If you wish, edit `self.RAND_DELAY_MIN` and `self.RAND_DELAY_MAX` to change the (randomized) amount of time between votes.
-4. Run `auto_voter.py`.
+3. **DO NOT** use a VPN while running this script. Cloudflare flags VPNs.
+4. If you wish, edit `self.RAND_DELAY_MIN` and `self.RAND_DELAY_MAX` to change the (randomized) amount of time between votes.
+5. Run `auto_voter.py`.
