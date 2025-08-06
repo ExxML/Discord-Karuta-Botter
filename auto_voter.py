@@ -69,7 +69,7 @@ class AutoVoter():
             for attempt in range(max_attempts):
                 try:
                     if attempt > 0:
-                        print(f"  ⚠️ Retry initialization attempt #{attempt + 1}/{max_attempts}")
+                        print(f"  ⚠️ Retrying initialization: Attempt #{attempt + 1}/{max_attempts}")
                         if self.driver:
                             self.driver.quit()
                             self.driver = None
