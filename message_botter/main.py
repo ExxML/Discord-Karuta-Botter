@@ -465,42 +465,45 @@ class MessageBotter():
                 break  # Continue the script
 
     async def run_instance(self, channel_num: int, channel_id: str, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
-        num_accounts = len(channel_tokens)
-        self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
-        # Breaking up start delay into multiple steps to check if need to pause
-        random_start_delay_per_step = random.uniform(2, 3)
-        num_start_delay_steps = round(start_delay / random_start_delay_per_step)
-        for _ in range(num_start_delay_steps):
-            await self.pause_event.wait()  # Check if need to pause
-            await asyncio.sleep(random_start_delay_per_step)
-        self.start_time = time.monotonic()
-        while True:
-            for token in channel_tokens:
-                print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
-                if time.monotonic() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
-                    print(f"ℹ️ Channel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in channel...")
-                    await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
-                    return
-                if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
-                    await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_id, channel_tokens.copy())
-                else:
-                    print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
+        try:
+            num_accounts = len(channel_tokens)
+            self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
+            # Breaking up start delay into multiple steps to check if need to pause
+            random_start_delay_per_step = random.uniform(2, 3)
+            num_start_delay_steps = round(start_delay / random_start_delay_per_step)
+            for _ in range(num_start_delay_steps):
                 await self.pause_event.wait()  # Check if need to pause
-                if self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:  # If FAIL_LIMIT == -1 (or any neg num), never pause
-                    if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
-                        await self.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "⚠️ Drop fail limit reached", 0)
-                    if self.TERMINAL_VISIBILITY:
-                        await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.",
-                                                                        "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
-                # Breaking up delay into multiple steps to check if need to pause
-                random_delay = self.DELAY + random.uniform(0.5 * 60, 5 * 60)  # Wait an additional 0.5-5 minutes per drop
-                random_delay_per_step = random.uniform(2, 3)
-                num_delay_steps = round(random_delay / random_delay_per_step)
-                for _ in range(num_delay_steps):
+                await asyncio.sleep(random_start_delay_per_step)
+            self.start_time = time.monotonic()
+            while True:
+                for token in channel_tokens:
+                    print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+                    if time.monotonic() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
+                        print(f"ℹ️ Channel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in channel...")
+                        await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
+                        return
+                    if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
+                        await self.drop_and_grab(token, self.tokens.index(token) + 1, channel_id, channel_tokens.copy())
+                    else:
+                        print(f"✅ [Account #{self.tokens.index(token) + 1}] Skipped drop.")
                     await self.pause_event.wait()  # Check if need to pause
-                    await asyncio.sleep(random_delay_per_step)
-                    if random.randint(1, self.RANDOM_COMMAND_RATE) == 1:
-                        await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.RANDOM_COMMANDS), 0)
+                    if self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:  # If FAIL_LIMIT == -1 (or any neg num), never pause
+                        if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
+                            await self.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "⚠️ Drop fail limit reached", 0)
+                        if self.TERMINAL_VISIBILITY:
+                            await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.",
+                                                                            "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
+                    # Breaking up delay into multiple steps to check if need to pause
+                    random_delay = self.DELAY + random.uniform(0.5 * 60, 5 * 60)  # Wait an additional 0.5-5 minutes per drop
+                    random_delay_per_step = random.uniform(2, 3)
+                    num_delay_steps = round(random_delay / random_delay_per_step)
+                    for _ in range(num_delay_steps):
+                        await self.pause_event.wait()  # Check if need to pause
+                        await asyncio.sleep(random_delay_per_step)
+                        if random.randint(1, self.RANDOM_COMMAND_RATE) == 1:
+                            await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.RANDOM_COMMANDS), 0)
+        except Exception as e:
+            print(f"\n❌ Error in Channel Instance #{channel_num} ❌\n{e}")
 
     async def run_script(self):
         if self.SHUFFLE_ACCOUNTS:
