@@ -34,8 +34,8 @@ class MessageBotter():
         self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs.
         self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up.
         self.DROP_FAIL_LIMIT = 3  # (int) Maximum number of failed drops across all channels before pausing script. Set to -1 if you wish to disable this limit.
-        self.TIME_LIMIT_HOURS_MIN = 6  # (int) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk).
-        self.TIME_LIMIT_HOURS_MAX = 10  # (int) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk).
+        self.TIME_LIMIT_HOURS_MIN = 6  # (int/float) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk).
+        self.TIME_LIMIT_HOURS_MAX = 10  # (int/float) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk).
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
         self.DROP_SKIP_RATE = 12  # (int) Every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
         self.RANDOM_COMMAND_RATE = 480  # (int) Every 2-3 seconds, there is a 1/self.RANDOM_COMMAND_RATE chance of sending a random command.
@@ -161,8 +161,8 @@ class MessageBotter():
             isinstance(self.SHUFFLE_ACCOUNTS, bool),
             isinstance(self.RATE_LIMIT, int),
             isinstance(self.DROP_FAIL_LIMIT, int),
-            isinstance(self.TIME_LIMIT_HOURS_MIN, int),
-            isinstance(self.TIME_LIMIT_HOURS_MAX, int),
+            isinstance(self.TIME_LIMIT_HOURS_MIN, (int, float)),
+            isinstance(self.TIME_LIMIT_HOURS_MAX, (int, float)),
             isinstance(self.CHANNEL_SKIP_RATE, int),
             isinstance(self.DROP_SKIP_RATE, int),
             isinstance(self.RANDOM_COMMAND_RATE, int),
@@ -545,7 +545,7 @@ class MessageBotter():
                 channel_tokens = self.channel_token_dict[channel_id]
                 start_delay_seconds = start_delay_multipliers[0] * 210 + random.uniform(5, 60)  # Randomly stagger start times
                 start_delay_multipliers.pop(0)
-                channel_time_limit_seconds = random.randint(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60)  # Random time limit in seconds
+                channel_time_limit_seconds = round(random.uniform(self.TIME_LIMIT_HOURS_MIN * 60 * 60, self.TIME_LIMIT_HOURS_MAX * 60 * 60))  # Random time limit in seconds
                 target_time = datetime.now() + timedelta(seconds = start_delay_seconds) + timedelta(seconds = channel_time_limit_seconds)
                 start_time = datetime.now() + timedelta(seconds = start_delay_seconds)
                 print(f"\nℹ️ Channel #{channel_num} will run for {(channel_time_limit_seconds / 60 / 60):.1f} hrs (until {target_time.strftime('%I:%M %p').lstrip('0')}) " +
