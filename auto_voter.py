@@ -81,7 +81,7 @@ class AutoVoter():
                     break
                 except Exception as e:
                     if attempt >= max_attempts - 1:
-                        print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
+                        print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:\n{e}")
                         return
                     if self.driver:
                         self.driver.quit()
@@ -162,7 +162,7 @@ class AutoVoter():
                 print("  ❌ Unexpected result after clicking vote")
 
         except Exception as e:
-            print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:", e)
+            print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:\n{e}")
     
     def cleanup(self, *args):
         if self.driver:

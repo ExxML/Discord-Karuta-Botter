@@ -111,7 +111,7 @@ class CommandChecker():
                                     send = True
                                 return send, account, command
                         except Exception as e:
-                            print("\n❌ Error parsing command:", e)
+                            print(f"\n❌ Error parsing command: {e}")
                             return None, None, None
                 elif status == 502 or status == 503:  # Discord servers under heavy load, not client-side error
                     self.discord_down_consec_count += 1
@@ -318,7 +318,7 @@ class CommandChecker():
                 await asyncio.sleep(3)
             except Exception as e:
                 self.exception_count += 1
-                print(f"\n❌ Command checker unexpected error ({self.exception_count}/{self.EXCEPTION_LIMIT}):", e)
+                print(f"\n❌ Command checker unexpected error ({self.exception_count}/{self.EXCEPTION_LIMIT}):\n{e}")
                 if self.exception_count >= self.EXCEPTION_LIMIT:
                     print("❌ Terminating command checker due to too many exceptions.")
                     break
