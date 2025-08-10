@@ -1,7 +1,7 @@
-# Discord Message Botter
-Discord Message Botter is a Python script for Windows that mimics realistic user behaviour to automatically drop and grab cards in Karuta, a Discord bot game.
+# Discord Karuta Botter
+Discord Karuta Botter is a Python script for Windows that mimics realistic user behaviour to automatically drop and grab cards in Karuta, a Discord bot game.
 
-While this script was originally designed for Karuta botting, it can be easily adapted for other self-bot purposes.
+While this script was originally designed for Karuta botting, it can be easily adapted for other Discord self-bot purposes.
 
 ## ⚠️ WARNING ⚠️
 Discord's Terms of Service explicitly prohibits self-bots (as of June 2025). Unauthorized use of this script *could* result in account bans. Use at your own risk.
@@ -60,7 +60,7 @@ cmd <account_number |OR| 'all'> <message>
 
 ## Top.gg Auto-Voter
 ### Usage
-1. Follow the usage steps above (for Discord Message Botter) to obtain a list of tokens in `tokens.json`.
+1. Follow the usage steps above (for Discord Karuta Botter) to obtain a list of tokens in `tokens.json`.
 2. Ensure your (normal) Chrome browser is up-to-date.
 3. **DO NOT** use a VPN while running this script. Cloudflare flags VPNs.
 4. If you wish, edit `self.RAND_DELAY_MIN` and `self.RAND_DELAY_MAX` to change the (randomized) amount of time between votes.
