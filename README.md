@@ -1,6 +1,8 @@
 # Discord Message Botter
 Discord Message Botter is a Python script for Windows that mimics realistic user behaviour to automatically drop and grab cards in Karuta, a Discord bot game.
 
+While this script was originally designed for Karuta botting, it can be easily adapted for other self-bot purposes.
+
 ## ⚠️ WARNING ⚠️
 Discord's Terms of Service explicitly prohibits self-bots (as of June 2025). Unauthorized use of this script *could* result in account bans. Use at your own risk.
 
