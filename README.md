@@ -50,8 +50,9 @@ cmd <account_number |OR| 'all'> <message>
 - Ex 2. `cmd 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (the first account listed in `self.ACCOUNTS`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
 - Ex 3. `cmd 3 kmultitrade @ExxML` sends a multitrade request from Account #3. After the trade items have been entered, type `cmd 3 /lock` to lock and confirm the trade (from Account #3).
 - Ex 4. `cmd 1 kmultiburn <filters>` multiburns cards on Account #1. When you are FULLY READY to complete the multiburn, type `cmd 1 /burn` to confirm the multiburn.
-- Ex 5. `cmd 1 /b <emoji / label>` clicks the button with the specified emoji OR label from Account #1. For example, `cmd 1 /b ✅` or `cmd 1 /b Confirm`.
-- Ex 6. `cmd /pause` / `cmd /resume` pauses and resumes the script.
+- Ex 5. `cmd 1 /b <emoji / label>` clicks the button on the most recent bot message (in self.INTERACTION_BOT_IDS) with the specified emoji OR label. For example, `cmd 1 /b ✅` or `cmd 1 /b I understand`.
+- Ex 6. `cmd 1 /r <emoji>` reacts to the most recent bot message (in self.INTERACTION_BOT_IDS) with the specified emoji. For example, `cmd 1 /r 💰`.
+- Ex 7. `cmd /pause` / `cmd /resume` pauses and resumes the script.
 
 > [!NOTE]
 > - The `all` argument does not work with `give`, `multitrade`, `/lock`, `multiburn`, or `/burn` commands.

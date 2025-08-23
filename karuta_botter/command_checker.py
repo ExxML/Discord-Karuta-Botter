@@ -16,7 +16,7 @@ class CommandChecker():
         self.COMMAND_CHANNEL_ID = command_channel_id
         self.KARUTA_PREFIX = karuta_prefix
         self.KARUTA_BOT_ID = karuta_bot_id
-        self.BUTTON_BOT_IDS = [self.KARUTA_BOT_ID, "408785106942164992"]  # List of bot IDs to look for when pressing button (i.e. OwO)
+        self.INTERACTION_BOT_IDS = [self.KARUTA_BOT_ID, "408785106942164992"]  # List of bot IDs to look for when pressing buttons or sending reactions (i.e. OwO)
         self.KARUTA_DROP_MESSAGE = karuta_drop_message
         self.KARUTA_EXPIRED_DROP_MESSAGE = karuta_expired_drop_message
         self.KARUTA_CARD_TRANSFER_TITLE = karuta_card_transfer_title
@@ -31,6 +31,7 @@ class CommandChecker():
         self.KARUTA_LOCK_COMMAND = "/lock"
         self.KARUTA_MULTIBURN_COMMAND = "/burn"
         self.KARUTA_CLICK_BUTTON_COMMAND = "/b "
+        self.KARUTA_SEND_REACTION_COMMAND = "/r "
         self.KARUTA_PAUSE_COMMAND = "/pause"
         self.KARUTA_RESUME_COMMAND = "/resume"
 
@@ -45,7 +46,7 @@ class CommandChecker():
         self.multiburn_fire_messages = []
 
     async def check_command(self, token: str):
-        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=3"
+        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=5"
         headers = self.main.get_headers(token, self.COMMAND_CHANNEL_ID)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
@@ -105,6 +106,9 @@ class CommandChecker():
                                     send = False
                                 elif command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_CLICK_BUTTON_COMMAND and isinstance(account, int):
                                     print(f"\n🤖 Clicking {command.split(" ", 1)[-1]} button on Account #{account}...")
+                                    send = False
+                                elif command.startswith(self.KARUTA_SEND_REACTION_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_SEND_REACTION_COMMAND and isinstance(account, int):
+                                    print(f"\n🤖 Sending {command.split(" ", 1)[-1]} reaction on Account #{account}...")
                                     send = False
                                 else:
                                     print(f"\n🤖 Sending '{command}' from {f'Account #{account}' if isinstance(account, int) else 'all accounts'}...")
@@ -259,7 +263,7 @@ class CommandChecker():
     async def check_click_button(self, token: str, account: int, command: str):
         if command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_CLICK_BUTTON_COMMAND:
             button_string = command.split(" ", 1)[-1]
-            url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=20"
+            url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=50"
             headers = self.main.get_headers(token, self.COMMAND_CHANNEL_ID)
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers = headers) as resp:
@@ -267,7 +271,7 @@ class CommandChecker():
                     if status == 200:
                         messages = await resp.json()
                         for msg in messages:
-                            if msg.get('author', {}).get('id') in self.BUTTON_BOT_IDS:
+                            if msg.get('author', {}).get('id') in self.INTERACTION_BOT_IDS:
                                 payload = await self.get_payload(account, button_string, msg)
                                 if payload is not None:
                                     async with aiohttp.ClientSession() as session:
@@ -282,6 +286,21 @@ class CommandChecker():
                         print(f"❌ [Account #{account}] Click {button_string} button failed: {button_string} button not found.")
                     else:
                         print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
+
+    async def check_send_reaction(self, token: str, account: int, command: str):
+        if command.startswith(self.KARUTA_SEND_REACTION_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_SEND_REACTION_COMMAND:
+            reaction_string = command.split(" ", 1)[-1]
+            url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=50"
+            headers = self.main.get_headers(token, self.COMMAND_CHANNEL_ID)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers = headers) as resp:
+                    status = resp.status
+                    if status == 200:
+                        messages = await resp.json()
+                        for msg in messages:
+                            if msg.get('author', {}).get('id') in self.INTERACTION_BOT_IDS:
+                                await self.main.add_reaction(token, account, self.COMMAND_CHANNEL_ID, msg.get('id'), reaction_string, self.RATE_LIMIT)
+                                return
 
     async def run(self):
         while True:
@@ -304,6 +323,7 @@ class CommandChecker():
                         await self.check_multiburn(token, account, command)
                         await self.confirm_multiburn(token, account, command)
                         await self.check_click_button(token, account, command)
+                        await self.check_send_reaction(token, account, command)
                     print("🤖 Message command executed.")
                 self.exception_count = 0
                 await asyncio.sleep(random.uniform(1, 2))  # Short delay to avoid getting rate-limited

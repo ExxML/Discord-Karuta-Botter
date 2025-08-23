@@ -299,7 +299,7 @@ class MessageBotter():
                 return status == 200
 
     async def get_karuta_message(self, token: str, account: int, channel_id: str, search_content: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=20"
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=50"
         headers = self.get_headers(token, channel_id)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
@@ -325,7 +325,7 @@ class MessageBotter():
                         pass
                 elif status == 429 and rate_limited < self.RATE_LIMIT:
                     rate_limited += 1
-                    retry_after = 1
+                    retry_after = 1  # seconds
                     print(f"⚠️ [Account #{account}] Retrieve message failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                     await asyncio.sleep(retry_after)
                     return await self.get_karuta_message(token, account, channel_id, search_content, rate_limited)
@@ -351,13 +351,13 @@ class MessageBotter():
                         print(f"❌ [Account #{account}] Grab card {card_number} failed: Token banned or insufficient permissions.")
                     elif status == 429 and rate_limited < self.RATE_LIMIT:
                         rate_limited += 1
-                        retry_after = 1
+                        retry_after = 1  # seconds
                         print(f"⚠️ [Account #{account}] Grab card {card_number} failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                         await asyncio.sleep(retry_after)
                         await self.add_reaction(token, account, channel_id, message_id, emoji, rate_limited)
                     else:
                         print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
-                elif self.SPECIAL_EVENT and self.special_event_token:  # emoji is the special event emoji
+                elif account == 0 and self.SPECIAL_EVENT and self.special_event_token:  # when reacting for special event emoji
                     if status == 204:
                         print(f"✅ [Special Event Account] Reacted {emoji}.")
                     elif status == 401:
@@ -366,12 +366,27 @@ class MessageBotter():
                         print(f"❌ [Special Event Account] React {emoji} failed: Token banned or insufficient permissions.")
                     elif status == 429 and rate_limited < self.RATE_LIMIT:
                         rate_limited += 1
-                        retry_after = 1
+                        retry_after = 1  # seconds
                         print(f"⚠️ [Special Event Account] React {emoji} failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                         await asyncio.sleep(retry_after)
                         await self.add_reaction(token, account, channel_id, message_id, emoji, rate_limited)
                     else:
                         print(f"❌ [Special Event Account] React {emoji} failed: Error code {status}.")
+                else:  # when manually reacting with message commands
+                    if status == 204:
+                        print(f"✅ [Account #{account}] Reacted {emoji}.")
+                    elif status == 401:
+                        print(f"❌ [Account #{account}] React {emoji} failed: Invalid token.")
+                    elif status == 403:
+                        print(f"❌ [Account #{account}] React {emoji} failed: Token banned or insufficient permissions.")
+                    elif status == 429 and rate_limited < self.RATE_LIMIT:
+                        rate_limited += 1
+                        retry_after = 1  # seconds
+                        print(f"⚠️ [Account #{account}] React {emoji} failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                        await asyncio.sleep(retry_after)
+                        await self.add_reaction(token, account, channel_id, message_id, emoji, rate_limited)
+                    else:
+                        print(f"❌ [Account #{account}] React {emoji} failed: Error code {status}.")
 
     async def run_command_checker(self):
         if all([self.COMMAND_SERVER_ID, self.COMMAND_CHANNEL_ID]):  # If command server id AND channel id field is not empty
@@ -424,7 +439,7 @@ class MessageBotter():
                 if self.SPECIAL_EVENT and self.special_event_token and len(drop_message.get('reactions', [])) > 3:  # 3 cards + 1 special event emoji
                     await asyncio.sleep(random.uniform(0, 3))
                     special_event_emoji = drop_message.get('reactions', [])[-1]['emoji'].get('name')  # Get the last (4th) emoji (the event emoji)
-                    await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)
+                    await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)  # 0 as account_num stub
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
                     if random.choice([True, False]):  # 50% chance of sending messages
