@@ -40,7 +40,7 @@ Alternatively, you can enter your tokens as a list of strings in `tokens.json`. 
 
 **Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.** If you don't have your tokens on hand, you can automatically extract and save your tokens to `tokens.json` by filling in your account credentials in `token_extractor.py`, setting `self.SAVE_TOKENS = True`, then running `main.py`.
 
-3. If there is a special event going on in Karuta, you can set `self.SPECIAL_EVENT = True` in `main.py` AND enter a **single** token (a string) in `special_event_token.json` to automatically react to drops with the event emoji (if there is one). The token must, of course, have access to all `self.DROP_CHANNEL_IDS`. If there is no special event, you MUST set `self.SPECIAL_EVENT = False`.
+3. If there is a special event going on in Karuta, you can set `self.SPECIAL_EVENT = True` in `main.py` AND enter a **single** token (a string) in `special_event_token.json` to automatically react to drops with the event emoji (if there is one). The token must, of course, have access to all `self.DROP_CHANNEL_IDS` and `self.SERVER_ACTIVITY_DROP_CHANNEL_IDS`. If there is no special event, you MUST set `self.SPECIAL_EVENT = False`.
 4. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_SERVER_ID` and `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands.
 5. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
 ```bash

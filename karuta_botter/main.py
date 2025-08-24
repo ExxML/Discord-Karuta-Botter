@@ -25,8 +25,12 @@ class MessageBotter():
         # Enter your command server and channel (where commands can be sent) as a string. Leave the strings empty to disable message commands.
         self.COMMAND_SERVER_ID = ""
         self.COMMAND_CHANNEL_ID = ""
-        # Enter your drop channels as list of strings.
+        # Enter your drop channels as a list of strings.
         self.DROP_CHANNEL_IDS = [
+            "",
+        ]
+        # Enter your server activity drop channels as a list of strings (for reacting to drops with the special event emoji during Karuta events). Only used if self.SPECIAL_EVENT = True.
+        self.SERVER_ACTIVITY_DROP_CHANNEL_IDS = [
             "",
         ]
         self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
@@ -44,6 +48,7 @@ class MessageBotter():
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
         self.KARUTA_DROP_MESSAGE = "is dropping 3 cards!"
+        self.KARUTA_SERVER_ACTIVITY_DROP_MESSAGE = "I'm dropping 3 cards since this server is currently active!"
         self.KARUTA_EXPIRED_DROP_MESSAGE = "This drop has expired and the cards can no longer be grabbed."
 
         self.KARUTA_CARD_TRANSFER_TITLE = "Card Transfer"
@@ -148,12 +153,13 @@ class MessageBotter():
                 (self.COMMAND_SERVER_ID == "" or self.COMMAND_SERVER_ID.isdigit()),
                 (self.COMMAND_CHANNEL_ID == "" or self.COMMAND_CHANNEL_ID.isdigit()),
                 all(id.isdigit() for id in self.DROP_CHANNEL_IDS),
+                all(id.isdigit() for id in self.SERVER_ACTIVITY_DROP_CHANNEL_IDS),
                 self.KARUTA_BOT_ID.isdigit()
             ]):
-                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID(s), command server/channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID(s), command server/channel ID, (server activity) drop channel ID(s), and Karuta bot ID in main.py.")
                 sys.exit()
         except AttributeError:
-            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID(s), command server/channel ID, drop channel ID(s), and Karuta bot ID in main.py.")
+            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID(s), command server/channel ID, (server activity) drop channel ID(s), and Karuta bot ID in main.py.")
             sys.exit()
         if not all([
             isinstance(self.TERMINAL_VISIBILITY, int),
@@ -240,23 +246,20 @@ class MessageBotter():
                     status = resp.status
                     if status == 200:
                         messages = await resp.json()
-                        try:
-                            for msg in messages:
-                                reactions = msg.get('reactions', [])
-                                if all([
-                                    msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
-                                    len(reactions) >= 3,
-                                    self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
-                                    self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
-                                ]):
-                                    if self.SPECIAL_EVENT and wait_for_emoji:  # If special event, wait an additional 2-3s to watch for the special event emoji
-                                        await asyncio.sleep(random.uniform(2, 3))
-                                        wait_for_emoji = False
-                                        continue
-                                    print(f"✅ [Account #{account}] Retrieved drop message.")
-                                    return msg
-                        except (KeyError, IndexError):
-                            pass
+                        for msg in messages:
+                            reactions = msg.get('reactions', [])
+                            if all([
+                                msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
+                                len(reactions) >= 3,
+                                self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
+                                self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
+                            ]):
+                                if self.SPECIAL_EVENT and wait_for_emoji:  # If special event, wait an additional 2-3s to watch for the special event emoji
+                                    await asyncio.sleep(random.uniform(2, 3))
+                                    wait_for_emoji = False
+                                    continue
+                                print(f"✅ [Account #{account}] Retrieved drop message.")
+                                return msg
                         if not wait_for_emoji:
                             continue
                     elif status == 401:
@@ -306,23 +309,20 @@ class MessageBotter():
                 status = resp.status
                 if status == 200:
                     messages = await resp.json()
-                    try:
-                        for msg in messages:
-                            if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
-                                if search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
-                                    print(f"✅ [Account #{account}] Retrieved card transfer message.")
-                                    return msg
-                                elif search_content == self.KARUTA_MULTITRADE_LOCK_MESSAGE and self.KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
-                                    print(f"✅ [Account #{account}] Retrieved multitrade lock message.")
-                                    return msg
-                                elif search_content == self.KARUTA_MULTITRADE_CONFIRM_MESSAGE and self.KARUTA_MULTITRADE_CONFIRM_MESSAGE in msg.get('content', ''):
-                                    print(f"✅ [Account #{account}] Retrieved multitrade confirm message.")
-                                    return msg
-                                elif search_content == self.KARUTA_MULTIBURN_TITLE and msg.get('embeds') and self.KARUTA_MULTIBURN_TITLE == msg['embeds'][0].get('title'):
-                                    print(f"✅ [Account #{account}] Retrieved multiburn message.")
-                                    return msg
-                    except (KeyError, IndexError):
-                        pass
+                    for msg in messages:
+                        if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
+                            if search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
+                                print(f"✅ [Account #{account}] Retrieved card transfer message.")
+                                return msg
+                            elif search_content == self.KARUTA_MULTITRADE_LOCK_MESSAGE and self.KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
+                                print(f"✅ [Account #{account}] Retrieved multitrade lock message.")
+                                return msg
+                            elif search_content == self.KARUTA_MULTITRADE_CONFIRM_MESSAGE and self.KARUTA_MULTITRADE_CONFIRM_MESSAGE in msg.get('content', ''):
+                                print(f"✅ [Account #{account}] Retrieved multitrade confirm message.")
+                                return msg
+                            elif search_content == self.KARUTA_MULTIBURN_TITLE and msg.get('embeds') and self.KARUTA_MULTIBURN_TITLE == msg['embeds'][0].get('title'):
+                                print(f"✅ [Account #{account}] Retrieved multiburn message.")
+                                return msg
                 elif status == 429 and rate_limited < self.RATE_LIMIT:
                     rate_limited += 1
                     retry_after = 1  # seconds
@@ -411,6 +411,38 @@ class MessageBotter():
         else:
             print("\n🤖 Message commands disabled.")
 
+    async def run_special_event_checker(self):
+        while True:
+            try:
+                for server_activity_drop_channel_id in self.SERVER_ACTIVITY_DROP_CHANNEL_IDS:
+                    url = f"https://discord.com/api/v10/channels/{server_activity_drop_channel_id}/messages?limit=20"
+                    headers = self.get_headers(self.special_event_token, server_activity_drop_channel_id)
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(url, headers = headers) as resp:
+                            status = resp.status
+                            if status == 200:
+                                messages = await resp.json()
+                                try:
+                                    for msg in messages:
+                                        if all([
+                                            msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
+                                            len(msg.get('reactions', [])) > 3,  # 3 cards + 1 special event emoji
+                                            msg.get('reactions', []) and msg.get('reactions', [])[-1].get('count') == 1,  # ensure there is only 1 reaction (Karuta's) on the special event emoji
+                                            (self.KARUTA_DROP_MESSAGE in msg.get('content', '') or self.KARUTA_SERVER_ACTIVITY_DROP_MESSAGE in msg.get('content', '')),
+                                            self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
+                                        ]):
+                                            special_event_emoji = msg.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
+                                            await self.add_reaction(self.special_event_token, 0, server_activity_drop_channel_id, msg.get('id'), special_event_emoji, 0)  # 0 as account_num stub
+                                except IndexError:
+                                    pass
+                            else:
+                                print(f"❌ [Special Event Account] Retrieve message failed: Error code {status}.")
+                                return None
+            except Exception:
+                await asyncio.sleep(5)
+                pass
+            await asyncio.sleep(2)  # Short delay between checking channels to avoid rate-limiting
+
     async def set_token_dictionaries(self):
         self.token_channel_dict = {}
         tokens = self.shuffled_tokens if self.shuffled_tokens else self.tokens
@@ -436,10 +468,13 @@ class MessageBotter():
                     grab_account = self.tokens.index(grab_token) + 1
                     await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
                     await asyncio.sleep(random.uniform(0.5, 3.5))
-                if self.SPECIAL_EVENT and self.special_event_token and len(drop_message.get('reactions', [])) > 3:  # 3 cards + 1 special event emoji
-                    await asyncio.sleep(random.uniform(0, 3))
-                    special_event_emoji = drop_message.get('reactions', [])[-1]['emoji'].get('name')  # Get the last (4th) emoji (the event emoji)
-                    await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)  # 0 as account_num stub
+                try:
+                    if self.SPECIAL_EVENT and self.special_event_token and len(drop_message.get('reactions', [])) > 3:  # 3 cards + 1 special event emoji
+                        await asyncio.sleep(random.uniform(0, 3))
+                        special_event_emoji = drop_message.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
+                        await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)  # 0 as account_num stub
+                except IndexError:
+                    pass
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
                     if random.choice([True, False]):  # 50% chance of sending messages
@@ -539,7 +574,8 @@ class MessageBotter():
                     elif self.special_event_token == "":
                         print("\n❌ Not watching for special event reactions (no token entered in special_event_token.json).")
                     else:
-                        print("\nℹ️ Watching for special event reactions.")
+                        asyncio.create_task(self.run_special_event_checker())
+                        print(f"\nℹ️ Watching for special event reactions in script drop channels + {len(self.SERVER_ACTIVITY_DROP_CHANNEL_IDS)} server activity drop channel(s).")
             except FileNotFoundError:
                 self.special_event_token = ""
                 print("\n❌ Not watching for special event reactions (no special_event_token.json file found).")
