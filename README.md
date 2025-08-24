@@ -57,7 +57,7 @@ cmd <account_number |OR| 'all'> <message>
 > [!NOTE]
 > - The `all` argument does not work with `give`, `multitrade`, `/lock`, `multiburn`, or `/burn` commands.
 > - If you mistype the account number for the `/lock` or `/burn` command, you must restart the trade/burn process. Sorry!
-> - Automatic confirmation for the `kburn` command will not be supported. Use `kmultiburn` instead.
+> - Automatic confirmation for the `kburn` command will not be supported. Use the `/b 🔥` command to manually confirm the burn, or use `kmultiburn` instead.
 
 #### ⚠️ **DO NOT** run the script for more than 10 consecutive hours. Karuta may flag your accounts for suspicious activity. After a random time limit, the script will automatically stop and display a warning in the terminal.
 #### ⚠️ **DO NOT** run this script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
