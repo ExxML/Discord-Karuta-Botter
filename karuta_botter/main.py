@@ -29,7 +29,8 @@ class MessageBotter():
         self.DROP_CHANNEL_IDS = [
             "",
         ]
-        # Enter your server activity drop channels as a list of strings (for reacting to drops with the special event emoji during Karuta events). Only used if self.SPECIAL_EVENT = True.
+        # Enter your server activity drop channels as a list of strings (for reacting to drops with the special event emoji during Karuta events). 
+        # Only used if self.SPECIAL_EVENT = True. Leave the list empty to disable grabbing the special event emoji on server activity based drops.
         self.SERVER_ACTIVITY_DROP_CHANNEL_IDS = [
             "",
         ]
@@ -138,6 +139,7 @@ class MessageBotter():
 
         # Set up variables
         self.drop_fail_count = 0
+        self.drop_fail_count_lock = asyncio.Lock()
         self.token_headers = {}
         self.tokens = []
         self.executed_commands = []
@@ -264,15 +266,18 @@ class MessageBotter():
                             continue
                     elif status == 401:
                         print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Invalid token.")
-                        self.drop_fail_count += 1
+                        async with self.drop_fail_count_lock:
+                            self.drop_fail_count += 1
                         return None
                     elif status == 403:
                         print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Token banned or insufficient permissions.")
-                        self.drop_fail_count += 1
+                        async with self.drop_fail_count_lock:
+                            self.drop_fail_count += 1
                         return None
                 await asyncio.sleep(random.uniform(0.5, 1))
             print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Timed out ({timeout}s).")
-            self.drop_fail_count += 1
+            async with self.drop_fail_count_lock:
+                self.drop_fail_count += 1
             return None
 
     async def send_message(self, token: str, account: int, channel_id: str, content: str, rate_limited: int):
@@ -504,7 +509,8 @@ class MessageBotter():
             command = await asyncio.to_thread(input, prompt)
             if command == target_command:  # Resume if target command is inputted
                 if flag == self.DROP_FAIL_LIMIT_REACHED_FLAG and self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:
-                    self.drop_fail_count = 0
+                    async with self.drop_fail_count_lock:
+                        self.drop_fail_count = 0
                     print("\nℹ️ Reset drop fail count. Resuming drops...")
                 elif flag == self.EXECUTION_COMPLETED_FLAG:
                     ctypes.windll.shell32.ShellExecuteW(
