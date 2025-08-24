@@ -38,7 +38,7 @@ class MessageBotter():
         self.KARUTA_PREFIX = "k"  # (str) Karuta's bot prefix.
         self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs.
         self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up.
-        self.DROP_FAIL_LIMIT = 3  # (int) Maximum number of failed drops across all channels before pausing script. Set to -1 if you wish to disable this limit.
+        self.DROP_FAIL_LIMIT = 5  # (int) Maximum number of failed drops across all channels before pausing script. Set to -1 if you wish to disable this limit.
         self.TIME_LIMIT_HOURS_MIN = 6  # (int/float) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk).
         self.TIME_LIMIT_HOURS_MAX = 10  # (int/float) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk).
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
@@ -248,20 +248,23 @@ class MessageBotter():
                     status = resp.status
                     if status == 200:
                         messages = await resp.json()
-                        for msg in messages:
-                            reactions = msg.get('reactions', [])
-                            if all([
-                                msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
-                                len(reactions) >= 3,
-                                self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
-                                self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
-                            ]):
-                                if self.SPECIAL_EVENT and wait_for_emoji:  # If special event, wait an additional 2-3s to watch for the special event emoji
-                                    await asyncio.sleep(random.uniform(2, 3))
-                                    wait_for_emoji = False
-                                    continue
-                                print(f"✅ [Account #{account}] Retrieved drop message.")
-                                return msg
+                        try:
+                            for msg in messages:
+                                reactions = msg.get('reactions', [])
+                                if all([
+                                    msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
+                                    len(reactions) >= 3,
+                                    self.KARUTA_DROP_MESSAGE in msg.get('content', ''),
+                                    self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
+                                ]):
+                                    if self.SPECIAL_EVENT and wait_for_emoji:  # If special event, wait an additional 2-3s to watch for the special event emoji
+                                        await asyncio.sleep(random.uniform(2, 3))
+                                        wait_for_emoji = False
+                                        continue
+                                    print(f"✅ [Account #{account}] Retrieved drop message.")
+                                    return msg
+                        except (KeyError, IndexError):
+                            pass
                         if not wait_for_emoji:
                             continue
                     elif status == 401:
@@ -314,20 +317,23 @@ class MessageBotter():
                 status = resp.status
                 if status == 200:
                     messages = await resp.json()
-                    for msg in messages:
-                        if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
-                            if search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
-                                print(f"✅ [Account #{account}] Retrieved card transfer message.")
-                                return msg
-                            elif search_content == self.KARUTA_MULTITRADE_LOCK_MESSAGE and self.KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
-                                print(f"✅ [Account #{account}] Retrieved multitrade lock message.")
-                                return msg
-                            elif search_content == self.KARUTA_MULTITRADE_CONFIRM_MESSAGE and self.KARUTA_MULTITRADE_CONFIRM_MESSAGE in msg.get('content', ''):
-                                print(f"✅ [Account #{account}] Retrieved multitrade confirm message.")
-                                return msg
-                            elif search_content == self.KARUTA_MULTIBURN_TITLE and msg.get('embeds') and self.KARUTA_MULTIBURN_TITLE == msg['embeds'][0].get('title'):
-                                print(f"✅ [Account #{account}] Retrieved multiburn message.")
-                                return msg
+                    try:
+                        for msg in messages:
+                            if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
+                                if search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
+                                    print(f"✅ [Account #{account}] Retrieved card transfer message.")
+                                    return msg
+                                elif search_content == self.KARUTA_MULTITRADE_LOCK_MESSAGE and self.KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
+                                    print(f"✅ [Account #{account}] Retrieved multitrade lock message.")
+                                    return msg
+                                elif search_content == self.KARUTA_MULTITRADE_CONFIRM_MESSAGE and self.KARUTA_MULTITRADE_CONFIRM_MESSAGE in msg.get('content', ''):
+                                    print(f"✅ [Account #{account}] Retrieved multitrade confirm message.")
+                                    return msg
+                                elif search_content == self.KARUTA_MULTIBURN_TITLE and msg.get('embeds') and self.KARUTA_MULTIBURN_TITLE == msg['embeds'][0].get('title'):
+                                    print(f"✅ [Account #{account}] Retrieved multiburn message.")
+                                    return msg
+                    except (KeyError, IndexError):
+                        pass
                 elif status == 429 and rate_limited < self.RATE_LIMIT:
                     rate_limited += 1
                     retry_after = 1  # seconds
@@ -363,20 +369,26 @@ class MessageBotter():
                     else:
                         print(f"❌ [Account #{account}] Grab card {card_number} failed: Error code {status}.")
                 elif account == 0 and self.SPECIAL_EVENT and self.special_event_token:  # when reacting for special event emoji
+                    if channel_id in self.DROP_CHANNEL_IDS:
+                        channel_name = f"Drop Channel #{self.DROP_CHANNEL_IDS.index(channel_id) + 1}"
+                    elif channel_id in self.SERVER_ACTIVITY_DROP_CHANNEL_IDS:
+                        channel_name = f"Server Activity Drop Channel #{self.SERVER_ACTIVITY_DROP_CHANNEL_IDS.index(channel_id) + 1}"
+                    else:
+                        channel_name = "Unknown Channel"
                     if status == 204:
-                        print(f"✅ [Special Event Account] Reacted {emoji}.")
+                        print(f"✅ [Special Event Account] Reacted {emoji} in {channel_name}.")
                     elif status == 401:
-                        print(f"❌ [Special Event Account] React {emoji} failed: Invalid token.")
+                        print(f"❌ [Special Event Account] React {emoji} in {channel_name} failed: Invalid token.")
                     elif status == 403:
-                        print(f"❌ [Special Event Account] React {emoji} failed: Token banned or insufficient permissions.")
+                        print(f"❌ [Special Event Account] React {emoji} in {channel_name} failed: Token banned or insufficient permissions.")
                     elif status == 429 and rate_limited < self.RATE_LIMIT:
                         rate_limited += 1
                         retry_after = 1  # seconds
-                        print(f"⚠️ [Special Event Account] React {emoji} failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
+                        print(f"⚠️ [Special Event Account] React {emoji} in {channel_name} failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
                         await asyncio.sleep(retry_after)
                         await self.add_reaction(token, account, channel_id, message_id, emoji, rate_limited)
                     else:
-                        print(f"❌ [Special Event Account] React {emoji} failed: Error code {status}.")
+                        print(f"❌ [Special Event Account] React {emoji} in {channel_name} failed: Error code {status}.")
                 else:  # when manually reacting with message commands
                     if status == 204:
                         print(f"✅ [Account #{account}] Reacted {emoji}.")
@@ -438,15 +450,15 @@ class MessageBotter():
                                         ]):
                                             special_event_emoji = msg.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
                                             await self.add_reaction(self.special_event_token, 0, server_activity_drop_channel_id, msg.get('id'), special_event_emoji, 0)  # 0 as account_num stub
-                                except IndexError:
+                                except (KeyError, IndexError):
                                     pass
                             else:
                                 print(f"❌ [Special Event Account] Retrieve message failed: Error code {status}.")
                                 return None
-            except Exception:
-                await asyncio.sleep(5)
-                pass
-            await asyncio.sleep(2)  # Short delay between checking channels to avoid rate-limiting
+            except Exception as e:
+                print(f"\n❌ Special Event Checker Failed ❌\n{e}")
+                return
+            await asyncio.sleep(random.uniform(0.5, 1.5))  # Short delay between checking channels to avoid rate-limiting
 
     async def set_token_dictionaries(self):
         self.token_channel_dict = {}
@@ -478,7 +490,7 @@ class MessageBotter():
                         await asyncio.sleep(random.uniform(0, 3))
                         special_event_emoji = drop_message.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
                         await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)  # 0 as account_num stub
-                except IndexError:
+                except (KeyError, IndexError):
                     pass
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
@@ -511,7 +523,7 @@ class MessageBotter():
                 if flag == self.DROP_FAIL_LIMIT_REACHED_FLAG and self.DROP_FAIL_LIMIT >= 0 and self.drop_fail_count >= self.DROP_FAIL_LIMIT:
                     async with self.drop_fail_count_lock:
                         self.drop_fail_count = 0
-                    print("\nℹ️ Reset drop fail count. Resuming drops...")
+                    print("ℹ️ Reset drop fail count. Resuming drops...")
                 elif flag == self.EXECUTION_COMPLETED_FLAG:
                     ctypes.windll.shell32.ShellExecuteW(
                         None, None, sys.executable, " ".join(sys.argv + [RELAUNCH_FLAG]), None, self.TERMINAL_VISIBILITY
@@ -535,7 +547,7 @@ class MessageBotter():
                 for token in channel_tokens:
                     print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
                     if time.monotonic() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
-                        print(f"ℹ️ Channel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping script in channel...")
+                        print(f"ℹ️ Channel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping drops in channel...")
                         await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                         return
                     if self.DROP_SKIP_RATE < 0 or random.randint(1, self.DROP_SKIP_RATE) != 1:  # If SKIP_RATE == -1 (or any neg num), never skip
@@ -547,7 +559,7 @@ class MessageBotter():
                         if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
                             await self.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "⚠️ Drop fail limit reached", 0)
                         if self.TERMINAL_VISIBILITY:
-                            await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing script...\nPress `Enter` if you wish to resume.",
+                            await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing drops...\nPress `Enter` if you wish to resume.\n",
                                                                             "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
                     # Breaking up delay into multiple steps to check if need to pause
                     random_delay = self.DELAY + random.uniform(0.5 * 60, 5 * 60)  # Wait an additional 0.5-5 minutes per drop
@@ -581,7 +593,7 @@ class MessageBotter():
                         print("\n❌ Not watching for special event reactions (no token entered in special_event_token.json).")
                     else:
                         asyncio.create_task(self.run_special_event_checker())
-                        print(f"\nℹ️ Watching for special event reactions in script drop channels + {len(self.SERVER_ACTIVITY_DROP_CHANNEL_IDS)} server activity drop channel(s).")
+                        print(f"\nℹ️ Watching for special event reactions in script drop channels and {len(self.SERVER_ACTIVITY_DROP_CHANNEL_IDS)} server activity drop channel(s).")
             except FileNotFoundError:
                 self.special_event_token = ""
                 print("\n❌ Not watching for special event reactions (no special_event_token.json file found).")
@@ -611,13 +623,18 @@ class MessageBotter():
                     print(f"  - Account #{self.tokens.index(token) + 1}")
                 task_instances.append(asyncio.create_task(self.run_instance(channel_num, channel_id, start_delay_seconds, channel_tokens.copy(), channel_time_limit_seconds)))
         await asyncio.sleep(3)  # Short delay to show user the account/channel information
+        if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
+            random_token = random.choice(self.tokens)
+            print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+            await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution started", 0)
         await asyncio.gather(*task_instances)
         await asyncio.sleep(1)
         if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
             random_token = random.choice(self.tokens)
             await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution completed", 0)
         if self.TERMINAL_VISIBILITY:
-            await self.async_input_handler(f"\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.", "", self.EXECUTION_COMPLETED_FLAG)
+            print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
+            await self.async_input_handler(f"\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.\n", "", self.EXECUTION_COMPLETED_FLAG)
 
 if __name__ == "__main__":
     bot = MessageBotter()
