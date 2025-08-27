@@ -51,6 +51,7 @@ class MessageBotter():
         self.KARUTA_DROP_MESSAGE = "is dropping 3 cards!"
         self.KARUTA_SERVER_ACTIVITY_DROP_MESSAGE = "I'm dropping 3 cards since this server is currently active!"
         self.KARUTA_EXPIRED_DROP_MESSAGE = "This drop has expired and the cards can no longer be grabbed."
+        self.KARUTA_DROP_COOLDOWN_MESSAGE = ", you must wait"
 
         self.KARUTA_CARD_TRANSFER_TITLE = "Card Transfer"
 
@@ -240,6 +241,12 @@ class MessageBotter():
     async def get_drop_message(self, token: str, account: int, channel_id: str, wait_for_emoji: bool):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=5"
         headers = self.get_headers(token, channel_id)
+        user_id = None
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://discord.com/api/v10/users/@me", headers = headers) as resp:
+                if resp.status == 200:
+                    user_id = (await resp.json()).get('id')
+        on_cooldown = False
         timeout = 30  # seconds
         start_time = time.monotonic()
         async with aiohttp.ClientSession() as session:
@@ -263,10 +270,15 @@ class MessageBotter():
                                         continue
                                     print(f"✅ [Account #{account}] Retrieved drop message.")
                                     return msg
+                                elif msg.get('author', {}).get('id') == self.KARUTA_BOT_ID and user_id and f"<@{user_id}>{self.KARUTA_DROP_COOLDOWN_MESSAGE}" in msg.get('content', ''):
+                                    on_cooldown = True
                         except (KeyError, IndexError):
                             pass
                         if not wait_for_emoji:
                             continue
+                        if on_cooldown:
+                            print(f"ℹ️ [Account #{account}] Retrieve drop message failed: Drop is on cooldown.")
+                            return None
                     elif status == 401:
                         print(f"❌ [Account #{account}] Retrieve drop message failed ({self.drop_fail_count + 1}/{self.DROP_FAIL_LIMIT}): Invalid token.")
                         async with self.drop_fail_count_lock:
@@ -429,6 +441,7 @@ class MessageBotter():
             print("\n🤖 Message commands disabled.")
 
     async def run_special_event_checker(self):
+        reacted_message_ids = set()
         while True:
             try:
                 for server_activity_drop_channel_id in self.SERVER_ACTIVITY_DROP_CHANNEL_IDS:
@@ -441,15 +454,17 @@ class MessageBotter():
                                 messages = await resp.json()
                                 try:
                                     for msg in messages:
+                                        msg_id = msg.get('id')
                                         if all([
+                                            msg_id not in reacted_message_ids,  # Ensure no duplicate reactions on one message
                                             msg.get('author', {}).get('id') == self.KARUTA_BOT_ID,
                                             len(msg.get('reactions', [])) > 3,  # 3 cards + 1 special event emoji
-                                            msg.get('reactions', []) and msg.get('reactions', [])[-1].get('count') == 1,  # ensure there is only 1 reaction (Karuta's) on the special event emoji
                                             (self.KARUTA_DROP_MESSAGE in msg.get('content', '') or self.KARUTA_SERVER_ACTIVITY_DROP_MESSAGE in msg.get('content', '')),
                                             self.KARUTA_EXPIRED_DROP_MESSAGE not in msg.get('content', '')
                                         ]):
                                             special_event_emoji = msg.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
-                                            await self.add_reaction(self.special_event_token, 0, server_activity_drop_channel_id, msg.get('id'), special_event_emoji, 0)  # 0 as account_num stub
+                                            await self.add_reaction(self.special_event_token, 0, server_activity_drop_channel_id, msg_id, special_event_emoji, 0)  # 0 as account stub
+                                            reacted_message_ids.add(msg_id)
                                 except (KeyError, IndexError):
                                     pass
                             else:
