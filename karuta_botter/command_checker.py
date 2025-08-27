@@ -46,7 +46,7 @@ class CommandChecker():
         self.multiburn_fire_messages = []
 
     async def check_command(self, token: str):
-        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=5"
+        url = f"https://discord.com/api/v10/channels/{self.COMMAND_CHANNEL_ID}/messages?limit=3"
         headers = self.main.get_headers(token, self.COMMAND_CHANNEL_ID)
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers = headers) as resp:
@@ -283,7 +283,7 @@ class CommandChecker():
                                             else:
                                                 print(f"❌ [Account #{account}] Click {button_string} button failed: Error code {status}.")
                                             return
-                        print(f"❌ [Account #{account}] Click {button_string} button failed: {button_string} button not found.")
+                        print(f"❌ [Account #{account}] Click {button_string} button failed: Button not found.")
                     else:
                         print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
 
@@ -299,8 +299,14 @@ class CommandChecker():
                         messages = await resp.json()
                         for msg in messages:
                             if msg.get('author', {}).get('id') in self.INTERACTION_BOT_IDS:
-                                await self.main.add_reaction(token, account, self.COMMAND_CHANNEL_ID, msg.get('id'), reaction_string, self.RATE_LIMIT)
-                                return
+                                # Check if the target reaction exists on the message
+                                reaction_found = any(r.get('emoji', {}).get('name') == reaction_string for r in msg.get('reactions', []))
+                                if reaction_found:
+                                    await self.main.add_reaction(token, account, self.COMMAND_CHANNEL_ID, msg.get('id'), reaction_string, self.RATE_LIMIT)
+                                    return
+                        print(f"❌ [Account #{account}] React {reaction_string} failed: Reaction not found.")
+                    else:
+                        print(f"❌ [Account #{account}] React {reaction_string} failed: Error code {status}.")
 
     async def run(self):
         while True:
