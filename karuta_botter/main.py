@@ -14,6 +14,7 @@ import sys
 import ctypes
 import math
 import time
+import signal
 
 class MessageBotter():
     def __init__(self):
@@ -660,6 +661,24 @@ class MessageBotter():
             print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
             await self.async_input_handler(f"✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.\n", "", self.EXECUTION_COMPLETED_FLAG)
 
+    async def cleanup(self):
+        random_token = random.choice(self.tokens)
+        await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Shutting down...", 0)
+
+    def signal_handler(self, signum, frame):
+        print("\n✅ Terminal window closed. Running cleanup...")
+        try:
+            loop = asyncio.get_running_loop()
+            task = loop.create_task(self.cleanup())
+            task.add_done_callback(lambda _: sys.exit())
+        except RuntimeError:
+            # No running loop, so create a new one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.cleanup())
+            loop.close()
+            sys.exit()
+
 if __name__ == "__main__":
     bot = MessageBotter()
     RELAUNCH_FLAG = "--no-relaunch"
@@ -670,4 +689,10 @@ if __name__ == "__main__":
         sys.exit()
     bot.check_config()
     bot.tokens = TokenExtractor().main(len(bot.DROP_CHANNEL_IDS), bot.WINDOWS_VERSIONS, bot.BROWSER_VERSIONS)
+    
+    # Set up signal handlers for terminal window closure
+    if bot.COMMAND_SERVER_ID and bot.COMMAND_CHANNEL_ID:
+        signal.signal(signal.SIGTERM, bot.signal_handler)
+        signal.signal(signal.SIGINT, bot.signal_handler)
+    
     asyncio.run(bot.run_script())
