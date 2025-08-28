@@ -465,7 +465,11 @@ class MessageBotter():
                                             special_event_emoji = msg.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
                                             await self.add_reaction(self.special_event_token, 0, server_activity_drop_channel_id, msg_id, special_event_emoji, 0)  # 0 as account stub
                                             reacted_message_ids.add(msg_id)
-                                except (KeyError, IndexError):
+                                except KeyError:
+                                    print(f"❌ [Special Event Account] Retrieve message failed: KeyError.")
+                                    pass
+                                except IndexError:
+                                    print(f"❌ [Special Event Account] Retrieve message failed: IndexError.")
                                     pass
                             else:
                                 print(f"❌ [Special Event Account] Retrieve message failed: Error code {status}.")
@@ -504,8 +508,12 @@ class MessageBotter():
                     if self.SPECIAL_EVENT and self.special_event_token and len(drop_message.get('reactions', [])) > 3:  # 3 cards + 1 special event emoji
                         await asyncio.sleep(random.uniform(0, 3))
                         special_event_emoji = drop_message.get('reactions', [])[-1].get('emoji').get('name')  # Get the last (4th) emoji (the event emoji)
-                        await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)  # 0 as account_num stub
-                except (KeyError, IndexError):
+                        await self.add_reaction(self.special_event_token, 0, channel_id, drop_message_id, special_event_emoji, 0)  # 0 as account stub
+                except KeyError:
+                    print(f"❌ [Special Event Account] Retrieve message failed: KeyError.")
+                    pass
+                except IndexError:
+                    print(f"❌ [Special Event Account] Retrieve message failed: IndexError.")
                     pass
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
@@ -608,7 +616,8 @@ class MessageBotter():
                         print("\n❌ Not watching for special event reactions (no token entered in special_event_token.json).")
                     else:
                         asyncio.create_task(self.run_special_event_checker())
-                        print(f"\nℹ️ Watching for special event reactions in script drop channels and {len(self.SERVER_ACTIVITY_DROP_CHANNEL_IDS)} server activity drop channel(s).")
+                        print(f"\nℹ️ Watching for special event reactions in {len(self.DROP_CHANNEL_IDS)} script drop channels " +
+                                f"and {len(self.SERVER_ACTIVITY_DROP_CHANNEL_IDS)} server activity drop channel(s).")
             except FileNotFoundError:
                 self.special_event_token = ""
                 print("\n❌ Not watching for special event reactions (no special_event_token.json file found).")
