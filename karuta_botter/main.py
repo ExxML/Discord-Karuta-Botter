@@ -658,7 +658,7 @@ class MessageBotter():
             await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution completed", 0)
         if self.TERMINAL_VISIBILITY:
             print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
-            await self.async_input_handler(f"\n✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.\n", "", self.EXECUTION_COMPLETED_FLAG)
+            await self.async_input_handler(f"✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.\n", "", self.EXECUTION_COMPLETED_FLAG)
 
 if __name__ == "__main__":
     bot = MessageBotter()
