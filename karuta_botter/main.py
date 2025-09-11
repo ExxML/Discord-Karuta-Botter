@@ -497,10 +497,10 @@ class MessageBotter():
             drop_message = await self.get_drop_message(token, account, channel_id, wait_for_emoji = True)
             if drop_message:
                 drop_message_id = drop_message.get('id')
-                random.shuffle(self.EMOJIS)  # Shuffle emojis for random emoji order
+                shuffled_emojis = random.sample(self.EMOJIS, len(self.EMOJIS))  # Shuffle emojis for random emoji order
                 random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
                 for i in range(num_channel_tokens):
-                    emoji = self.EMOJIS[i]
+                    emoji = shuffled_emojis[i]
                     grab_token = channel_tokens[i]
                     grab_account = self.tokens.index(grab_token) + 1
                     await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
@@ -559,18 +559,18 @@ class MessageBotter():
     async def run_instance(self, channel_num: int, channel_id: str, start_delay: int, channel_tokens: list[str], time_limit_seconds: int):
         try:
             num_accounts = len(channel_tokens)
-            self.DELAY = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
+            delay = 30 * 60 / num_accounts  # Ideally 10 min delay per account (3 accounts)
             # Breaking up start delay into multiple steps to check if need to pause
             random_start_delay_per_step = random.uniform(2, 3)
             num_start_delay_steps = round(start_delay / random_start_delay_per_step)
             for _ in range(num_start_delay_steps):
                 await self.pause_event.wait()  # Check if need to pause
                 await asyncio.sleep(random_start_delay_per_step)
-            self.start_time = time.monotonic()
+            start_time = time.monotonic()
             while True:
                 for token in channel_tokens:
                     print(f"\nChannel #{channel_num} - {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
-                    if time.monotonic() - self.start_time >= time_limit_seconds:  # Time limit for automatic shutoff
+                    if time.monotonic() - start_time >= time_limit_seconds:  # Time limit for automatic shutoff
                         print(f"ℹ️ Channel #{channel_num} has reached the time limit of {(time_limit_seconds / 60 / 60):.1f} hours. Stopping drops in channel...")
                         await self.send_message(token, self.tokens.index(token) + 1, channel_id, random.choice(self.TIME_LIMIT_EXCEEDED_MESSAGES), 0)
                         return
@@ -586,7 +586,7 @@ class MessageBotter():
                             await self.async_input_handler(f"\n⚠️ Drop Fail Limit Reached ⚠️\nThe script has failed to retrieve {self.DROP_FAIL_LIMIT} total drops. Automatically pausing drops...\nPress `Enter` if you wish to resume.\n",
                                                                             "", self.DROP_FAIL_LIMIT_REACHED_FLAG)
                     # Breaking up delay into multiple steps to check if need to pause
-                    random_delay = self.DELAY + random.uniform(0.5 * 60, 5 * 60)  # Wait an additional 0.5-5 minutes per drop
+                    random_delay = delay + random.uniform(0.5 * 60, 5 * 60)  # Wait an additional 0.5-5 minutes per drop
                     random_delay_per_step = random.uniform(2, 3)
                     num_delay_steps = round(random_delay / random_delay_per_step)
                     for _ in range(num_delay_steps):
