@@ -2,7 +2,9 @@ import undetected_chromedriver as uc  # MUST use undetected_chromedriver to bypa
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import WebDriverException
 from datetime import datetime
+import traceback
 import ctypes
 import sys
 import json
@@ -61,19 +63,49 @@ class AutoVoter():
         )
         options.add_argument(f'--user-agent={user_agent}')
         
-        self.driver = uc.Chrome(options = options, use_subprocess = True)
+        self.driver = uc.Chrome(options = options)
+
+        # Wait for the browser to actually create a window/webview
+        timeout = 15  # seconds
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                print("Waiting for browser to get ready...")
+                handles = self.driver.window_handles  # Will raise if not ready
+                if handles:
+                    self.driver.switch_to.window(handles[0])
+                    return
+            except WebDriverException:
+                pass
+            time.sleep(1)
+        
+        # If browser didn't create a window in time
+        try:
+            self.driver.quit()
+        except Exception:
+            pass
+        raise RuntimeError("Chrome started but no window was ready (timed out).")
+
+    def is_login_button_present(self):
+        try:
+            _ = self.driver.find_element(By.XPATH, "//button[contains(., 'Log')]")
+            return True
+        except:
+            return False
 
     def auto_vote(self, account_idx: int):
         try:
-            max_attempts = 45
+            max_attempts = 10
             for attempt in range(max_attempts):
                 try:
                     if attempt > 0:
-                        print(f"  ⚠️ Retrying initialization: Attempt #{attempt + 1}/{max_attempts}")
+                        print(f"  Retrying initialization: Attempt #{attempt + 1}/{max_attempts}")
                         if self.driver:
                             self.driver.quit()
                             self.driver = None
                         self.load_chrome()
+                    else:
+                        print(f"  Initializing Chrome: Attempt #1/{max_attempts}")
                     time.sleep(1)
                     
                     # Navigate to Discord login
@@ -86,7 +118,7 @@ class AutoVoter():
                     if self.driver:
                         self.driver.quit()
                         self.driver = None
-                    time.sleep(2)
+                    time.sleep(1)
             WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
             print("  Opened Discord")
 
@@ -124,9 +156,22 @@ class AutoVoter():
             self.driver.execute_cdp_cmd("Network.clearBrowserCache", {})
             self.driver.refresh()
 
+            # Check if login button exists and click it (for loop to repeat unresponsive button clicks)
+            for i in range(10):
+                if self.is_login_button_present():
+                    login_button = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
+                    login_button.click()
+                    print(f"  Clicked login button: Attempt #{i + 1}/10")
+                else:
+                    break
+                time.sleep(5)
+            
+            # Force page refresh to ensure Discord authorization has no loading errors
+            time.sleep(5)
+            self.driver.execute_cdp_cmd("Network.clearBrowserCache", {})
+            self.driver.refresh()
+
             # Redirect to authorisation page
-            login_button = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
-            login_button.click()
             WebDriverWait(self.driver, 15).until(lambda d: "https://discord.com/oauth2/authorize" in d.current_url)
             print("  Redirected to authorisation page")
             
@@ -163,6 +208,7 @@ class AutoVoter():
 
         except Exception as e:
             print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:\n{e}")
+            traceback.print_exc()
     
     def cleanup(self, *args):
         if self.driver:
