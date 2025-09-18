@@ -157,14 +157,14 @@ class AutoVoter():
             self.driver.refresh()
 
             # Check if login button exists and click it (for loop to repeat unresponsive button clicks)
-            for i in range(10):
+            for i in range(20):
                 if self.is_login_button_present():
                     login_button = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log')]")))
                     login_button.click()
-                    print(f"  Clicked login button: Attempt #{i + 1}/10")
+                    print(f"  Clicked login button: Attempt #{i + 1}/20")
                 else:
                     break
-                time.sleep(5)
+                time.sleep(1)
             
             # Force page refresh to ensure Discord authorization has no loading errors
             time.sleep(5)
@@ -201,7 +201,7 @@ class AutoVoter():
 
             # Check if voted successfully (long timeout because potential captcha)
             try:
-                WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Thanks for voting!')]")))
+                WebDriverWait(self.driver, 30).until(EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Thanks for voting!')]")))
                 print("  ✅ Voted successfully")
             except:
                 print("  ❌ Unexpected result after clicking vote")
