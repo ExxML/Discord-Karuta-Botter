@@ -88,15 +88,17 @@ class MessageGrabber():
                     messages = await resp.json()
                     try:
                         for msg in messages:
+                            # OBSERVE: The list of messages contains the n = 100 most recent messages in the channel
+                            # OBSERVE: The list of messages is sorted by newest first (highest message ID first)
                             if msg.get('id') == msg_id:
                                 print(f"✅ Message Found:\n{msg}\n")
                                 return
                     except (KeyError, IndexError):
                         pass
                 else:
-                    print(f"❌ Retrieve message failed: Error code {status}.")
+                    print(f"❌ Retrieve message failed: Error code {status}.\n")
                     return
-                print(f"❌ Retrieve message failed: Message '{msg_id}' was not found in 100 recent messages.")
+                print(f"❌ Retrieve message failed: Message '{msg_id}' was not found in 100 recent messages.\n")
 
 if __name__ == "__main__":
     RELAUNCH_FLAG = "--no-relaunch"
