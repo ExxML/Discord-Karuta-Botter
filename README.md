@@ -64,6 +64,7 @@ cmd <account_number |OR| 'all'> <message>
 
 ## Compatibility
 - This script can be used in conjunction with [CardCompanion](https://top.gg/bot/1380936713639166082), a Discord bot that can analyze and notify you of rare cards being dropped. If a "pog card" is dropped (a card that matches a certain stat (ex. >1000 wl)), CardCompanion will display an emoji in the message (red circle below), indicating which card is the "pog card". The script will then ensure the grabber of the card is the same as the dropper, boosting the card stats and avoiding suspicion. If CardCompanion is not being used OR a "pog card" was not dropped, the grabber will be randomized by default.
+
 ![Card Companion Preview](preview_images/card_companion_preview.png)
 - The `/b` command can also be used on any bot buttons, not just Karuta. It is set in `self.INTERACTION_BOT_IDS` in `command_checker.py`, which includes OwO by default.
 
