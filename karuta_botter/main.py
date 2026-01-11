@@ -1,5 +1,6 @@
-from token_extractor import TokenExtractor
 from command_checker import CommandChecker
+from token_extractor import TokenExtractor
+from config import Config
 from datetime import datetime, timedelta
 from collections import defaultdict
 import win32gui
@@ -18,34 +19,8 @@ import signal
 
 class MessageBotter():
     def __init__(self):
-        ### CUSTOMIZE THESE SETTINGS ###
-        # Enter a list of strings containing the user IDs that can use message commands. Leave the list empty to allow any account to use commands.
-        self.COMMAND_USER_IDS = [
-            "",
-        ]
-        # Enter your command server and channel (where commands can be sent) as a string. Leave the strings empty to disable message commands.
-        self.COMMAND_SERVER_ID = ""
-        self.COMMAND_CHANNEL_ID = ""
-        # Enter your drop channels as a list of strings.
-        self.DROP_CHANNEL_IDS = [
-            "",
-        ]
-        # Enter your server activity drop channels as a list of strings (for reacting to drops with the special event emoji during Karuta events). 
-        # Only used if self.SPECIAL_EVENT = True. Leave the list empty to disable grabbing the special event emoji on server activity based drops.
-        self.SERVER_ACTIVITY_DROP_CHANNEL_IDS = [
-            "",
-        ]
-        self.TERMINAL_VISIBILITY = 1  # 0 = hidden, 1 = visible (recommended)
-        self.KARUTA_PREFIX = "k"  # (str) Karuta's bot prefix.
-        self.SHUFFLE_ACCOUNTS = True  # (bool) Improve randomness by shuffling accounts across channels every time the script runs.
-        self.RATE_LIMIT = 3  # (int) Maximum number of rate limits before giving up.
-        self.DROP_FAIL_LIMIT = 5  # (int) Maximum number of failed drops across all channels before pausing script. Set to -1 if you wish to disable this limit.
-        self.TIME_LIMIT_HOURS_MIN = 6  # (int/float) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk).
-        self.TIME_LIMIT_HOURS_MAX = 10  # (int/float) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk).
-        self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
-        self.DROP_SKIP_RATE = 12  # (int) For every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
-        self.RANDOM_COMMAND_RATE = 480  # (int) Every 2-3 seconds, there is a 1/self.RANDOM_COMMAND_RATE chance of sending a random command.
-        self.SPECIAL_EVENT = False  # (bool) Whether the script will use the token in special_event_token.json to auto-react with the event emoji (if there is one) during Karuta special events.
+        # Initialize config and map instance constants
+        self.__dict__.update(vars(Config()))
 
         ### DO NOT MODIFY THESE CONSTANTS ###
         self.KARUTA_BOT_ID = "646937666251915264"
@@ -124,8 +99,6 @@ class MessageBotter():
         ]
         self.TIME_LIMIT_EXCEEDED_MESSAGES = ["stawp", "stoop", "quittin", "q", "exeeting", "exité", "ceeze", "cloze", '🛑', '🚫', '❌', '⛔']
 
-        self.pause_event = asyncio.Event()
-        self.pause_event.set()
         self.DROP_FAIL_LIMIT_REACHED_FLAG = "Drop Fail Limit Reached"
         self.EXECUTION_COMPLETED_FLAG = "Execution Completed"
 
@@ -155,6 +128,9 @@ class MessageBotter():
         self.multiburn_initial_messages = []
         self.multiburn_fire_messages = []
 
+        self.pause_event = asyncio.Event()
+        self.pause_event.set()
+
     def check_config(self):
         try:
             if not all([
@@ -162,13 +138,12 @@ class MessageBotter():
                 (self.COMMAND_SERVER_ID == "" or self.COMMAND_SERVER_ID.isdigit()),
                 (self.COMMAND_CHANNEL_ID == "" or self.COMMAND_CHANNEL_ID.isdigit()),
                 all(id.isdigit() for id in self.DROP_CHANNEL_IDS),
-                all(id.isdigit() for id in self.SERVER_ACTIVITY_DROP_CHANNEL_IDS),
-                self.KARUTA_BOT_ID.isdigit()
+                all(id.isdigit() for id in self.SERVER_ACTIVITY_DROP_CHANNEL_IDS)
             ]):
-                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID(s), command server/channel ID, (server activity) drop channel ID(s), and Karuta bot ID in main.py.")
+                input("⛔ Configuration Error ⛔\nPlease enter non-empty, numeric strings for the command user ID(s), command server/channel ID, and (server activity) drop channel ID(s) in config.py.")
                 sys.exit()
         except AttributeError:
-            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID(s), command server/channel ID, (server activity) drop channel ID(s), and Karuta bot ID in main.py.")
+            input("⛔ Configuration Error ⛔\nPlease enter strings (not integers) for the command user ID(s), command server/channel ID, and (server activity) drop channel ID(s) in config.py.")
             sys.exit()
         if not all([
             isinstance(self.TERMINAL_VISIBILITY, int),
@@ -190,10 +165,10 @@ class MessageBotter():
             self.DROP_SKIP_RATE != 0,
             self.RANDOM_COMMAND_RATE > 0
         ]):
-            input("⛔ Configuration Error ⛔\nPlease enter valid constant values in main.py.")
+            input("⛔ Configuration Error ⛔\nPlease enter valid constant values in config.py.")
             sys.exit()
         if self.TIME_LIMIT_HOURS_MIN > self.TIME_LIMIT_HOURS_MAX:
-            input("⛔ Configuration Error ⛔\nPlease enter a maximum time limit greater than the minimum time limit in main.py.")
+            input("⛔ Configuration Error ⛔\nPlease enter a maximum time limit greater than the minimum time limit in config.py.")
             sys.exit()
 
     def get_headers(self, token: str, channel_id: str):
