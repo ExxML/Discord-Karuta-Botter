@@ -63,6 +63,7 @@ class MessageBotter():
             f"{self.KARUTA_PREFIX}jobboard", f"{self.KARUTA_PREFIX}jb", f"{self.KARUTA_PREFIX}shop", 
             f"{self.KARUTA_PREFIX}itemshop", f"{self.KARUTA_PREFIX}gemshop", f"{self.KARUTA_PREFIX}frameshop", 
             f"{self.KARUTA_PREFIX}inventory", f"{self.KARUTA_PREFIX}inv", f"{self.KARUTA_PREFIX}i", 
+            f"{self.KARUTA_PREFIX}i", f"{self.KARUTA_PREFIX}i", f"{self.KARUTA_PREFIX}i", f"{self.KARUTA_PREFIX}i", 
             f"{self.KARUTA_PREFIX}schedule", f"{self.KARUTA_PREFIX}blackmarket", f"{self.KARUTA_PREFIX}bm", 
             f"{self.KARUTA_PREFIX}view", f"{self.KARUTA_PREFIX}afl", f"{self.KARUTA_PREFIX}backgroundshop", 
             f"{self.KARUTA_PREFIX}al"
@@ -87,7 +88,7 @@ class MessageBotter():
             "you farming rn?", "yo gimme that theme", "bruh stop stealing drops", "i swear that was mine", 
             "how's that even possible lol", "yo ggs on that pull", "can't believe u got that", "W pull fr", 
             "yo thats actually cracked", "nah you cheating fr", "how that even drop here", "yo can i see ur binder", 
-            "is that a foil??", "yo whered u get that bg", "nahhh that card's nuts", "WISHING WORKED OMG", 
+            "is that a lp??", "yo whered u get that bg", "nahhh that card's nuts", "WISHING WORKED OMG", 
             "no shot you got that", "how do u drop so good", "yo that pull's fire", "stop flexin ur pulls 🥺", 
             "wait what event is this from", "yo i'm savin that pull", "yo i need to start wishing", "gimme that plsss", 
             "is that even tradable?", "i swear u got admin luck", "yo queue with me bruh", "that card go hard", 
