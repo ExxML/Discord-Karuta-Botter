@@ -43,12 +43,12 @@ class MessageBotter():
         self.TIME_LIMIT_HOURS_MIN = 6  # (int/float) MINIMUM time limit in hours before script automatically pauses (to avoid ban risk).
         self.TIME_LIMIT_HOURS_MAX = 10  # (int/float) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk).
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
-        self.DROP_SKIP_RATE = 12  # (int) Every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
+        self.DROP_SKIP_RATE = 12  # (int) For every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
         self.RANDOM_COMMAND_RATE = 480  # (int) Every 2-3 seconds, there is a 1/self.RANDOM_COMMAND_RATE chance of sending a random command.
         self.SPECIAL_EVENT = False  # (bool) Whether the script will use the token in special_event_token.json to auto-react with the event emoji (if there is one) during Karuta special events.
 
         ### DO NOT MODIFY THESE CONSTANTS ###
-        self.KARUTA_BOT_ID = "646937666251915264"  # Karuta's user ID
+        self.KARUTA_BOT_ID = "646937666251915264"
         self.KARUTA_DROP_MESSAGE = "is dropping 3 cards!"
         self.KARUTA_SERVER_ACTIVITY_DROP_MESSAGE = "I'm dropping 3 cards since this server is currently active!"
         self.KARUTA_EXPIRED_DROP_MESSAGE = "This drop has expired and the cards can no longer be grabbed."
@@ -60,6 +60,16 @@ class MessageBotter():
         self.KARUTA_MULTITRADE_CONFIRM_MESSAGE = "This trade has been locked."
 
         self.KARUTA_MULTIBURN_TITLE = "Burn Cards"
+
+        self.CARD_COMPANION_BOT_ID = "1380936713639166082"
+        self.CARD_COMPANION_POG_EMOJIS = [":no_1:", ":no_2:", ":no_3:"]
+
+        self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
+        self.EMOJI_MAP = {
+            '1️⃣': '[1]',
+            '2️⃣': '[2]',
+            '3️⃣': '[3]'
+        } # Use card number instead of emoji in terminal output for better readability
 
         self.RANDOM_ADDON = ['', ' ', ' !', ' :D', ' w']
         self.DROP_MESSAGES = [f"{self.KARUTA_PREFIX}drop", f"{self.KARUTA_PREFIX}d"]
@@ -78,7 +88,9 @@ class MessageBotter():
             f"{self.KARUTA_PREFIX}jobboard", f"{self.KARUTA_PREFIX}jb", f"{self.KARUTA_PREFIX}shop", 
             f"{self.KARUTA_PREFIX}itemshop", f"{self.KARUTA_PREFIX}gemshop", f"{self.KARUTA_PREFIX}frameshop", 
             f"{self.KARUTA_PREFIX}inventory", f"{self.KARUTA_PREFIX}inv", f"{self.KARUTA_PREFIX}i", 
-            f"{self.KARUTA_PREFIX}schedule", f"{self.KARUTA_PREFIX}blackmarket", f"{self.KARUTA_PREFIX}bm"
+            f"{self.KARUTA_PREFIX}schedule", f"{self.KARUTA_PREFIX}blackmarket", f"{self.KARUTA_PREFIX}bm", 
+            f"{self.KARUTA_PREFIX}view", f"{self.KARUTA_PREFIX}afl", f"{self.KARUTA_PREFIX}backgroundshop", 
+            f"{self.KARUTA_PREFIX}al"
         ]
         self.RANDOM_MESSAGES = [
             "bruhh", "ggzz", "dude lmao", "tf what", "omg nice", "dam welp", "crazy stuf", "look at dis", "wowza", 
@@ -108,15 +120,8 @@ class MessageBotter():
             "i'll trade u 3 for it fr", "you pull like a whale", "yo check auction prices", "nah im done lmao", 
             "yo queue now or i'm stealing", "why so many good cards today", "i got baited smh", "yo that's a set piece?", 
             "wait was that a dupe?", "i need that in my favs", "nah u got god luck today", "yo stop sniping me", 
-            "i was lagging bruh", "pleaseeee i'll overpay", "yo is that new art?"
+            "i was lagging bruh", "pleaseeee i'll overpay", "yo is that new art?", "AINT NO WAY", "WTF"
         ]
-        self.EMOJIS = ['1️⃣', '2️⃣', '3️⃣']
-        self.EMOJI_MAP = {
-            '1️⃣': '[1]',
-            '2️⃣': '[2]',
-            '3️⃣': '[3]'
-        }
-
         self.TIME_LIMIT_EXCEEDED_MESSAGES = ["stawp", "stoop", "quittin", "q", "exeeting", "exité", "ceeze", "cloze", '🛑', '🚫', '❌', '⛔']
 
         self.pause_event = asyncio.Event()
@@ -322,43 +327,6 @@ class MessageBotter():
                     print(f"❌ [Account #{account}] Send message '{content}' failed: Error code {status}.")
                 return status == 200
 
-    async def get_karuta_message(self, token: str, account: int, channel_id: str, search_content: str, rate_limited: int):
-        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=50"
-        headers = self.get_headers(token, channel_id)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers = headers) as resp:
-                status = resp.status
-                if status == 200:
-                    messages = await resp.json()
-                    try:
-                        for msg in messages:
-                            if msg.get('author', {}).get('id') == self.KARUTA_BOT_ID:
-                                if search_content == self.KARUTA_CARD_TRANSFER_TITLE and msg.get('embeds') and self.KARUTA_CARD_TRANSFER_TITLE == msg['embeds'][0].get('title'):
-                                    print(f"✅ [Account #{account}] Retrieved card transfer message.")
-                                    return msg
-                                elif search_content == self.KARUTA_MULTITRADE_LOCK_MESSAGE and self.KARUTA_MULTITRADE_LOCK_MESSAGE in msg.get('content', ''):
-                                    print(f"✅ [Account #{account}] Retrieved multitrade lock message.")
-                                    return msg
-                                elif search_content == self.KARUTA_MULTITRADE_CONFIRM_MESSAGE and self.KARUTA_MULTITRADE_CONFIRM_MESSAGE in msg.get('content', ''):
-                                    print(f"✅ [Account #{account}] Retrieved multitrade confirm message.")
-                                    return msg
-                                elif search_content == self.KARUTA_MULTIBURN_TITLE and msg.get('embeds') and self.KARUTA_MULTIBURN_TITLE == msg['embeds'][0].get('title'):
-                                    print(f"✅ [Account #{account}] Retrieved multiburn message.")
-                                    return msg
-                    except (KeyError, IndexError):
-                        pass
-                elif status == 429 and rate_limited < self.RATE_LIMIT:
-                    rate_limited += 1
-                    retry_after = 1  # seconds
-                    print(f"⚠️ [Account #{account}] Retrieve message failed ({rate_limited}/{self.RATE_LIMIT}): Rate limited, retrying after {retry_after}s.")
-                    await asyncio.sleep(retry_after)
-                    return await self.get_karuta_message(token, account, channel_id, search_content, rate_limited)
-                else:
-                    print(f"❌ [Account #{account}] Retrieve message failed: Error code {status}.")
-                    return None
-                print(f"❌ [Account #{account}] Retrieve message failed: Message '{search_content}' not found in recent messages.")
-                return None
-
     async def add_reaction(self, token: str, account: int, channel_id: str, message_id: str, emoji: str, rate_limited: int):
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me"
         headers = self.get_headers(token, channel_id)
@@ -489,6 +457,32 @@ class MessageBotter():
         for k, v in self.token_channel_dict.items():
             self.channel_token_dict[v].append(k)
 
+    async def get_card_companion_pog_card(self, token: str, account: int, channel_id: str, drop_message_id: str):
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=10"
+        headers = self.get_headers(token, channel_id)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers = headers) as resp:
+                status = resp.status
+                if status == 200:
+                    messages = await resp.json()
+                    try:
+                        for msg in messages:
+                            if all([
+                                msg.get('author', {}).get('id') == self.CARD_COMPANION_BOT_ID,
+                                msg.get('id') > drop_message_id,  # Ensure CardCompanion message is after the drop message
+                                any(emoji_str in msg.get('content', '') for emoji_str in self.CARD_COMPANION_POG_EMOJIS)  # Check if message contains an emoji indicating a pog card
+                            ]):
+                                card_number = int(msg.get('content')[5])  # The fifth index is the card number of the pog card
+                                print(f"✅ [Account #{account}] Identified CardCompanion pog card: [{card_number}].")
+                                return card_number
+                    except (KeyError, IndexError):
+                        pass
+                else:
+                    print(f"❌ [Account #{account}] Retrieve CardCompanion message failed: Error code {status}.")
+                    return None
+                # In the case CardCompanion does not return a message containing a pog card, return None
+                return None
+
     async def drop_and_grab(self, token: str, account: int, channel_id: str, channel_tokens: list[str]):
         num_channel_tokens = len(channel_tokens)
         drop_message = random.choice(self.DROP_MESSAGES) + random.choice(self.RANDOM_ADDON)
@@ -497,14 +491,40 @@ class MessageBotter():
             drop_message = await self.get_drop_message(token, account, channel_id, wait_for_emoji = True)
             if drop_message:
                 drop_message_id = drop_message.get('id')
-                shuffled_emojis = random.sample(self.EMOJIS, len(self.EMOJIS))  # Shuffle emojis for random emoji order
-                random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
-                for i in range(num_channel_tokens):
-                    emoji = shuffled_emojis[i]
-                    grab_token = channel_tokens[i]
-                    grab_account = self.tokens.index(grab_token) + 1
-                    await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
+                # Note that there is no need to wait for the CardCompanion message because get_drop_message() only returns after all Karuta emojis have been added, by which time CardCompanion should have already identified the drop
+                pog_card = await self.get_card_companion_pog_card(token, account, channel_id, drop_message_id) # Get pog card number: 1, 2, 3, or None
+                if pog_card and pog_card <= len(self.EMOJIS): # Ensure pog card exists and is within bounds
+                    # If pog card exists, ensure the dropper is the grabber
+                    pog_card_index = pog_card - 1
+                    emoji = self.EMOJIS[pog_card_index]
+                    await self.add_reaction(token, account, channel_id, drop_message_id, emoji, 0)
                     await asyncio.sleep(random.uniform(0.5, 3.5))
+
+                    # Grab other cards normally
+                    other_emojis = self.EMOJIS[:pog_card_index] + self.EMOJIS[pog_card_index + 1:]
+                    shuffled_other_emojis = random.sample(other_emojis, len(other_emojis))
+                    other_channel_tokens = channel_tokens.copy()
+                    other_channel_tokens.remove(token)
+                    num_other_channel_tokens = len(other_channel_tokens)
+                    random.shuffle(other_channel_tokens)
+
+                    for i in range(num_other_channel_tokens):
+                        emoji = shuffled_other_emojis[i]
+                        grab_token = other_channel_tokens[i]
+                        grab_account = self.tokens.index(grab_token) + 1
+                        await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
+                        await asyncio.sleep(random.uniform(0.5, 3.5))
+                else:
+                    shuffled_emojis = random.sample(self.EMOJIS, len(self.EMOJIS))  # Shuffle emojis for random emoji order
+                    random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
+                    for i in range(num_channel_tokens):
+                        emoji = shuffled_emojis[i]
+                        grab_token = channel_tokens[i]
+                        grab_account = self.tokens.index(grab_token) + 1
+                        await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
+                        await asyncio.sleep(random.uniform(0.5, 3.5))
+                
+                # Grab special event emoji on special event account
                 try:
                     if self.SPECIAL_EVENT and self.special_event_token and len(drop_message.get('reactions', [])) > 3:  # 3 cards + 1 special event emoji
                         await asyncio.sleep(random.uniform(0, 3))
@@ -516,15 +536,16 @@ class MessageBotter():
                 except IndexError:
                     print(f"❌ [Special Event Account] Retrieve message failed: IndexError.")
                     pass
+
                 random.shuffle(channel_tokens)  # Shuffle tokens again for random order messages
                 for i in range(num_channel_tokens):
-                    if random.choice([True, False]):  # 50% chance of sending messages
-                        grab_token = channel_tokens[i]
-                        grab_account = self.tokens.index(grab_token) + 1
+                    if random.choice([True, False]):  # 50% chance of sending random commands/messages
+                        msg_token = channel_tokens[i]
+                        msg_account = self.tokens.index(msg_token) + 1
                         for _ in range(random.randint(1, 3)):
                             random_msg_list = random.choice([self.RANDOM_COMMANDS, self.RANDOM_MESSAGES])
-                            random_message = random.choice(random_msg_list)
-                            await self.send_message(grab_token, grab_account, channel_id, random_message, self.RATE_LIMIT)
+                            random_msg = random.choice(random_msg_list)
+                            await self.send_message(msg_token, msg_account, channel_id, random_msg, self.RATE_LIMIT)
                             await asyncio.sleep(random.uniform(1, 4))
         else:
             if self.TERMINAL_VISIBILITY:

@@ -4,7 +4,7 @@ Discord Karuta Botter is a headless Python script for Windows that mimics realis
 While this script was originally designed for Karuta botting, it can be easily adapted for other Discord self-bot purposes.
 
 ## Terminal Preview
-![Karuta Botter Preview](karuta_botter_preview.png)
+![Karuta Botter Preview](preview_images/karuta_botter_preview.png)
 
 ## ⚠️ WARNING ⚠️
 Discord's Terms of Service explicitly prohibits self-bots (as of August 2025, and for the foreseeable future). Unauthorized use of this script *could* result in account bans. Use at your own risk.
@@ -59,8 +59,13 @@ cmd <account_number |OR| 'all'> <message>
 > - If you mistype the account number for the `/lock` or `/burn` command, you must restart the trade/burn process. Sorry!
 > - Automatic confirmation for the `kburn` command will not be supported. Use the `/b 🔥` command to manually confirm the burn, or use `kmultiburn` instead.
 
-#### ⚠️ **DO NOT** run the drop script for more than 10 consecutive hours or Karuta may flag your accounts for suspicious activity. Set `self.TIME_LIMIT_HOURS_MIN` and `self.TIME_LIMIT_HOURS_MAX` to control the time limit.
-#### ⚠️ **DO NOT** run the account login script too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
+#### ⚠️ **DO NOT** run the drop script (main.py) for more than 10 consecutive hours or Karuta may flag your accounts for suspicious activity. Set `self.TIME_LIMIT_HOURS_MIN` and `self.TIME_LIMIT_HOURS_MAX` to control the time limit.
+#### ⚠️ **DO NOT** run the account login script (token_extractor.py) too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
+
+## Compatibility
+- This script can be used in conjunction with [CardCompanion](https://top.gg/bot/1380936713639166082), a Discord bot that can analyze and notify you of rare cards being dropped. If a "pog card" is dropped (a card that matches a certain stat (ex. >1000 wl)), CardCompanion will display an emoji in the message (red circle below), indicating which card is the "pog card". The script will then ensure the grabber of the card is the same as the dropper, boosting the card stats and avoiding suspicion. If CardCompanion is not being used OR a "pog card" was not dropped, the grabber will be randomized by default.
+![Card Companion Preview](preview_images/card_companion_preview.png)
+- The `/b` command can also be used on any bot buttons, not just Karuta. It is set in `self.INTERACTION_BOT_IDS` in `command_checker.py`, which includes OwO by default.
 
 ## Top.gg Auto-Voter
 ### Usage
