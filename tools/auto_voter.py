@@ -13,9 +13,13 @@ import random
 import signal
 import atexit
 
-### TO USE THE AUTO-VOTER, YOU MUST HAVE A LIST OF TOKEN(S) in tokens.json. You cannot use account logins.
+### TO USE THE AUTO-VOTER, YOU MUST HAVE A LIST OF TOKEN(S) in tokens.json. You cannot use account logins. ###
 class AutoVoter():
     def __init__(self):
+        ### Feel free to customize these delays ###
+        self.RAND_DELAY_MIN = 10  # (int) Minimum amount of minutes to wait between votes
+        self.RAND_DELAY_MAX = 20 # (int) Maximum amount of minutes to wait between votes
+
         self.driver = None
         atexit.register(self.cleanup)
         signal.signal(signal.SIGINT, self.cleanup)
@@ -29,9 +33,6 @@ class AutoVoter():
         if not isinstance(self.TOKENS, list) or not all(isinstance(token, str) for token in self.TOKENS):
             input('⛔ Token Format Error ⛔\nExpected a list of strings. Example: ["token1", "token2", "token3"]')
             sys.exit()
-
-        self.RAND_DELAY_MIN = 10  # (int) Minimum amount of MINUTES to wait between votes
-        self.RAND_DELAY_MAX = 20 # (int) Maximum amount of MINUTES to wait between votes
 
         self.WINDOWS_VERSIONS = ["10.0", "11.0"]
         self.BROWSER_VERSIONS = [
@@ -119,6 +120,7 @@ class AutoVoter():
                         self.driver.quit()
                         self.driver = None
                     time.sleep(1)
+            
             WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
             print("  Opened Discord")
 
@@ -227,14 +229,14 @@ class AutoVoter():
         # Executes with tokens
         for account_idx in range(len(self.shuffled_tokens)):
             print(f"{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
-            print("Loading new undetected Chrome...")
+            print("Loading new Undetected Chrome instance...")
             self.load_chrome()
             print(f"Auto-voting on Account #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1} ({account_idx + 1}/{len(self.shuffled_tokens)})...")
             self.auto_vote(account_idx)
             print("Closing Chrome...")
             self.driver.quit()
             delay = random.uniform(self.RAND_DELAY_MIN, self.RAND_DELAY_MAX) * 60  # Random delay between votes
-            print(f"Waiting {round(delay / 60)} minutes before voting again...\n")
+            print(f"Waiting {round(delay / 60)} minutes before voting on another account...\n")
             time.sleep(delay)
 
         input("✅ All accounts have been voted on. Press `Enter` to exit.")
