@@ -356,7 +356,7 @@ class CommandChecker():
                             await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, f"{account}", self.RATE_LIMIT)  # Show account number
                             await asyncio.sleep(random.uniform(0.1, 0.5))
                             await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
-                            await asyncio.sleep(random.uniform(0.5, 1))
+                            await asyncio.sleep(random.uniform(3, 4))
                     else:
                         token = self.tokens[account - 1]
                         if send:
