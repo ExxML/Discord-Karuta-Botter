@@ -26,5 +26,6 @@ class Config():
         self.TIME_LIMIT_HOURS_MAX = 10  # (int/float) MAXIMUM time limit in hours before script automatically pauses (to avoid ban risk).
         self.CHANNEL_SKIP_RATE = 8  # (int) Every time the script runs, there is a 1/self.CHANNEL_SKIP_RATE chance of skipping a channel. Set to -1 if you wish to disable skipping.
         self.DROP_SKIP_RATE = 12  # (int) For every drop, there is a 1/self.DROP_SKIP_RATE chance of skipping the drop. Set to -1 if you wish to disable it skipping.
+        self.ONLY_GRAB_POG_CARDS = False  # (bool) Determines whether to ONLY grab pog cards (as defined by CardCompanion). IF CARDCOMPANION IS NOT SET UP, SET THIS TO FALSE, or else no cards will be grabbed.
         self.RANDOM_COMMAND_RATE = 480  # (int) Every 2-3 seconds, there is a 1/self.RANDOM_COMMAND_RATE chance of sending a random command.
         self.SPECIAL_EVENT = False  # (bool) Whether the script will use the token in special_event_token.json to auto-react with the event emoji (if there is one) during Karuta special events.

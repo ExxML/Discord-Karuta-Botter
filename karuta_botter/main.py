@@ -156,6 +156,7 @@ class MessageBotter():
             isinstance(self.TIME_LIMIT_HOURS_MAX, (int, float)),
             isinstance(self.CHANNEL_SKIP_RATE, int),
             isinstance(self.DROP_SKIP_RATE, int),
+            isinstance(self.ONLY_GRAB_POG_CARDS, bool),
             isinstance(self.RANDOM_COMMAND_RATE, int),
             isinstance(self.SPECIAL_EVENT, bool),
             self.TERMINAL_VISIBILITY in (0, 1),
@@ -166,7 +167,7 @@ class MessageBotter():
             self.DROP_SKIP_RATE != 0,
             self.RANDOM_COMMAND_RATE > 0
         ]):
-            input("⛔ Configuration Error ⛔\nPlease enter valid constant values in config.py.")
+            input("⛔ Configuration Error ⛔\nPlease enter valid values in config.py.")
             sys.exit()
         if self.TIME_LIMIT_HOURS_MIN > self.TIME_LIMIT_HOURS_MAX:
             input("⛔ Configuration Error ⛔\nPlease enter a maximum time limit greater than the minimum time limit in config.py.")
@@ -476,29 +477,31 @@ class MessageBotter():
                     await self.add_reaction(token, account, channel_id, drop_message_id, emoji, 0)
                     await asyncio.sleep(random.uniform(0.5, 3.5))
 
-                    # Grab other cards normally
-                    other_emojis = self.EMOJIS[:pog_card_index] + self.EMOJIS[pog_card_index + 1:]
-                    shuffled_other_emojis = random.sample(other_emojis, len(other_emojis))
-                    other_channel_tokens = channel_tokens.copy()
-                    other_channel_tokens.remove(token)
-                    num_other_channel_tokens = len(other_channel_tokens)
-                    random.shuffle(other_channel_tokens)
+                    if not self.ONLY_GRAB_POG_CARDS:
+                        # Grab other cards normally
+                        other_emojis = self.EMOJIS[:pog_card_index] + self.EMOJIS[pog_card_index + 1:]
+                        shuffled_other_emojis = random.sample(other_emojis, len(other_emojis))
+                        other_channel_tokens = channel_tokens.copy()
+                        other_channel_tokens.remove(token)
+                        num_other_channel_tokens = len(other_channel_tokens)
+                        random.shuffle(other_channel_tokens)
 
-                    for i in range(num_other_channel_tokens):
-                        emoji = shuffled_other_emojis[i]
-                        grab_token = other_channel_tokens[i]
-                        grab_account = self.tokens.index(grab_token) + 1
-                        await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
-                        await asyncio.sleep(random.uniform(0.5, 3.5))
+                        for i in range(num_other_channel_tokens):
+                            emoji = shuffled_other_emojis[i]
+                            grab_token = other_channel_tokens[i]
+                            grab_account = self.tokens.index(grab_token) + 1
+                            await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
+                            await asyncio.sleep(random.uniform(0.5, 3.5))
                 else:
-                    shuffled_emojis = random.sample(self.EMOJIS, len(self.EMOJIS))  # Shuffle emojis for random emoji order
-                    random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
-                    for i in range(num_channel_tokens):
-                        emoji = shuffled_emojis[i]
-                        grab_token = channel_tokens[i]
-                        grab_account = self.tokens.index(grab_token) + 1
-                        await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
-                        await asyncio.sleep(random.uniform(0.5, 3.5))
+                    if not self.ONLY_GRAB_POG_CARDS:
+                        shuffled_emojis = random.sample(self.EMOJIS, len(self.EMOJIS))  # Shuffle emojis for random emoji order
+                        random.shuffle(channel_tokens)  # Shuffle tokens for random emoji assignment
+                        for i in range(num_channel_tokens):
+                            emoji = shuffled_emojis[i]
+                            grab_token = channel_tokens[i]
+                            grab_account = self.tokens.index(grab_token) + 1
+                            await self.add_reaction(grab_token, grab_account, channel_id, drop_message_id, emoji, 0)
+                            await asyncio.sleep(random.uniform(0.5, 3.5))
                 
                 # Grab special event emoji on special event account
                 try:
@@ -624,6 +627,11 @@ class MessageBotter():
                 sys.exit()
         else:
             self.special_event_token = ""
+
+        if self.ONLY_GRAB_POG_CARDS:
+            print("\n❗ Only pog cards (as defined by CardCompanion) will be grabbed.")
+        else:
+            print("\nℹ️ All dropped cards will be grabbed, regardless of whether it is a pog card (as defined by CardCompanion).")
 
         task_instances = []
         num_channels = len(self.DROP_CHANNEL_IDS)
