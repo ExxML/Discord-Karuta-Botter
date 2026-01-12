@@ -31,14 +31,14 @@ If you decide to buy accounts, I recommend purchasing from https://shop.xyliase.
 
 ## Usage
 1. Edit the `__init__` constants in `config.py`. `self.COMMAND_USER_IDS` restricts message commands to these accounts- leave the list empty if you want to allow *any* user to send commands. `self.COMMAND_CHANNEL_ID` is the channel where you can send message commands to control your accounts remotely. `self.DROP_CHANNEL_IDS` is a list of channels where the bot will drop cards. **There must be 1 drop channel per 3 accounts used.**
-2. Enter your emails and passwords in `self.ACCOUNTS` in `token_extractor.py` using the following format:
+2. Enter your emails and passwords in `self.ACCOUNTS` in `tools/token_extractor.py` using the following format:
 ```python
 {"email": "example_email@gmail.com", "password": "example_password"}, ...
 ```
 
 Alternatively, you can enter your tokens as a list of strings in `tokens.json`. **`tokens.json` MUST be in the root directory of the project (NOT in the karuta_botter folder).** Leave the list in `tokens.json` empty if you would like to use the token extractor instead. 
 
-**Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.** If you don't have your tokens on hand, you can automatically extract and save your tokens to `tokens.json` by filling in your account credentials in `token_extractor.py`, setting `self.SAVE_TOKENS = True`, then running `main.py`.
+**Generally, I recommend using tokens instead of account credentials so you can save time and avoid potential rate limiting.** If you don't have your tokens on hand, you can automatically extract and save your tokens to `tokens.json` by filling in your account credentials in `tools/token_extractor.py`, setting `self.SAVE_TOKENS = True`, then running `main.py`.
 
 3. If there is a special event going on in Karuta, you can set `self.SPECIAL_EVENT = True` in `config.py` AND enter a **single** token (a string) in `special_event_token.json` to automatically react to drops with the event emoji (if there is one). The token must, of course, have access to all `self.DROP_CHANNEL_IDS` and `self.SERVER_ACTIVITY_DROP_CHANNEL_IDS`. If there is no special event, you MUST set `self.SPECIAL_EVENT = False`.
 4. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. In `config.py`, `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_SERVER_ID` and `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands entirely.
@@ -60,7 +60,7 @@ cmd <account_number |OR| 'all'> <message>
 > - Automatic confirmation for the `kburn` command will not be supported. Use the `/b 🔥` command to manually confirm the burn, or use `kmultiburn` instead.
 
 #### ⚠️ **DO NOT** run the drop script (main.py) for more than 10 consecutive hours or Karuta may flag your accounts for suspicious activity. Set `self.TIME_LIMIT_HOURS_MIN` and `self.TIME_LIMIT_HOURS_MAX` in `config.py` to control the time limit.
-#### ⚠️ **DO NOT** run the account login script (token_extractor.py) too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
+#### ⚠️ **DO NOT** run the account login script (tools/token_extractor.py) too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
 
 ## Compatibility
 - This script can be used in conjunction with [CardCompanion](https://top.gg/bot/1380936713639166082), a Discord bot that can analyze and notify you of rare cards being dropped. If a "pog card" is dropped (a card that matches a certain stat (ex. >1000 wl)), CardCompanion will display an emoji in the message (red circle below), indicating which card is the "pog card". The script will then ensure the grabber of the card is the same as the dropper, boosting the card stats and avoiding suspicion. If CardCompanion is not being used OR a "pog card" was not dropped, the grabber will be randomized by default.
@@ -74,4 +74,4 @@ cmd <account_number |OR| 'all'> <message>
 2. Ensure your (normal) Chrome browser is up-to-date.
 3. **DO NOT** use a VPN while running this script. Cloudflare flags VPNs.
 4. If you wish, edit `self.RAND_DELAY_MIN` and `self.RAND_DELAY_MAX` to change the (randomized) amount of time between votes.
-5. Run `auto_voter.py`.
+5. Run `tools/auto_voter.py`.
