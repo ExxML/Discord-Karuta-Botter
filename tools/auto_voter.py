@@ -16,9 +16,10 @@ import atexit
 ### TO USE THE AUTO-VOTER, YOU MUST HAVE A LIST OF TOKEN(S) in tokens.json. You cannot use account logins. ###
 class AutoVoter():
     def __init__(self):
-        ### Feel free to customize these delays ###
+        ### Feel free to customize these settings ###
         self.RAND_DELAY_MIN = 10  # (int) Minimum amount of minutes to wait between votes
-        self.RAND_DELAY_MAX = 20 # (int) Maximum amount of minutes to wait between votes
+        self.RAND_DELAY_MAX = 20  # (int) Maximum amount of minutes to wait between votes
+        self.SHUFFLE_ACCOUNTS = True  # (bool) Whether to randomize the order of accounts when voting. Generally, I would recommend keeping this setting `True`
 
         self.driver = None
         atexit.register(self.cleanup)
@@ -114,7 +115,7 @@ class AutoVoter():
                     break
                 except Exception as e:
                     if attempt >= max_attempts - 1:
-                        print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:\n{e}")
+                        print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.tokens[account_idx]) + 1}:\n{e}")
                         return
                     if self.driver:
                         self.driver.quit()
@@ -125,7 +126,7 @@ class AutoVoter():
             print("  Opened Discord")
 
             inject_token_script = f"""
-                let token = "{self.shuffled_tokens[account_idx]}";
+                let token = "{self.tokens[account_idx]}";
                 function login(token) {{
                     setInterval(() => {{
                         document.body.appendChild(document.createElement('iframe')).contentWindow.localStorage.token = `"${{token}}"`;
@@ -209,7 +210,7 @@ class AutoVoter():
                 print("  ❌ Unexpected result after clicking vote")
 
         except Exception as e:
-            print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1}:\n{e}")
+            print(f"  ❌ Error with Acccount #{self.TOKENS.index(self.tokens[account_idx]) + 1}:\n{e}")
             traceback.print_exc()
     
     def cleanup(self, *args):
@@ -221,17 +222,22 @@ class AutoVoter():
             
     def main(self):
         if self.TOKENS:
-            self.shuffled_tokens = random.sample(self.TOKENS, len(self.TOKENS))
+            if self.SHUFFLE_ACCOUNTS:
+                self.tokens = random.sample(self.TOKENS, len(self.TOKENS))
+                print("ℹ️ Accounts will vote in a randomized order.\n")
+            else:
+                self.tokens = self.TOKENS
+                print("ℹ️ Accounts will vote in order.\n")
         else:
             input("⛔ Token Error ⛔\nNo tokens found. Please enter at least 1 token to vote with in tokens.json.")
             sys.exit()
 
         # Executes with tokens
-        for account_idx in range(len(self.shuffled_tokens)):
+        for account_idx in range(len(self.tokens)):
             print(f"{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
             print("Loading new Undetected Chrome instance...")
             self.load_chrome()
-            print(f"Auto-voting on Account #{self.TOKENS.index(self.shuffled_tokens[account_idx]) + 1} ({account_idx + 1}/{len(self.shuffled_tokens)})...")
+            print(f"Auto-voting on Account #{self.TOKENS.index(self.tokens[account_idx]) + 1} ({account_idx + 1}/{len(self.tokens)})...")
             self.auto_vote(account_idx)
             print("Closing Chrome...")
             self.driver.quit()

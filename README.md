@@ -76,4 +76,5 @@ cmd <account_number |OR| 'all'> <message>
 2. Ensure your (normal) Chrome browser is up-to-date.
 3. **DO NOT** use a VPN while running this script. Cloudflare flags VPNs.
 4. If you wish, edit `self.RAND_DELAY_MIN` and `self.RAND_DELAY_MAX` to change the (randomized) amount of time between votes.
-5. Run `tools/auto_voter.py`.
+5. You may also edit `self.SHUFFLE_ACCOUNTS` depending on whether you want to randomize the order of accounts for voting. Generally, I would recommend keeping this setting `True`.
+6. Run `tools/auto_voter.py`.
