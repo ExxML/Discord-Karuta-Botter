@@ -44,7 +44,7 @@ Alternatively, you can enter your tokens as a list of strings in `tokens.json`. 
 4. Run `main.py`. It is **highly recommended** to run the program in a private channel to avoid interruptions. In `config.py`, `self.COMMAND_USER_IDS` prevents other people from using message commands, but you can also set `self.COMMAND_SERVER_ID` and `self.COMMAND_CHANNEL_ID` to an empty string to disable message commands entirely.
 5. To send a message from any account, manually send a message in the `self.COMMAND_CHANNEL_ID` channel using the following format (without angle brackets):
 ```bash
-cmd <account_number |OR| 'all'> <message>
+cmd <account_number |OR| account_number_range |OR| 'all'> <message>
 ```
 - Ex 1. `cmd all kcollection o:wishlist` sends `kcollection o:wishlist` from ALL accounts.
 - Ex 2. `cmd 1 kgive @ExxML <card_code>` sends a card transfer from Account #1 (the first account listed in `self.ACCOUNTS`). A few seconds after the transfer is sent, the script will automatically confirm the transfer (from Account #1).
@@ -53,14 +53,15 @@ cmd <account_number |OR| 'all'> <message>
 - Ex 5. `cmd 1 /b <emoji / label>` clicks the button on the most recent bot message (in self.INTERACTION_BOT_IDS) with the specified emoji OR label. For example, `cmd 1 /b ✅` or `cmd 1 /b I understand`.
 - Ex 6. `cmd 1 /r <emoji>` reacts to the most recent bot message (in self.INTERACTION_BOT_IDS) with the specified emoji. For example, `cmd 1 /r 💰`.
 - Ex 7. `cmd /pause` / `cmd /resume` pauses and resumes the script.
+- Ex 8. `cmd 1-10 kinventory` sends `kinventory` from Accounts #1-10.
 
 > [!NOTE]
-> - The `all` argument does not work with `give`, `multitrade`, `/lock`, `multiburn`, or `/burn` commands.
+> - ONLY single account arguments work with `give`, `multitrade`, `/lock`, `multiburn`, or `/burn` commands. Account number ranges and `all` will not work with those commands.
 > - If you mistype the account number for the `/lock` or `/burn` command, you must restart the trade/burn process. Sorry!
 > - Automatic confirmation for the `kburn` command will not be supported. Use the `/b 🔥` command to manually confirm the burn, or use `kmultiburn` instead.
 
-#### ⚠️ **DO NOT** run the drop script (main.py) for more than 10 consecutive hours or Karuta may flag your accounts for suspicious activity. Set `self.TIME_LIMIT_HOURS_MIN` and `self.TIME_LIMIT_HOURS_MAX` in `config.py` to control the time limit.
-#### ⚠️ **DO NOT** run the account login script (token_extractor.py) too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
+#### ⚠️ **DO NOT** run the drop script (`main.py`) for more than 10 consecutive hours or Karuta may flag your accounts for suspicious activity. Set `self.TIME_LIMIT_HOURS_MIN` and `self.TIME_LIMIT_HOURS_MAX` in `config.py` to control the time limit.
+#### ⚠️ **DO NOT** run the account login script (`token_extractor.py`) too many times in a row because you will get login rate-limited by Discord Web. The cooldown after being rate-limited is typically a few hours.
 
 ## Compatibility
 - This script can be used in conjunction with [CardCompanion](https://top.gg/bot/1380936713639166082), a Discord bot that can analyze and notify you of rare cards being dropped. If a "pog card" is dropped (a card that matches a certain stat (ex. >1000 wl)), CardCompanion will display an emoji in the message (red circle below), indicating which card is the "pog card". The script will then ensure the grabber of the card is the same as the dropper, boosting the card stats and avoiding suspicion. If CardCompanion is not being used OR a "pog card" was not dropped, the grabber will be randomized by default.
