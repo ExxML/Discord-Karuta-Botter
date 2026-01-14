@@ -656,19 +656,19 @@ class MessageBotter():
         if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
             random_token = random.choice(self.tokens)
             print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
-            await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution started", 0)
+            await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "Execution started", 0)
         await asyncio.gather(*task_instances)
         await asyncio.sleep(1)
         if self.COMMAND_SERVER_ID and self.COMMAND_CHANNEL_ID:
             random_token = random.choice(self.tokens)
-            await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Execution completed", 0)
+            await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "Execution completed", 0)
         if self.TERMINAL_VISIBILITY:
             print(f"\n{datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
             await self.async_input_handler(f"✅ Script Execution Completed ✅\nClose the terminal to exit, or press `Enter` to restart the script.\n", "", self.EXECUTION_COMPLETED_FLAG)
 
     async def cleanup(self):
         random_token = random.choice(self.tokens)
-        await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "✅ Shutting down...", 0)
+        await self.send_message(random_token, self.tokens.index(random_token) + 1, self.COMMAND_CHANNEL_ID, "Shutting down...", 0)
 
     def signal_handler(self, signum, frame):
         print("\n✅ Terminal window closed. Running cleanup...")
