@@ -101,13 +101,16 @@ class CommandChecker():
                                 self.executed_commands.append(msg)
                                 content = raw_content.removeprefix(self.MESSAGE_COMMAND_PREFIX).strip()
                                 account_str, command = (content.split(" ", 1) + [""])[:2]
+
+                                # Parsing account number
                                 if account_str.isdigit():
-                                    account = int(account_str)
-                                    if account < 1 or account > len(self.tokens):
+                                    account_num = int(account_str)
+                                    if account_num < 1 or account_num > len(self.tokens):
                                         print(f"\n❌ Error parsing command: Account number is not between 1 and {len(self.tokens)}.")
                                         return None, None, None
+                                    account_range = (account_num, account_num)
                                 elif account_str.lower() == self.ALL_ACCOUNT_FLAG:
-                                    account = self.ALL_ACCOUNT_FLAG
+                                    account_range = (1, len(self.tokens))
                                 elif account_str.lower() == self.KARUTA_PAUSE_COMMAND:
                                     if self.main.pause_event.is_set():
                                         self.main.pause_event.clear()  # Pause drops
@@ -126,31 +129,57 @@ class CommandChecker():
                                         print("\n🤖 Drops have already resumed.")
                                         await self.main.send_message(token, self.tokens.index(token) + 1, self.COMMAND_CHANNEL_ID, "Drops have already resumed.", 0)
                                     return None, None, None
+                                elif '-' in account_str:
+                                    account_strs = account_str.split('-')
+                                    lower_str = account_strs[0]
+                                    upper_str = account_strs[1]
+                                    if (lower_str.isdigit() and upper_str.isdigit()):
+                                        lower = int(lower_str)
+                                        upper = int(upper_str)
+                                        if (1 <= lower and lower <= upper and upper <= len(self.tokens)):
+                                            account_range = (lower, upper)
+                                        else:
+                                            print(f"\n❌ Error parsing command: Account number range is either not between 1 and {len(self.tokens)} or the lower account number is greater than the upper account number.")
+                                            return None, None, None
+                                    else:
+                                        print("\n❌ Error parsing command: Account number range does not contain two integers.")
+                                        return None, None, None
                                 else:
-                                    print("\n❌ Error parsing command: Account number is not a number or 'all'.")
+                                    print("\n❌ Error parsing command: Account number is not a number, a range of numbers, or 'all'.")
                                     return None, None, None
-                                if (command.startswith(f"{self.KARUTA_PREFIX}give") or command.startswith(f"{self.KARUTA_PREFIX}g")) and isinstance(account, int):
-                                    print(f"\n🤖 Sending card transfer from Account #{account}...")
-                                    send = True
-                                elif command == self.KARUTA_LOCK_COMMAND and isinstance(account, int):
-                                    print(f"\n🤖 Locking and confirming trade from Account #{account}...")
-                                    send = False
-                                elif (command.startswith(f"{self.KARUTA_PREFIX}multiburn") or command.startswith(f"{self.KARUTA_PREFIX}mb")) and isinstance(account, int):
-                                    print(f"\n🤖 Multiburning on Account #{account}...")
-                                    send = True
-                                elif command == self.KARUTA_MULTIBURN_COMMAND and isinstance(account, int):
-                                    print(f"\n🤖 Confirming multiburn on Account #{account}...")
-                                    send = False
-                                elif command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_CLICK_BUTTON_COMMAND and isinstance(account, int):
-                                    print(f"\n🤖 Clicking {command.split(" ", 1)[-1]} button on Account #{account}...")
-                                    send = False
-                                elif command.startswith(self.KARUTA_SEND_REACTION_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_SEND_REACTION_COMMAND and isinstance(account, int):
-                                    print(f"\n🤖 Sending {command.split(" ", 1)[-1]} reaction on Account #{account}...")
-                                    send = False
+
+                                # Parsing commands
+                                is_single_account = (account_range[0] == account_range[1])
+                                if (is_single_account):
+                                    # If sending from single account
+                                    if command.startswith(f"{self.KARUTA_PREFIX}give") or command.startswith(f"{self.KARUTA_PREFIX}g"):
+                                        print(f"\n🤖 Sending card transfer from Account #{account_range[0]}...")
+                                        send = True
+                                    elif command == self.KARUTA_LOCK_COMMAND:
+                                        print(f"\n🤖 Locking and confirming trade from Account #{account_range[0]}...")
+                                        send = False
+                                    elif command.startswith(f"{self.KARUTA_PREFIX}multiburn") or command.startswith(f"{self.KARUTA_PREFIX}mb"):
+                                        print(f"\n🤖 Multiburning on Account #{account_range[0]}...")
+                                        send = True
+                                    elif command == self.KARUTA_MULTIBURN_COMMAND:
+                                        print(f"\n🤖 Confirming multiburn on Account #{account_range[0]}...")
+                                        send = False
+                                    elif command.startswith(self.KARUTA_CLICK_BUTTON_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_CLICK_BUTTON_COMMAND:
+                                        print(f"\n🤖 Clicking {command.split(" ", 1)[-1]} button on Account #{account_range[0]}...")
+                                        send = False
+                                    elif command.startswith(self.KARUTA_SEND_REACTION_COMMAND) and command.split(" ", 1)[-1] != self.KARUTA_SEND_REACTION_COMMAND:
+                                        print(f"\n🤖 Sending {command.split(" ", 1)[-1]} reaction on Account #{account_range[0]}...")
+                                        send = False
+                                    else:
+                                        # If single account and not sending special command
+                                        print(f"\n🤖 Sending '{command}' from Account #{account_range[0]}...")
+                                        send = True
                                 else:
-                                    print(f"\n🤖 Sending '{command}' from {f'Account #{account}' if isinstance(account, int) else 'all accounts'}...")
+                                    # If range of accounts and not sending special commands
+                                    print(f"\n🤖 Sending '{command}' from Accounts #{account_range[0]}-{account_range[1]}...")
                                     send = True
-                                return send, account, command
+                                return send, account_range, command
+                        
                         except Exception as e:
                             print(f"\n❌ Error parsing command: {e}")
                             return None, None, None
@@ -348,25 +377,29 @@ class CommandChecker():
     async def run(self):
         while True:
             try:
-                send, account, command = await self.check_command(random.choice(self.tokens))  # Use a random account to check for message commands
-                if account and command:
-                    if account == self.ALL_ACCOUNT_FLAG:
-                        for index, token in enumerate(self.tokens):
-                            account = index + 1
-                            await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, f"{account}", self.RATE_LIMIT)  # Show account number
-                            await asyncio.sleep(random.uniform(0.1, 0.5))
-                            await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
-                            await asyncio.sleep(random.uniform(3, 4))
-                    else:
-                        token = self.tokens[account - 1]
+                send, account_range, command = await self.check_command(random.choice(self.tokens))  # Use a random account to check for message commands
+                if account_range and command:
+                    lower_account, upper_account = account_range
+                    if (lower_account == upper_account):
+                        # If single account
+                        token = self.tokens[lower_account - 1]
                         if send:
-                            await self.main.send_message(token, account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)
-                        await self.check_card_transfer(token, account, command)
-                        await self.check_multitrade(token, account, command)
-                        await self.check_multiburn(token, account, command)
-                        await self.confirm_multiburn(token, account, command)
-                        await self.check_click_button(token, account, command)
-                        await self.check_send_reaction(token, account, command)
+                            await self.main.send_message(token, lower_account, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)
+                        await self.check_card_transfer(token, lower_account, command)
+                        await self.check_multitrade(token, lower_account, command)
+                        await self.check_multiburn(token, lower_account, command)
+                        await self.confirm_multiburn(token, lower_account, command)
+                        await self.check_click_button(token, lower_account, command)
+                        await self.check_send_reaction(token, lower_account, command)
+                    else:
+                        # If range of accounts
+                        for i in range(lower_account - 1, upper_account):
+                            token = self.tokens[i]
+                            account_num = i + 1
+                            await self.main.send_message(token, account_num, self.COMMAND_CHANNEL_ID, f"{account_num}", self.RATE_LIMIT)  # Show account number
+                            await asyncio.sleep(random.uniform(0.1, 0.3))
+                            await self.main.send_message(token, account_num, self.COMMAND_CHANNEL_ID, command, self.RATE_LIMIT)  # Won't retry even if rate-limited (so it doesn't interfere with drops/grabs)
+                            await asyncio.sleep(random.uniform(2.5, 3.5))
                     print("🤖 Message command executed.")
                 self.exception_count = 0
                 await asyncio.sleep(random.uniform(1, 2))  # Short delay to avoid getting rate-limited
